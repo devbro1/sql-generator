@@ -1,5 +1,4 @@
 export class Query {
-
     private param_select : string[] = [];
     private param_table: string = '';
     private param_where: any[] = [];
@@ -11,11 +10,18 @@ export class Query {
     public select(selects : string | string[]) {
         if (typeof selects === 'string')
         {
-            this.param_select.push(selects);
+            let selects2 = selects;
+            let matches = selects.match(/"?(?<alias>[a-zA-Z0-9]*)"?\."?(?<var_name>.*)"?/);
+            if(matches)
+            {
+                selects2 = "\""+matches.groups?.alias+"\"." + matches.groups?.var_name;
+            }
+
+            this.param_select.push(selects2);
         }
         else if(Array.isArray(selects))
         {
-            this.param_select = [...this.param_table, ...selects ];
+            selects.map((a) => {this.select(a);});
         }
 
         return this;

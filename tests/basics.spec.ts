@@ -10,7 +10,15 @@ describe('sum module', () => {
     expect(query.toFullSQL()).toBe('SELECT * FROM table');
   });
 
-  test('basic select with label', () => {
+  test('basic select with array', () => {
+    let query = new Query();
+    query.select(['a','b','c'])
+      .from('table');
+      
+    expect(query.toFullSQL()).toBe('SELECT a, b, c FROM table');
+  });
+
+  test('basic select with alias', () => {
     let query = new Query();
     query.select('t1.*')
       .from('table t1');
