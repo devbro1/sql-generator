@@ -1,66 +1,48 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query, RawSQL } from "../index";
+import { Query } from "../index";
 
-describe("raw queries", () => {
-  test("object type", () => {
-    let raw = new RawSQL("select * from table1");
-
-    expect(raw.toFullSQL()).toBe("SELECT * FROM table");
-  });
-
-  test("quick func access", () => {
-    let raw = Query.raw("select * from table1");
-
-    expect(raw.toFullSQL()).toBe("SELECT * FROM table");
-  });
-
-  test("partial select field", () => {
-    let raw = Query.raw("max(age)");
-
-    expect(raw.toFullSQL()).toBe("max(age)");
-  });
-
-  test("random code", () => {
-    let raw = Query.raw("max(age)");
-
-    expect(raw.toFullSQL()).toBe("max(age)");
-  });
-
-  test("where condition numeric", () => {
-    let raw = Query.raw("age > $age", { age: 22 });
-
-    expect(raw.toFullSQL()).toBe("age > 22");
-  });
-
-  test("where condition text", () => {
-    let raw = Query.raw("name like $name", { name: "far%" });
-
-    expect(raw.toFullSQL()).toBe("name like 'far%'");
-  });
-
-  test("as part of select", () => {
+describe("basic select statements", () => {
+  test("where1", () => {
     let query = new Query();
-    query.select(["username", Query.raw("age")]).from("table");
+    query.select("*").from("table").where("col1", "value", { condition: "=" });
 
-    expect(query.toFullSQL()).toBe("SELECT username, age FROM table");
+    expect(query.toFullSQL()).toBe("SELECT * FROM table WHERE col1 = 'value'");
   });
-
-  test("as part of select", () => {
+  test("where2", () => {
     let query = new Query();
-    query.select(["username", Query.raw("count(*)")]).from("table");
+    query.select("*").from("table").where("col1", "value");
 
-    expect(query.toFullSQL()).toBe("SELECT count(*) FROM table");
+    expect(query.toFullSQL()).toBe("SELECT * FROM table WHERE col1 = 'value'");
   });
+  test("where2", () => {
+    let query = new Query();
+    query.select("*").from("table").where("col1", 1234.56);
 
-  test("as part of where", () => {
+    expect(query.toFullSQL()).toBe("SELECT * FROM table WHERE col1 = 1234.56");
+  });
+  test("where2", () => {
     let query = new Query();
     query
       .select("*")
       .from("table")
-      .where(Query.raw("name ilike $name", { name: "FARZAD%" }));
+      .where("col1", "value")
+      .Where("col2", "value2");
 
     expect(query.toFullSQL()).toBe(
-      "SELECT * FROM table WHERE name ilike 'FARZAD%'",
+      "SELECT * FROM table WHERE col1 = 'value' AND col2 = 'value2'",
+    );
+  });
+
+  test("orWhere", () => {
+    let query = new Query();
+    query
+      .select("*")
+      .from("table")
+      .where("col1", "value")
+      .orWhere("col2", "value2");
+
+    expect(query.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE col1 = 'value' OR col2 = 'value2'",
     );
   });
 });
