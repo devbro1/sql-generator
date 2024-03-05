@@ -1,22 +1,28 @@
 export class Query {
-  param_select: string[] = [];
-  param_table: string = "";
-  param_where: any[] = [];
+  nodes = {
+    select: [],
+    table: [],
+    where: [],
+    limit: [],
+    offset: [],
+    order_by: [],
+  };
 
   constructor() {}
 
   public select(selects: string | string[]) {
     if (typeof selects === "string") {
-      let selects2 = selects;
+      let selects2 = { alias: "", field_name: selects };
       let matches = selects.match(
         /"?(?<alias>[a-zA-Z0-9]*)"?\."?(?<var_name>.*)"?/,
       );
       if (matches) {
-        selects2 =
-          '"' + matches.groups?.alias + '".' + matches.groups?.var_name;
+        selects2 = {
+          alias: matches.groups?.alias,
+          field_name: matches.groups?.var_name,
+        };
       }
-
-      this.param_select.push(selects2);
+      this.nodes.select.push(selects2);
     } else if (Array.isArray(selects)) {
       selects.map((a) => {
         this.select(a);
@@ -26,64 +32,174 @@ export class Query {
     return this;
   }
 
-  public from(table: string) {
-    this.param_table = table;
+  public table(table: string) {
+    this.nodes.table.push({ table_name: table });
+    return this;
+  }
 
+  public from(table: string) {
+    this.nodes.table.push({ table_name: table });
     return this;
   }
 
   public where(
-    column: string,
-    value: any,
-    options: object = { condition: "=" },
+    column: string | any[],
+    operation: string = "",
+    value: any = "",
   ) {
-    this.param_where.push({
-      column_name: column,
-      value: value,
-      options: options,
-    });
+    if (typeof column == "string") {
+      this.nodes.where.push({
+        column_name: column,
+        operation: operation,
+        value: value,
+        condition: "AND",
+      });
+    } else if (Array.isArray(column)) {
+      column.map((col) => {
+        this.where(col[0], col[1], col[2]);
+      });
+    }
 
     return this;
   }
 
-  public toFullSQL() {
-    let rc: string[] = [];
-    if (this.param_select.length > 0) {
-      rc.push(
-        "SELECT " +
-          this.param_select.reduce((a, b) => {
-            return a + ", " + b;
-          }),
-      );
-    }
-
-    if (this.param_table) {
-      rc.push("FROM " + this.param_table);
-    }
-
-    if (this.param_where.length) {
-      rc.push("WHERE");
-      this.param_where.map((w) => {
-        let cond = "=";
-        let value = w.value;
-        if (w.options?.condition) {
-          cond = w.options.condition;
-        }
-
-        if (typeof value == "string") {
-          value = "'" + value + "'";
-        } else if (typeof value == "number") {
-          value = value;
-        } else {
-        }
-        rc.push(w.column_name + " " + cond + " " + value);
+  public orWhere(
+    column: string | any[],
+    operation: string = "",
+    value: any = "",
+  ) {
+    if (typeof column == "string") {
+      this.nodes.where.push({
+        column_name: column,
+        operation: operation,
+        value: value,
+        condition: "OR",
+      });
+    } else if (Array.isArray(column)) {
+      column.map((col) => {
+        this.where(col[0], col[1], col[2]);
       });
     }
 
-    let rc_str = "";
-    rc_str = rc.reduce((a, b) => {
-      return a + " " + b;
+    return this;
+  }
+
+  public whereIn(column: string, values: any[]) {
+    this.nodes.where.push({
+      column_name: column,
+      operation: "IN",
+      value: values,
+      condition: "AND",
     });
+    return this;
+  }
+
+  public whereBetween(column: string, values: any[]) {
+    this.nodes.where.push({
+      column_name: column,
+      operation: "BETWEEN",
+      value: values,
+      condition: "AND",
+    });
+    return this;
+  }
+
+  public limit(limit: number) {
+    this.nodes.limit = [{ limit: limit }];
+    return this;
+  }
+
+  public offset(offset: number) {
+    this.nodes.offset = [{ offset: offset }];
+    return this;
+  }
+
+  public escape(value: any) {
+    if (typeof value == "string") {
+      return "'" + value.replace(/'/g, "\\'") + "'";
+    } else if (typeof value == "number") {
+      return value;
+    } else if (Array.isArray(value)) {
+      let rc = "ARRAY[";
+      let count = 0;
+      value.map((v) => {
+        if (count) {
+          rc += ", ";
+        }
+        rc += this.escape(v);
+        count++;
+      });
+      rc += "]";
+      return rc;
+    }
+  }
+
+  public toFullSQL() {
+    let rc: string[] = [];
+    if (this.nodes.select.length > 0) {
+      rc.push("SELECT");
+      let select_fields = "";
+      this.nodes.select.map((field) => {
+        if (select_fields.length > 0) {
+          select_fields += ", ";
+        }
+
+        if (typeof field == "object") {
+          if (field?.alias) {
+            select_fields += '"' + field?.alias + '".';
+          }
+          select_fields += field?.field_name;
+        }
+      });
+
+      rc.push(select_fields);
+    }
+
+    if (this.nodes.table) {
+      rc.push("FROM " + this.nodes.table[0].table_name);
+    }
+
+    if (this.nodes.where.length) {
+      rc.push("WHERE");
+      let condition_count = 0;
+      this.nodes.where.map((w) => {
+        let value = this.escape(w.value);
+
+        if (0 < condition_count) {
+          rc.push(w.condition);
+        }
+        if (w.operation == "IN") {
+          rc.push(w.column_name + " = ANY(" + value + ")");
+        } else if (w.operation == "BETWEEN") {
+          rc.push(
+            w.column_name +
+              " BETWEEN " +
+              this.escape(w.value[0]) +
+              " AND " +
+              this.escape(w.value[1]),
+          );
+        } else {
+          rc.push(w.column_name + " " + w.operation + " " + value);
+        }
+
+        condition_count++;
+      });
+    }
+
+    if (this.nodes.limit.length) {
+      rc.push("LIMIT " + this.nodes.limit[0].limit);
+    }
+
+    if (this.nodes.offset.length) {
+      rc.push("OFFSET " + this.nodes.offset[0].offset);
+    }
+
+    let rc_str = "";
+    if (rc.length) {
+      rc_str = rc.reduce((a, b) => {
+        return a + " " + b;
+      });
+    }
 
     return rc_str;
   }
