@@ -39,14 +39,21 @@ export class Query {
     return this;
   }
 
-  public table(table: string) {
-    this.nodes.table.push({ table_name: table });
+  public table(table: string | RawSQL) {
+    if (typeof table === "string") {
+      this.nodes.table.push({ table_name: table });
+    } else if (
+      typeof table === "object" &&
+      column.constructor.name === "RawSQL"
+    ) {
+      this.nodes.table.push({ raw: table });
+    }
+
     return this;
   }
 
-  public from(table: string) {
-    this.nodes.table.push({ table_name: table });
-    return this;
+  public from(table: string | RawSQL) {
+    return this.table(table);
   }
 
   public where(
@@ -164,8 +171,13 @@ export class Query {
       rc.push(select_fields);
     }
 
-    if (this.nodes.table) {
-      rc.push("FROM " + this.nodes.table[0].table_name);
+    if (this.nodes.table.length) {
+      rc.push("FROM");
+      if (this.nodes.table[0].raw?.constructor.name === "RawSQL") {
+        rc.push(this.nodes.table[0].raw?.toFullSQL());
+      } else {
+        rc.push(this.nodes.table[0].table_name);
+      }
     }
 
     if (this.nodes.where.length) {

@@ -70,4 +70,11 @@ describe("raw queries", () => {
       "SELECT * FROM table WHERE name ilike 'FARZAD%'",
     );
   });
+
+  test("custom from", () => {
+    let query = new Query();
+    query.select("*").from(Query.raw("(select * from table1) t1"));
+
+    expect(query.toFullSQL()).toBe("SELECT * FROM (select * from table1) t1");
+  });
 });
