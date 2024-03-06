@@ -1,10 +1,13 @@
 import { RawSQL } from "./Raw";
+import { DefaultDB } from "./DefaultDB";
 
 export class Query {
   nodes = {
     select: [],
     table: [],
     where: [],
+    group_by: [],
+    having: [],
     limit: [],
     offset: [],
     order_by: [],
@@ -116,6 +119,18 @@ export class Query {
     return this;
   }
 
+  public groupBy(column: RawSQL) {
+    this.nodes.group_by.push({ raw: column });
+
+    return this;
+  }
+
+  public having(having: RawSQL) {
+    this.nodes.having.push({ raw: having });
+
+    return this;
+  }
+
   public limit(limit: number) {
     this.nodes.limit = [{ limit: limit }];
     return this;
@@ -124,26 +139,6 @@ export class Query {
   public offset(offset: number) {
     this.nodes.offset = [{ offset: offset }];
     return this;
-  }
-
-  public escape(value: any) {
-    if (typeof value == "string") {
-      return "'" + value.replace(/'/g, "\\'") + "'";
-    } else if (typeof value == "number") {
-      return value;
-    } else if (Array.isArray(value)) {
-      let rc = "ARRAY[";
-      let count = 0;
-      value.map((v) => {
-        if (count) {
-          rc += ", ";
-        }
-        rc += this.escape(v);
-        count++;
-      });
-      rc += "]";
-      return rc;
-    }
   }
 
   public toFullSQL() {
@@ -177,7 +172,7 @@ export class Query {
       rc.push("WHERE");
       let condition_count = 0;
       this.nodes.where.map((w) => {
-        let value = this.escape(w.value);
+        let value = DefaultDB.escape(w.value);
 
         if (0 < condition_count) {
           rc.push(w.condition);
@@ -191,9 +186,9 @@ export class Query {
           rc.push(
             w.column_name +
               " BETWEEN " +
-              this.escape(w.value[0]) +
+              DefaultDB.escape(w.value[0]) +
               " AND " +
-              this.escape(w.value[1]),
+              DefaultDB.escape(w.value[1]),
           );
         } else {
           rc.push(w.column_name + " " + w.operation + " " + value);
@@ -201,6 +196,16 @@ export class Query {
 
         condition_count++;
       });
+    }
+
+    if (this.nodes.group_by.length) {
+      rc.push("GROUP BY");
+      rc.push(this.nodes.group_by[0].raw.toFullSQL());
+    }
+
+    if (this.nodes.having.length) {
+      rc.push("HAVING");
+      rc.push(this.nodes.having[0].raw.toFullSQL());
     }
 
     if (this.nodes.limit.length) {

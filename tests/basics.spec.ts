@@ -39,4 +39,17 @@ describe("basic select statements", () => {
 
     expect(query.toFullSQL()).toBe("SELECT * FROM table LIMIT 111 OFFSET 222");
   });
+
+  test("groupby and having", () => {
+    let query = new Query();
+    query
+      .select(["product_id", Query.raw("SUM(quantity) AS total_quantity")])
+      .from("sales")
+      .groupBy(Query.raw("product_id"))
+      .having(Query.raw("SUM(quantity) > 100"));
+
+    expect(query.toFullSQL()).toBe(
+      "SELECT product_id, SUM(quantity) AS total_quantity FROM sales GROUP BY product_id HAVING SUM(quantity) > 100",
+    );
+  });
 });

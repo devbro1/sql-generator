@@ -1,3 +1,5 @@
+import { DefaultDB } from "./DefaultDB";
+
 export class RawSQL {
   sql = "";
   bindings = {};
@@ -10,7 +12,7 @@ export class RawSQL {
     let rc = this.sql;
 
     Object.entries(this.bindings).map(([key, value]) => {
-      rc = rc.replace("$" + key, value.toString());
+      rc = rc.replace("$" + key, DefaultDB.escape(value));
     });
 
     return rc;

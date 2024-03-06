@@ -42,7 +42,7 @@ describe("raw queries", () => {
     let query = new Query();
     query.select(Query.raw("age")).from("table");
 
-    expect(query.toFullSQL()).toBe("SELECT username, age FROM table");
+    expect(query.toFullSQL()).toBe("SELECT age FROM table");
   });
 
   test("as part of select", () => {
@@ -56,7 +56,7 @@ describe("raw queries", () => {
     let query = new Query();
     query.select(["username", Query.raw("count(*)")]).from("table");
 
-    expect(query.toFullSQL()).toBe("SELECT count(*) FROM table");
+    expect(query.toFullSQL()).toBe("SELECT username, count(*) FROM table");
   });
 
   test("as part of where", () => {
