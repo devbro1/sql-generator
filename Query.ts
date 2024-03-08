@@ -1,11 +1,25 @@
 import { RawSQL } from "./Raw";
 import { DefaultDB } from "./DefaultDB";
+import { ConditionClause, operation } from "./ConditionClause";
+
+type node = {
+  select: any[];
+  table: any[];
+  joins: any[];
+  where: ConditionClause;
+  group_by: any[];
+  having: any[];
+  limit: any[];
+  offset: any[];
+  order_by: any[];
+};
 
 export class Query {
-  nodes = {
+  nodes: node = {
     select: [],
     table: [],
-    where: [],
+    joins: [],
+    where: new ConditionClause(),
     group_by: [],
     having: [],
     limit: [],
@@ -44,7 +58,7 @@ export class Query {
       this.nodes.table.push({ table_name: table });
     } else if (
       typeof table === "object" &&
-      column.constructor.name === "RawSQL"
+      table.constructor.name === "RawSQL"
     ) {
       this.nodes.table.push({ raw: table });
     }
@@ -56,18 +70,103 @@ export class Query {
     return this.table(table);
   }
 
+  public join(table: string, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      table: table,
+      type: "TABLE_JOIN",
+      join_type: "JOIN",
+      on: join_on,
+    });
+  }
+
+  public innerJoin(table: string, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      table: table,
+      type: "TABLE_JOIN",
+      join_type: "INNER JOIN",
+      on: join_on,
+    });
+  }
+
+  public outerJoin(table: string, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      table: table,
+      type: "TABLE_JOIN",
+      join_type: "OUTER JOIN",
+      on: join_on,
+    });
+  }
+
+  public leftJoin(table: string, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      table: table,
+      type: "TABLE_JOIN",
+      join_type: "LEFT JOIN",
+      on: join_on,
+    });
+  }
+
+  public rightJoin(table: string, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      table: table,
+      type: "TABLE_JOIN",
+      join_type: "RIGHT JOIN",
+      on: join_on,
+    });
+  }
+
+  public fullJoin(table: string, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      table: table,
+      type: "TABLE_JOIN",
+      join_type: "FULL JOIN",
+      on: join_on,
+    });
+  }
+
+  public joinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      raw: raw,
+      type: "RAW_JOIN",
+      join_type: "JOIN",
+      on: join_on,
+    });
+  }
+
+  public innerJoinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      raw: raw,
+      type: "RAW_JOIN",
+      join_type: "INNER JOIN",
+      on: join_on,
+    });
+  }
+
+  public leftJoinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      raw: raw,
+      type: "RAW_JOIN",
+      join_type: "LEFT JOIN",
+      on: join_on,
+    });
+  }
+
+  public rightJoinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+    this.nodes.joins.push({
+      raw: raw,
+      type: "RAW_JOIN",
+      join_type: "RIGHT JOIN",
+      on: join_on,
+    });
+  }
+
   public where(
     column: string | any[] | RawSQL,
-    operation: string = "",
+    operation: operation = "=",
     value: any = "",
   ) {
     if (typeof column == "string") {
-      this.nodes.where.push({
-        column_name: column,
-        operation: operation,
-        value: value,
-        condition: "AND",
-      });
+      this.nodes.where.and(column, operation, value);
     } else if (Array.isArray(column)) {
       column.map((col) => {
         this.where(col[0], col[1], col[2]);
@@ -76,10 +175,7 @@ export class Query {
       typeof column == "object" &&
       column.constructor.name === "RawSQL"
     ) {
-      this.nodes.where.push({
-        raw: column,
-        condition: "AND",
-      });
+      this.nodes.where.andRaw(column);
     }
 
     return this;
@@ -87,16 +183,11 @@ export class Query {
 
   public orWhere(
     column: string | any[],
-    operation: string = "",
+    operation: operation = "=",
     value: any = "",
   ) {
     if (typeof column == "string") {
-      this.nodes.where.push({
-        column_name: column,
-        operation: operation,
-        value: value,
-        condition: "OR",
-      });
+      this.nodes.where.or(column, operation, value);
     } else if (Array.isArray(column)) {
       column.map((col) => {
         this.where(col[0], col[1], col[2]);
@@ -107,22 +198,12 @@ export class Query {
   }
 
   public whereIn(column: string, values: any[]) {
-    this.nodes.where.push({
-      column_name: column,
-      operation: "IN",
-      value: values,
-      condition: "AND",
-    });
+    this.nodes.where.and(column, "IN", values);
     return this;
   }
 
   public whereBetween(column: string, values: any[]) {
-    this.nodes.where.push({
-      column_name: column,
-      operation: "BETWEEN",
-      value: values,
-      condition: "AND",
-    });
+    this.nodes.where.and(column, "BETWEEN", values);
     return this;
   }
 
@@ -180,34 +261,24 @@ export class Query {
       }
     }
 
-    if (this.nodes.where.length) {
-      rc.push("WHERE");
-      let condition_count = 0;
-      this.nodes.where.map((w) => {
-        let value = DefaultDB.escape(w.value);
-
-        if (0 < condition_count) {
-          rc.push(w.condition);
+    if (this.nodes.joins.length) {
+      this.nodes.joins.map((join) => {
+        rc.push(join.join_type);
+        if (join.type === "TABLE_JOIN") {
+          rc.push(join.table);
+        } else if (join.type === "RAW_JOIN") {
+          rc.push(join.raw.toFullSQL());
         }
-
-        if (w.raw?.constructor.name === "RawSQL") {
-          rc.push(w.raw.toFullSQL());
-        } else if (w.operation == "IN") {
-          rc.push(w.column_name + " = ANY(" + value + ")");
-        } else if (w.operation == "BETWEEN") {
-          rc.push(
-            w.column_name +
-              " BETWEEN " +
-              DefaultDB.escape(w.value[0]) +
-              " AND " +
-              DefaultDB.escape(w.value[1]),
-          );
-        } else {
-          rc.push(w.column_name + " " + w.operation + " " + value);
-        }
-
-        condition_count++;
+        rc.push("ON");
+        let on_condition = new ConditionClause();
+        join.on(on_condition);
+        rc.push(on_condition.toFullSQL());
       });
+    }
+
+    if (this.nodes.where.length()) {
+      rc.push("WHERE");
+      rc.push(this.nodes.where.toFullSQL());
     }
 
     if (this.nodes.group_by.length) {
