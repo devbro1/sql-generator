@@ -2,69 +2,64 @@ import { describe, expect, test } from "@jest/globals";
 import { Query, RawSQL } from "../index";
 
 describe("raw queries", () => {
-  test("object type", () => {
-    let raw = new RawSQL("select * from table");
-
-    expect(raw.toFullSQL()).toBe("select * from table");
+  let query;
+  beforeEach(() => {
+    query = new Query({client:"postgresql", connection:{}});
   });
 
   test("quick func access", () => {
-    let raw = Query.raw("select * from table");
+    let raw = query.raw("select * from table");
 
     expect(raw.toFullSQL()).toBe("select * from table");
   });
 
   test("partial select field", () => {
-    let raw = Query.raw("max(age)");
+    let raw = query.raw("max(age)");
 
     expect(raw.toFullSQL()).toBe("max(age)");
   });
 
   test("random code", () => {
-    let raw = Query.raw("max(age)");
+    let raw = query.raw("max(age)");
 
     expect(raw.toFullSQL()).toBe("max(age)");
   });
 
   test("where condition numeric", () => {
-    let raw = Query.raw("age > $age", { age: 22 });
+    let raw = query.raw("age > $age", { age: 22 });
 
     expect(raw.toFullSQL()).toBe("age > 22");
   });
 
   test("where condition text", () => {
-    let raw = Query.raw("name like $name", { name: "far%" });
+    let raw = query.raw("name like $name", { name: "far%" });
 
     expect(raw.toFullSQL()).toBe("name like 'far%'");
   });
 
   test("as part of select", () => {
-    let query = new Query();
-    query.select(Query.raw("age")).from("table");
+    query.select(query.raw("age")).from("table");
 
     expect(query.toFullSQL()).toBe("SELECT age FROM table");
   });
 
   test("as part of select", () => {
-    let query = new Query();
-    query.select(["username", Query.raw("age")]).from("table");
+    query.select(["username", query.raw("age")]).from("table");
 
     expect(query.toFullSQL()).toBe("SELECT username, age FROM table");
   });
 
   test("as part of select", () => {
-    let query = new Query();
-    query.select(["username", Query.raw("count(*)")]).from("table");
+    query.select(["username", query.raw("count(*)")]).from("table");
 
     expect(query.toFullSQL()).toBe("SELECT username, count(*) FROM table");
   });
 
   test("as part of where", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table")
-      .where(Query.raw("name ilike $name", { name: "FARZAD%" }));
+      .where(query.raw("name ilike $name", { name: "FARZAD%" }));
 
     expect(query.toFullSQL()).toBe(
       "SELECT * FROM table WHERE name ilike 'FARZAD%'",
@@ -72,8 +67,7 @@ describe("raw queries", () => {
   });
 
   test("custom from", () => {
-    let query = new Query();
-    query.select("*").from(Query.raw("(select * from table1) t1"));
+    query.select("*").from(query.raw("(select * from table1) t1"));
 
     expect(query.toFullSQL()).toBe("SELECT * FROM (select * from table1) t1");
   });

@@ -2,15 +2,18 @@ import { describe, expect, test } from "@jest/globals";
 import { Query } from "../index";
 
 describe("where clause", () => {
+  let query;
+  beforeEach(() => {
+    query = new Query({client:"postgresql", connection:{}});
+  });
+
   test("where 1", () => {
-    let query = new Query();
     query.select("*").from("table").where("col1", "=", "value");
 
     expect(query.toFullSQL()).toBe("SELECT * FROM table WHERE col1 = 'value'");
   });
 
   test("where 2", () => {
-    let query = new Query();
     query.select("*").from("table").whereIn("col1", [1, 2, 3, 4]);
 
     expect(query.toFullSQL()).toBe(
@@ -19,7 +22,6 @@ describe("where clause", () => {
   });
 
   test("where 3", () => {
-    let query = new Query();
     query.select("*").from("table").whereBetween("col1", [111, 222]);
 
     expect(query.toFullSQL()).toBe(
@@ -28,7 +30,6 @@ describe("where clause", () => {
   });
 
   test("where 4", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table")
@@ -42,7 +43,6 @@ describe("where clause", () => {
     );
   });
   test("where 5", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table")
@@ -55,7 +55,6 @@ describe("where clause", () => {
   });
 
   test("orWhere", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table")

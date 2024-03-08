@@ -1,6 +1,6 @@
 import { RawSQL } from "./Raw";
-import { DefaultDB } from "./DefaultDB";
 import { ConditionClause, operation } from "./ConditionClause";
+import { Postgresql } from "./databases/postgresql";
 
 type node = {
   select: any[];
@@ -15,11 +15,12 @@ type node = {
 };
 
 export class Query {
+  client;
   nodes: node = {
     select: [],
     table: [],
     joins: [],
-    where: new ConditionClause(),
+    where: new ConditionClause({}),
     group_by: [],
     having: [],
     limit: [],
@@ -27,7 +28,17 @@ export class Query {
     order_by: [],
   };
 
-  constructor() {}
+  constructor(options) {
+    if(options.client === 'postgresql') {
+      this.client = new Postgresql(options.connection);
+    }
+    else
+    {
+      throw Error("no client is implemented for " + options.client)
+    }
+
+    this.nodes.where = new ConditionClause(this.client);
+  }
 
   public select(selects: string | any[] | RawSQL) {
     if (typeof selects === "string") {
@@ -270,7 +281,7 @@ export class Query {
           rc.push(join.raw.toFullSQL());
         }
         rc.push("ON");
-        let on_condition = new ConditionClause();
+        let on_condition = new ConditionClause(this.client);
         join.on(on_condition);
         rc.push(on_condition.toFullSQL());
       });
@@ -304,7 +315,9 @@ export class Query {
     return rc.join(" ");
   }
 
-  public static raw(sql, bindings = {}) {
-    return new RawSQL(sql, bindings);
+  public raw(sql, bindings = {}) {
+    let rc = new RawSQL(this.client);
+    rc.set(sql, bindings);
+    return rc;
   }
 }

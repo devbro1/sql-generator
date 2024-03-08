@@ -1,5 +1,4 @@
 import { RawSQL } from "./Raw";
-import { DefaultDB } from "./DefaultDB";
 
 export type operation =
   | "="
@@ -32,6 +31,12 @@ type options = {
 
 export class ConditionClause {
   nodes: node[] = [];
+
+  client;
+
+  constructor(client) {
+    this.client = client;
+  }
 
   public length() {
     return this.nodes.length;
@@ -89,7 +94,7 @@ export class ConditionClause {
     let rc: string[] = [];
     let condition_count = 0;
     this.nodes.map((w: node) => {
-      let value = DefaultDB.escape(w.value);
+      let value = this.client.escape(w.value);
 
       if (0 < condition_count) {
         rc.push(w.join_condition);
@@ -105,9 +110,9 @@ export class ConditionClause {
         rc.push(
           w.column_name +
             " BETWEEN " +
-            DefaultDB.escape(w.value[0]) +
+            this.client.escape(w.value[0]) +
             " AND " +
-            DefaultDB.escape(w.value[1]),
+            this.client.escape(w.value[1]),
         );
       } else {
         rc.push(w.column_name + " " + w.operation + " " + value);

@@ -3,8 +3,12 @@ import { Query } from "../index";
 import { ConditionClause } from "../ConditionClause";
 
 describe("joins", () => {
+  let query;
+  beforeEach(() => {
+    query = new Query({client:"postgresql", connection:{}});
+  });
+
   test("join", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
@@ -18,7 +22,6 @@ describe("joins", () => {
   });
 
   test("inner join", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
@@ -32,7 +35,7 @@ describe("joins", () => {
   });
 
   test("left join", () => {
-    let query = new Query();
+
     query
       .select("*")
       .from("table1")
@@ -46,7 +49,6 @@ describe("joins", () => {
   });
 
   test("right join", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
@@ -60,7 +62,6 @@ describe("joins", () => {
   });
 
   test("full join", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
@@ -74,12 +75,11 @@ describe("joins", () => {
   });
 
   test("join subquery", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
       .joinSub(
-        Query.raw("(select * from table2) t2"),
+        query.raw("(select * from table2) t2"),
         (join: ConditionClause) => {
           join.andColumn("table1.col1", "=", "t2.col2");
         },
@@ -91,12 +91,11 @@ describe("joins", () => {
   });
 
   test("join subquery 2", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
       .joinSub(
-        Query.raw("(select * from table2) t2"),
+        query.raw("(select * from table2) t2"),
         (join: ConditionClause) => {
           join.andColumn("table1.col1", "=", "t2.col1");
           join.andColumn("table1.col2", "=", "t2.col2");
@@ -111,12 +110,12 @@ describe("joins", () => {
   });
 
   test("inner join subquery", () => {
-    let query = new Query();
+
     query
       .select("*")
       .from("table1")
       .innerJoinSub(
-        Query.raw("(select * from table2) t2"),
+        query.raw("(select * from table2) t2"),
         (join: ConditionClause) => {
           join.andColumn("table1.col1", "=", "t2.col2");
         },
@@ -128,12 +127,11 @@ describe("joins", () => {
   });
 
   test("left join subquery", () => {
-    let query = new Query();
     query
       .select("*")
       .from("table1")
       .leftJoinSub(
-        Query.raw("(select * from table2) t2"),
+        query.raw("(select * from table2) t2"),
         (join: ConditionClause) => {
           join.andColumn("table1.col1", "=", "t2.col2");
         },
@@ -145,12 +143,12 @@ describe("joins", () => {
   });
 
   test("right join subquery", () => {
-    let query = new Query();
+
     query
       .select("*")
       .from("table1")
       .rightJoinSub(
-        Query.raw("(select * from table2) t2"),
+        query.raw("(select * from table2) t2"),
         (join: ConditionClause) => {
           join.andColumn("table1.col1", "=", "t2.col2");
         },
