@@ -292,21 +292,16 @@ export class Query {
     }
 
     if (this.nodes.limit.length) {
-      rc.push("LIMIT " + this.nodes.limit[0].limit);
+      rc.push("LIMIT");
+      rc.push(this.nodes.limit[0].limit);
     }
 
     if (this.nodes.offset.length) {
-      rc.push("OFFSET " + this.nodes.offset[0].offset);
+      rc.push("OFFSET");
+      rc.push(this.nodes.offset[0].offset);
     }
 
-    let rc_str = "";
-    if (rc.length) {
-      rc_str = rc.reduce((a, b) => {
-        return a + " " + b;
-      });
-    }
-
-    return rc_str;
+    return rc.join(" ");
   }
 
   public static raw(sql, bindings = {}) {
