@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query, RawSQL } from "../index";
+import { Query, RawSQL } from "../../index";
 
 describe("raw queries", () => {
   let query;
@@ -38,37 +38,37 @@ describe("raw queries", () => {
   });
 
   test("as part of select", () => {
-    query.select(query.raw("age")).from("table");
+    let qb = query.select(query.raw("age")).from("table");
 
-    expect(query.toFullSQL()).toBe("SELECT age FROM table");
+    expect(qb.toFullSQL()).toBe("SELECT age FROM table");
   });
 
   test("as part of select", () => {
-    query.select(["username", query.raw("age")]).from("table");
+    let qb = query.select(["username", query.raw("age")]).from("table");
 
-    expect(query.toFullSQL()).toBe("SELECT username, age FROM table");
+    expect(qb.toFullSQL()).toBe("SELECT username, age FROM table");
   });
 
   test("as part of select", () => {
-    query.select(["username", query.raw("count(*)")]).from("table");
+    let qb = query.select(["username", query.raw("count(*)")]).from("table");
 
-    expect(query.toFullSQL()).toBe("SELECT username, count(*) FROM table");
+    expect(qb.toFullSQL()).toBe("SELECT username, count(*) FROM table");
   });
 
   test("as part of where", () => {
-    query
+    let qb = query
       .select("*")
       .from("table")
       .where(query.raw("name ilike $name", { name: "FARZAD%" }));
 
-    expect(query.toFullSQL()).toBe(
+    expect(qb.toFullSQL()).toBe(
       "SELECT * FROM table WHERE name ilike 'FARZAD%'",
     );
   });
 
   test("custom from", () => {
-    query.select("*").from(query.raw("(select * from table1) t1"));
+    let qb = query.select("*").from(query.raw("(select * from table1) t1"));
 
-    expect(query.toFullSQL()).toBe("SELECT * FROM (select * from table1) t1");
+    expect(qb.toFullSQL()).toBe("SELECT * FROM (select * from table1) t1");
   });
 });

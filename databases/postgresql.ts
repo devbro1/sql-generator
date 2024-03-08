@@ -1,14 +1,11 @@
+import {escapeIdentifier, escapeLiteral} from 'pg/lib/utils';
 export class Postgresql {
     constructor(options) {
         
     }
 
-    public escape(value: any): string {
-      if (typeof value == "string") {
-        return "'" + value.replace(/'/g, "\\'") + "'";
-      } else if (typeof value == "number") {
-        return value.toString();
-      } else if (Array.isArray(value)) {
+    public escape(value: string | number | any[]): string {
+      if (Array.isArray(value)) {
         let rc = "ARRAY[";
         let count = 0;
         value.map((v) => {
@@ -21,6 +18,15 @@ export class Postgresql {
         rc += "]";
         return rc;
       }
+      else if (typeof value == "string") {
+        return escapeLiteral(value);
+      } else if (typeof value == "number") {
+        return value.toString();
+      }
+    }
+
+    escapeIdentifier(identifier: string) {
+      return escapeIdentifier(identifier);
     }
   }
   
