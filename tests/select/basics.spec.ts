@@ -4,10 +4,9 @@ import { Query } from "../../index";
 describe("basic select statements", () => {
   let query;
   beforeEach(() => {
-    query = new Query({client:"postgresql", connection:{}});
+    query = new Query({ client: "postgresql", connection: {} });
   });
   test("basic select", () => {
-    
     let qb = query.select("*").from("table");
 
     expect(qb.toFullSQL()).toBe("SELECT * FROM table");
@@ -29,13 +28,11 @@ describe("basic select statements", () => {
     let qb = query.select("*").from("table").limit(100);
 
     expect(qb.toFullSQL()).toBe("SELECT * FROM table LIMIT 100");
-
   });
   test("basic select limit and offset 2", () => {
     let qb = query.select("*").from("table").offset(100);
 
     expect(qb.toFullSQL()).toBe("SELECT * FROM table OFFSET 100");
-
   });
   test("basic select limit and offset 3", () => {
     let qb = query.select("*").from("table").limit(111).offset(222);

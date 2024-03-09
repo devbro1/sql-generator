@@ -1,40 +1,45 @@
 export class InsertQueryBuilder {
-    client;
-    nodes = {
-        table:"",
-        values: {},
-    };
+  client;
+  nodes = {
+    table: "",
+    values: {},
+  };
 
-    constructor(client) {
-        this.client = client;
-    }
-    
-    public table(table: string) {
-        this.nodes.table = table;
+  constructor(client) {
+    this.client = client;
+  }
 
-        return this;
-    }
+  public table(table: string) {
+    this.nodes.table = table;
 
-    public values(values: object) {
-        this.nodes.values = values;
+    return this;
+  }
 
-        return this;
-    }
+  public values(values: object) {
+    this.nodes.values = values;
 
-    public toFullSQL(): string {
-        let rc = [];
+    return this;
+  }
 
-        rc.push("INSERT INTO");
-        rc.push(this.nodes.table);
-        rc.push("(");
-        rc.push(Object.keys(this.nodes.values).map(this.client.escapeIdentifier).join(", "))
-        rc.push(")");
-        rc.push("VALUES");
-        rc.push("(");
-        rc.push(Object.values(this.nodes.values).map(this.client.escape).join(", "))
-        rc.push(")");
-        
+  public toFullSQL(): string {
+    let rc = [];
 
-        return rc.join(" ");
-    }
+    rc.push("INSERT INTO");
+    rc.push(this.nodes.table);
+    rc.push("(");
+    rc.push(
+      Object.keys(this.nodes.values)
+        .map(this.client.escapeIdentifier)
+        .join(", "),
+    );
+    rc.push(")");
+    rc.push("VALUES");
+    rc.push("(");
+    rc.push(
+      Object.values(this.nodes.values).map(this.client.escape).join(", "),
+    );
+    rc.push(")");
+
+    return rc.join(" ");
+  }
 }

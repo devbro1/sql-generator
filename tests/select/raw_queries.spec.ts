@@ -4,7 +4,7 @@ import { Query, RawSQL } from "../../index";
 describe("raw queries", () => {
   let query;
   beforeEach(() => {
-    query = new Query({client:"postgresql", connection:{}});
+    query = new Query({ client: "postgresql", connection: {} });
   });
 
   test("quick func access", () => {

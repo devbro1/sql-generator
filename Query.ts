@@ -33,12 +33,10 @@ export class Query {
   };
 
   constructor(options) {
-    if(options.client === 'postgresql') {
+    if (options.client === "postgresql") {
       this.client = new Postgresql(options.connection);
-    }
-    else
-    {
-      throw Error("no client is implemented for " + options.client)
+    } else {
+      throw Error("no client is implemented for " + options.client);
     }
 
     this.nodes.where = new ConditionClause(this.client);

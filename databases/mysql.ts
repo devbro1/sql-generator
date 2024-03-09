@@ -1,13 +1,13 @@
-import { Client } from "pg";
 import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
+import mysql_lib from "nodejs-mysql";
+const sqlstring = require("sqlstring");
 
-export class Postgresql implements database {
-  client;
+export class mysql implements database {
+  connection;
   constructor(options) {
-    const client = new Client();
-    client.connect().then(() => {});
-    this.client = client;
+    const connection = mysql_lib.getInstance(options);
+    this.connection = connection;
   }
 
   public escape(value: string | number | any[]): string {
@@ -24,17 +24,17 @@ export class Postgresql implements database {
       rc += "]";
       return rc;
     } else if (typeof value == "string") {
-      return escapeLiteral(value);
+      return sqlstring.escapeLiteral(value);
     } else if (typeof value == "number") {
       return value.toString();
     }
   }
 
   escapeIdentifier(identifier: string) {
-    return escapeIdentifier(identifier);
+    return sqlstring.escapeId(identifier);
   }
 
   public query(sql: string) {
-    return this.client.query(sql);
+    return this.connection.exec(sql);
   }
 }
