@@ -19,7 +19,7 @@ describe("basic insert statements", () => {
     let qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
-      .returning('id');
+      .returning("id");
     expect(qb.toFullSQL()).toBe(
       'INSERT INTO table1 ( "col1", "col2", "col3" ) VALUES ( \'val1\', \'val2\', 333 ) RETURNING id',
     );
@@ -29,7 +29,7 @@ describe("basic insert statements", () => {
     let qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
-      .returning('col1 as id');
+      .returning("col1 as id");
     expect(qb.toFullSQL()).toBe(
       'INSERT INTO table1 ( "col1", "col2", "col3" ) VALUES ( \'val1\', \'val2\', 333 ) RETURNING col1 as id',
     );
@@ -39,7 +39,7 @@ describe("basic insert statements", () => {
     let qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
-      .returning(['id', 'name', 'email']);
+      .returning(["id", "name", "email"]);
     expect(qb.toFullSQL()).toBe(
       'INSERT INTO table1 ( "col1", "col2", "col3" ) VALUES ( \'val1\', \'val2\', 333 ) RETURNING id, name, email',
     );

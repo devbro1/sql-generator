@@ -22,14 +22,10 @@ export class InsertQueryBuilder {
     return this;
   }
 
-  public returning(columns: string | string[])
-  {
-    if(typeof columns === 'string')
-    {
+  public returning(columns: string | string[]) {
+    if (typeof columns === "string") {
       this.nodes.returning.push(columns);
-    }
-    else if(Array.isArray(columns))
-    {
+    } else if (Array.isArray(columns)) {
       this.nodes.returning.push(...columns);
     }
 
@@ -55,8 +51,7 @@ export class InsertQueryBuilder {
     );
     rc.push(")");
 
-    if(this.nodes.returning.length)
-    {
+    if (this.nodes.returning.length) {
       rc.push("RETURNING");
       rc.push(this.nodes.returning.join(", "));
     }

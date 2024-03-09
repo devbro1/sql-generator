@@ -34,7 +34,7 @@ export class TestDB implements database {
 
   public query(sql: string) {
     return new Promise((resolve, reject) => {
-        resolve("foo");
+      resolve("foo");
     });
   }
 }

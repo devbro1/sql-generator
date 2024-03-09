@@ -37,11 +37,9 @@ export class Query {
   constructor(options) {
     if (options.client === "postgresql") {
       this.client = new Postgresql(options.connection);
-    }
-    else if (options.client === "mysql" ) {
+    } else if (options.client === "mysql") {
       this.client = new mysql(options.connection);
-    }
-    else if (options.client === "test" ) {
+    } else if (options.client === "test") {
       this.client = new TestDB(options.connection);
     } else {
       throw Error("no client is implemented for " + options.client);
