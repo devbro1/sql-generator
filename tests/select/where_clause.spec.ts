@@ -4,7 +4,7 @@ import { Query } from "../../index";
 describe("where clause", () => {
   let query;
   beforeEach(() => {
-    query = new Query({ client: "test", connection: {} });
+    query = new Query({ client: "postgresql", connection: {} });
   });
 
   test("where 1", () => {
