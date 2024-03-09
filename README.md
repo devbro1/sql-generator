@@ -5,14 +5,14 @@
 
 Inspired by laravel, this is my attempt to create a create an ORM for javascript and nodejs that has all the features.
 
-for documentation please check [](https://devbro1.github.io/sql-generator/)
+for documentation please check [documentations](https://devbro1.github.io/sql-generator/)
 
 For quick code examples please checkout tests.
 
 
 ## report bugs or suggestions
 for bugs or suggestions please submit issues in github:
-[](https://github.com/devbro1/sql-generator/issues)
+[github issues](https://github.com/devbro1/sql-generator/issues)
 
 Please consider adding sample codes that I can test.
 
