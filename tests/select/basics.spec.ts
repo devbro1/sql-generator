@@ -4,7 +4,7 @@ import { Query } from "../../index";
 describe("basic select statements", () => {
   let query;
   beforeEach(() => {
-    query = new Query({ client: "postgresql", connection: {} });
+    query = new Query({ client: "test", connection: {} });
   });
   test("basic select", () => {
     let qb = query.select("*").from("table");

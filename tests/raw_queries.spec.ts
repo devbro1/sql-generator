@@ -1,10 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query, RawSQL } from "../../index";
+import { Query, RawSQL } from "../index";
 
 describe("raw queries", () => {
   let query;
   beforeEach(() => {
-    query = new Query({ client: "postgresql", connection: {} });
+    query = new Query({ client: "test", connection: {} });
   });
 
   test("quick func access", () => {

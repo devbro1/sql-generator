@@ -5,7 +5,7 @@ import { ConditionClause } from "../../ConditionClause";
 describe("joins", () => {
   let query;
   beforeEach(() => {
-    query = new Query({ client: "postgresql", connection: {} });
+    query = new Query({ client: "test", connection: {} });
   });
 
   test("join", () => {

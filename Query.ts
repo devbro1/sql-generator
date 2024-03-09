@@ -5,6 +5,8 @@ import { SelectQueryBuilder } from "./SelectQueryBuilder";
 import { InsertQueryBuilder } from "./InsertQueryBuilder";
 import { UpdateQueryBuilder } from "./UpdateQueryBuilder";
 import { DeleteQueryBuilder } from "./DeleteQueryBuilder";
+import { TestDB } from "./databases/TestDB";
+import { mysql } from "./databases/mysql";
 
 type node = {
   select: any[];
@@ -35,6 +37,12 @@ export class Query {
   constructor(options) {
     if (options.client === "postgresql") {
       this.client = new Postgresql(options.connection);
+    }
+    else if (options.client === "mysql" ) {
+      this.client = new mysql(options.connection);
+    }
+    else if (options.client === "test" ) {
+      this.client = new TestDB(options.connection);
     } else {
       throw Error("no client is implemented for " + options.client);
     }

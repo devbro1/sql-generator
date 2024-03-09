@@ -5,7 +5,7 @@ import { ConditionClause } from "../../ConditionClause";
 describe("basic delete statements", () => {
   let query;
   beforeEach(() => {
-    query = new Query({ client: "postgresql", connection: {} });
+    query = new Query({ client: "test", connection: {} });
   });
   test("basic 1", () => {
     let qb = query.delete("table1").where((cond: ConditionClause) => {

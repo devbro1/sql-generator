@@ -3,6 +3,7 @@ export class InsertQueryBuilder {
   nodes = {
     table: "",
     values: {},
+    returning: [],
   };
 
   constructor(client) {
@@ -17,6 +18,20 @@ export class InsertQueryBuilder {
 
   public values(values: object) {
     this.nodes.values = values;
+
+    return this;
+  }
+
+  public returning(columns: string | string[])
+  {
+    if(typeof columns === 'string')
+    {
+      this.nodes.returning.push(columns);
+    }
+    else if(Array.isArray(columns))
+    {
+      this.nodes.returning.push(...columns);
+    }
 
     return this;
   }
@@ -39,6 +54,12 @@ export class InsertQueryBuilder {
       Object.values(this.nodes.values).map(this.client.escape).join(", "),
     );
     rc.push(")");
+
+    if(this.nodes.returning.length)
+    {
+      rc.push("RETURNING");
+      rc.push(this.nodes.returning.join(", "));
+    }
 
     return rc.join(" ");
   }
