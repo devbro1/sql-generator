@@ -1,7 +1,7 @@
 # sql-generator
 
-[!NOTE]
-Still in Alpha. Not good for production!!!
+> [!CAUTION]
+> Still in Alpha. Not good for production yet!!! I expect various things to change
 
 Inspired by laravel, this is my attempt to create a create an ORM for javascript and nodejs that has all the features.
 
