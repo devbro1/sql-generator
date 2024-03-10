@@ -333,4 +333,8 @@ export class SelectQueryBuilder {
     rc.set(sql, bindings);
     return rc;
   }
+
+  public get() {
+    return this.client.query(this.toFullSQL());
+  }
 }

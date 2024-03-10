@@ -7,6 +7,7 @@ import { UpdateQueryBuilder } from "./UpdateQueryBuilder";
 import { DeleteQueryBuilder } from "./DeleteQueryBuilder";
 import { TestDB } from "../databases/TestDB";
 import { mysql } from "../databases/mysql";
+import { Sqlite } from "../databases/sqlite";
 
 type node = {
   select: any[];
@@ -39,6 +40,8 @@ export class Query {
       this.client = new Postgresql(options.connection);
     } else if (options.client === "mysql") {
       this.client = new mysql(options.connection);
+    } else if (options.client === "sqlite") {
+      this.client = new Sqlite(options.connection);
     } else if (options.client === "test") {
       this.client = new TestDB(options.connection);
     } else {

@@ -1,13 +1,12 @@
-import { Client } from "pg";
 import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
+import sqlite3 from 'better-sqlite3';
 
-export class Postgresql implements database {
-  client: Client;
+
+export class Sqlite implements database {
+  db: sqlite3.Database;
   constructor(options) {
-    const client = new Client(options);
-    client.connect().then(() => {});
-    this.client = client;
+    this.db = sqlite3(options);
   }
 
   public escape(value: string | number | any[]): string {
@@ -35,6 +34,11 @@ export class Postgresql implements database {
   }
 
   public query(sql: string) {
-    return this.client.query(sql);
+    return new Promise((resolve, reject) => {
+      let result: any[] = [];
+      result = this.db.prepare(sql).all();
+      resolve(result);
+      return result;
+    });
   }
 }
