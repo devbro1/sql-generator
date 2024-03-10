@@ -1,6 +1,6 @@
 {
   "name": "@devbro/sql-generator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "generic sql generator",
   "main": "index.js",
   "scripts": {
