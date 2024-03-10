@@ -47,15 +47,12 @@ collections:
       - select-statements
       - data-manipulation
 
-
 defaults:
-  -
-    scope:
+  - scope:
       path: ""
     values:
       layout: default
-  -
-    scope:
+  - scope:
       path: ""
       type: "docs"
     values:
@@ -68,8 +65,7 @@ defaults:
         content:
           width: 800
           height: 2000
-  -
-    scope:
+  - scope:
       path: ""
       type: "posts"
     values:
@@ -84,6 +80,6 @@ types:
   - major
 
 categories-order:
- - Getting Started
- - Select Statements
- - Data Manipulation
+  - Getting Started
+  - Select Statements
+  - Data Manipulation
