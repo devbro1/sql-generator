@@ -6,6 +6,8 @@ order: 1
 
 under the hood, different libraries are used for connecting to each database:
 
+
+### Postgresql
 postgresql uses `pg` library:
 
 ```javascript
@@ -23,6 +25,7 @@ query = new Query({
 });
 ```
 
+### Mysql
 mysql uses `mysql` and `nodejs-mysql` libraries:
 
 ```javascript
@@ -38,4 +41,22 @@ query = new Query({
 });
 ```
 
-more databases to come.
+### Sqlite
+```javascript
+import { Query } from "@devbro1/sql-generator";
+query = new Query({
+  client: "sqlite",
+  connection: "/tmp/database.db",
+});
+
+query = new Query({
+  client: "sqlite",
+  connection: ":memory:",
+});
+```
+
+### Mssql
+Not implemented yet
+
+### Oracle
+Not implemented yet
