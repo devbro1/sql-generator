@@ -7,7 +7,7 @@ describe("basic insert statements", () => {
     query = new Query({ client: "test", connection: {} });
   });
   test("basic 1", () => {
-    let qb = query
+    const qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 });
     expect(qb.toFullSQL()).toBe(
@@ -16,7 +16,7 @@ describe("basic insert statements", () => {
   });
 
   test("basic 1 returning", () => {
-    let qb = query
+    const qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
       .returning("id");
@@ -26,7 +26,7 @@ describe("basic insert statements", () => {
   });
 
   test("basic 1 returning", () => {
-    let qb = query
+    const qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
       .returning("col1 as id");
@@ -36,7 +36,7 @@ describe("basic insert statements", () => {
   });
 
   test("basic 1 returning", () => {
-    let qb = query
+    const qb = query
       .insert("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
       .returning(["id", "name", "email"]);

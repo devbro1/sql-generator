@@ -33,7 +33,7 @@ export class InsertQueryBuilder {
   }
 
   public toFullSQL(): string {
-    let rc = [];
+    const rc = [];
 
     rc.push("INSERT INTO");
     rc.push(this.nodes.table);

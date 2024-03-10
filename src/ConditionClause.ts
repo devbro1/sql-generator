@@ -91,10 +91,10 @@ export class ConditionClause {
   }
 
   public toFullSQL() {
-    let rc: string[] = [];
+    const rc: string[] = [];
     let condition_count = 0;
     this.nodes.map((w: node) => {
-      let value = this.client.escape(w.value);
+      const value = this.client.escape(w.value);
 
       if (0 < condition_count) {
         rc.push(w.join_condition);

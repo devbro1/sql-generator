@@ -3,9 +3,9 @@ import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
 
 export class TestDB implements database {
-  client;
+  client= "";
   constructor(options) {
-    this.client = {};
+    this.client = options;
   }
 
   public escape(value: string | number | any[]): string {

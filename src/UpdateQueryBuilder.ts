@@ -30,13 +30,13 @@ export class UpdateQueryBuilder {
   }
 
   public toFullSQL(): string {
-    let rc = [];
+    const rc = [];
 
     rc.push("UPDATE");
     rc.push(this.nodes.table);
     rc.push("SET");
 
-    let sets = [];
+    const sets = [];
     Object.entries(this.nodes.values).map(([key, value]) => {
       sets.push(
         this.client.escapeIdentifier(key) + " = " + this.client.escape(value),
@@ -45,7 +45,7 @@ export class UpdateQueryBuilder {
     rc.push(sets.join(", "));
 
     if (this.nodes.where) {
-      let cc = new ConditionClause(this.client);
+      const cc = new ConditionClause(this.client);
       this.nodes.where(cc);
       if (cc.length()) {
         rc.push("WHERE");

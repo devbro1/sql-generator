@@ -7,7 +7,7 @@ describe("basic update statements", () => {
     query = new Query({ client: "test", connection: {} });
   });
   test("basic 1", () => {
-    let qb = query
+    const qb = query
       .update("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 })
       .where((cond: ConditionClause) => {
@@ -20,7 +20,7 @@ describe("basic update statements", () => {
   });
 
   test("basic 2", () => {
-    let qb = query
+    const qb = query
       .update("table1")
       .values({ col1: "val1", col2: "val2", col3: 333 });
 

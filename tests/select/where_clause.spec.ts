@@ -8,13 +8,13 @@ describe("where clause", () => {
   });
 
   test("where 1", () => {
-    let qb = query.select("*").from("table").where("col1", "=", "value");
+    const qb = query.select("*").from("table").where("col1", "=", "value");
 
     expect(qb.toFullSQL()).toBe("SELECT * FROM table WHERE col1 = 'value'");
   });
 
   test("where 2", () => {
-    let qb = query.select("*").from("table").whereIn("col1", [1, 2, 3, 4]);
+    const qb = query.select("*").from("table").whereIn("col1", [1, 2, 3, 4]);
 
     expect(qb.toFullSQL()).toBe(
       "SELECT * FROM table WHERE col1 = ANY(ARRAY[1, 2, 3, 4])",
@@ -22,7 +22,7 @@ describe("where clause", () => {
   });
 
   test("where 3", () => {
-    let qb = query.select("*").from("table").whereBetween("col1", [111, 222]);
+    const qb = query.select("*").from("table").whereBetween("col1", [111, 222]);
 
     expect(qb.toFullSQL()).toBe(
       "SELECT * FROM table WHERE col1 BETWEEN 111 AND 222",
@@ -30,7 +30,7 @@ describe("where clause", () => {
   });
 
   test("where 4", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table")
       .where([
@@ -43,7 +43,7 @@ describe("where clause", () => {
     );
   });
   test("where 5", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table")
       .where("col1", "=", "value")
@@ -55,7 +55,7 @@ describe("where clause", () => {
   });
 
   test("orWhere", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table")
       .where("col1", "=", "value")

@@ -8,7 +8,7 @@ describe("joins", () => {
   });
 
   test("join", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .join("table2", (join: ConditionClause) => {
@@ -21,7 +21,7 @@ describe("joins", () => {
   });
 
   test("inner join", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .innerJoin("table2", (join: ConditionClause) => {
@@ -34,7 +34,7 @@ describe("joins", () => {
   });
 
   test("left join", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .leftJoin("table2", (join: ConditionClause) => {
@@ -47,7 +47,7 @@ describe("joins", () => {
   });
 
   test("right join", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .rightJoin("table2", (join: ConditionClause) => {
@@ -60,7 +60,7 @@ describe("joins", () => {
   });
 
   test("full join", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .fullJoin("table2", (join: ConditionClause) => {
@@ -73,7 +73,7 @@ describe("joins", () => {
   });
 
   test("join subquery", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .joinSub(
@@ -89,7 +89,7 @@ describe("joins", () => {
   });
 
   test("join subquery 2", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .joinSub(
@@ -108,7 +108,7 @@ describe("joins", () => {
   });
 
   test("inner join subquery", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .innerJoinSub(
@@ -124,7 +124,7 @@ describe("joins", () => {
   });
 
   test("left join subquery", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .leftJoinSub(
@@ -140,7 +140,7 @@ describe("joins", () => {
   });
 
   test("right join subquery", () => {
-    let qb = query
+    const qb = query
       .select("*")
       .from("table1")
       .rightJoinSub(

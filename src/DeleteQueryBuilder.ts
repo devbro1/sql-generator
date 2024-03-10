@@ -23,13 +23,13 @@ export class DeleteQueryBuilder {
   }
 
   public toFullSQL(): string {
-    let rc = [];
+    const rc = [];
 
     rc.push("DELETE FROM");
     rc.push(this.nodes.table);
 
     if (this.nodes.where) {
-      let cc = new ConditionClause(this.client);
+      const cc = new ConditionClause(this.client);
       this.nodes.where(cc);
       if (cc.length()) {
         rc.push("WHERE");

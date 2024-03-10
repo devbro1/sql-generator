@@ -49,30 +49,30 @@ export class Query {
   }
 
   public select(selects: string | any[] | RawSQL) {
-    let rc = new SelectQueryBuilder(this.client);
+    const rc = new SelectQueryBuilder(this.client);
     return rc.select(selects);
   }
 
   public insert(table: string) {
-    let rc = new InsertQueryBuilder(this.client);
+    const rc = new InsertQueryBuilder(this.client);
     rc.table(table);
     return rc;
   }
 
   public update(table: string) {
-    let rc = new UpdateQueryBuilder(this.client);
+    const rc = new UpdateQueryBuilder(this.client);
     rc.table(table);
     return rc;
   }
 
   public delete(table: string) {
-    let rc = new DeleteQueryBuilder(this.client);
+    const rc = new DeleteQueryBuilder(this.client);
     rc.table(table);
     return rc;
   }
 
   public raw(sql, bindings = {}) {
-    let rc = new RawSQL(this.client);
+    const rc = new RawSQL(this.client);
     rc.set(sql, bindings);
     return rc;
   }

@@ -36,7 +36,7 @@ export class SelectQueryBuilder {
   public select(selects: string | any[] | RawSQL) {
     if (typeof selects === "string") {
       let selects2 = { alias: "", field_name: selects };
-      let matches = selects.match(
+      const matches = selects.match(
         /"?(?<alias>[a-zA-Z0-9]*)"?\."?(?<var_name>.*)"?/,
       );
       if (matches) {
@@ -254,7 +254,7 @@ export class SelectQueryBuilder {
   }
 
   public toFullSQL() {
-    let rc: string[] = [];
+    const rc: string[] = [];
     if (this.nodes.select.length > 0) {
       rc.push("SELECT");
       let select_fields = "";
@@ -294,7 +294,7 @@ export class SelectQueryBuilder {
           rc.push(join.raw.toFullSQL());
         }
         rc.push("ON");
-        let on_condition = new ConditionClause(this.client);
+        const on_condition = new ConditionClause(this.client);
         join.on(on_condition);
         rc.push(on_condition.toFullSQL());
       });
@@ -329,7 +329,7 @@ export class SelectQueryBuilder {
   }
 
   public raw(sql, bindings = {}) {
-    let rc = new RawSQL(this.client);
+    const rc = new RawSQL(this.client);
     rc.set(sql, bindings);
     return rc;
   }

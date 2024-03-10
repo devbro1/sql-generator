@@ -7,7 +7,7 @@ describe("basic delete statements", () => {
     query = new Query({ client: "test", connection: {} });
   });
   test("basic 1", () => {
-    let qb = query.delete("table1").where((cond: ConditionClause) => {
+    const qb = query.delete("table1").where((cond: ConditionClause) => {
       cond.and("col4", "=", "val4");
       cond.andColumn("col5", "=", "col6");
     });
@@ -17,7 +17,7 @@ describe("basic delete statements", () => {
   });
 
   test("basic 2", () => {
-    let qb = query.delete("table1");
+    const qb = query.delete("table1");
 
     expect(qb.toFullSQL()).toBe("DELETE FROM table1");
   });
