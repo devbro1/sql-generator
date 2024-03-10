@@ -1,11 +1,13 @@
+// @ts-expect-error type does not exists
 import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
+// @ts-expect-error type does not exists
 import sqlite3 from 'better-sqlite3';
 
 
 export class Sqlite implements database {
   db: sqlite3.Database;
-  constructor(options) {
+  constructor(options: any) {
     this.db = sqlite3(options);
   }
 
@@ -27,6 +29,8 @@ export class Sqlite implements database {
     } else if (typeof value == "number") {
       return value.toString();
     }
+
+    return "";
   }
 
   escapeIdentifier(identifier: string) {

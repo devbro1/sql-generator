@@ -1,10 +1,11 @@
 import { Client } from "pg";
+// @ts-expect-error type file does not exists
 import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
 
 export class TestDB implements database {
   client= "";
-  constructor(options) {
+  constructor(options: any) {
     this.client = options;
   }
 
@@ -26,6 +27,8 @@ export class TestDB implements database {
     } else if (typeof value == "number") {
       return value.toString();
     }
+
+    return "";
   }
 
   escapeIdentifier(identifier: string) {

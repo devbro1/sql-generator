@@ -4,6 +4,7 @@
   "description": "generic sql generator",
   "main": "index.js",
   "scripts": {
+    "build": "npx tsc",
     "test": "jest",
     "format": "eslint . --fix --ext ts,tsx --report-unused-disable-directives --max-warnings 0 "
   },
@@ -12,6 +13,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.25",
+    "@types/pg": "^8.11.2",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
     "eslint": "8.57.0",

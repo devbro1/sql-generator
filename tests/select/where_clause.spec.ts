@@ -2,7 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import { Query } from "../../index";
 
 describe("where clause", () => {
-  let query;
+  let query:any;
   beforeEach(() => {
     query = new Query({ client: "test", connection: {} });
   });

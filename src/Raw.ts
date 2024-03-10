@@ -3,7 +3,7 @@ export class RawSQL {
   bindings = {};
   client;
 
-  constructor(client) {
+  constructor(client:any) {
     this.client = client;
   }
   set(sql: string, bindings: object = {}) {

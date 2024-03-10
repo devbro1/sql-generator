@@ -7,7 +7,7 @@ export class DeleteQueryBuilder {
     where: (cc: ConditionClause) => {},
   };
 
-  constructor(client) {
+  constructor(client:any) {
     this.client = client;
   }
 
@@ -17,7 +17,7 @@ export class DeleteQueryBuilder {
     return this;
   }
 
-  public where(func) {
+  public where(func:any) {
     this.nodes.where = func;
     return this;
   }

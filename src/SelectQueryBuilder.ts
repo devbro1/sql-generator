@@ -28,7 +28,7 @@ export class SelectQueryBuilder {
     order_by: [],
   };
 
-  constructor(client) {
+  constructor(client:any) {
     this.client = client;
     this.nodes.where = new ConditionClause(this.client);
   }
@@ -41,8 +41,8 @@ export class SelectQueryBuilder {
       );
       if (matches) {
         selects2 = {
-          alias: matches.groups?.alias,
-          field_name: matches.groups?.var_name,
+          alias: matches.groups?.alias || '',
+          field_name: matches.groups?.var_name || '',
         };
       }
       this.nodes.select.push(selects2);
@@ -74,7 +74,7 @@ export class SelectQueryBuilder {
     return this.table(table);
   }
 
-  public join(table: string, join_on: (ConditionClause) => void) {
+  public join(table: string, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       table: table,
       type: "TABLE_JOIN",
@@ -85,7 +85,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public innerJoin(table: string, join_on: (ConditionClause) => void) {
+  public innerJoin(table: string, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       table: table,
       type: "TABLE_JOIN",
@@ -96,7 +96,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public outerJoin(table: string, join_on: (ConditionClause) => void) {
+  public outerJoin(table: string, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       table: table,
       type: "TABLE_JOIN",
@@ -107,7 +107,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public leftJoin(table: string, join_on: (ConditionClause) => void) {
+  public leftJoin(table: string, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       table: table,
       type: "TABLE_JOIN",
@@ -118,7 +118,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public rightJoin(table: string, join_on: (ConditionClause) => void) {
+  public rightJoin(table: string, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       table: table,
       type: "TABLE_JOIN",
@@ -129,7 +129,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public fullJoin(table: string, join_on: (ConditionClause) => void) {
+  public fullJoin(table: string, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       table: table,
       type: "TABLE_JOIN",
@@ -140,7 +140,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public joinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+  public joinSub(raw: RawSQL, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       raw: raw,
       type: "RAW_JOIN",
@@ -151,7 +151,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public innerJoinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+  public innerJoinSub(raw: RawSQL, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       raw: raw,
       type: "RAW_JOIN",
@@ -162,7 +162,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public leftJoinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+  public leftJoinSub(raw: RawSQL, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       raw: raw,
       type: "RAW_JOIN",
@@ -173,7 +173,7 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public rightJoinSub(raw: RawSQL, join_on: (ConditionClause) => void) {
+  public rightJoinSub(raw: RawSQL, join_on: (ConditionClause: ConditionClause) => void) {
     this.nodes.joins.push({
       raw: raw,
       type: "RAW_JOIN",
@@ -328,7 +328,7 @@ export class SelectQueryBuilder {
     return rc.join(" ");
   }
 
-  public raw(sql, bindings = {}) {
+  public raw(sql:string, bindings = {}) {
     const rc = new RawSQL(this.client);
     rc.set(sql, bindings);
     return rc;

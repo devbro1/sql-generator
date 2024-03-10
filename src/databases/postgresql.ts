@@ -1,10 +1,11 @@
 import { Client } from "pg";
+// @ts-expect-error there is not type
 import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
 
 export class Postgresql implements database {
   client: Client;
-  constructor(options) {
+  constructor(options:any) {
     const client = new Client(options);
     client.connect().then(() => {});
     this.client = client;
@@ -28,6 +29,8 @@ export class Postgresql implements database {
     } else if (typeof value == "number") {
       return value.toString();
     }
+
+    return "";
   }
 
   escapeIdentifier(identifier: string) {

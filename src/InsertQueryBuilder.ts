@@ -6,7 +6,7 @@ export class InsertQueryBuilder {
     returning: [],
   };
 
-  constructor(client) {
+  constructor(client:any) {
     this.client = client;
   }
 
@@ -24,8 +24,10 @@ export class InsertQueryBuilder {
 
   public returning(columns: string | string[]) {
     if (typeof columns === "string") {
+      // @ts-expect-error type mismatch
       this.nodes.returning.push(columns);
     } else if (Array.isArray(columns)) {
+      // @ts-expect-error type mismatch
       this.nodes.returning.push(...columns);
     }
 

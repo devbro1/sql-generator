@@ -35,7 +35,7 @@ export class Query {
     order_by: [],
   };
 
-  constructor(options) {
+  constructor(options:any) {
     if (options.client === "postgresql") {
       this.client = new Postgresql(options.connection);
     } else if (options.client === "mysql") {
@@ -74,7 +74,7 @@ export class Query {
     return rc;
   }
 
-  public raw(sql, bindings = {}) {
+  public raw(sql: string, bindings = {}) {
     const rc = new RawSQL(this.client);
     rc.set(sql, bindings);
     return rc;

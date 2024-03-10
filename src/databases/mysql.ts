@@ -1,11 +1,11 @@
-import { escapeIdentifier, escapeLiteral } from "pg/lib/utils";
 import { database } from "./database";
+// @ts-expect-error type file does not exists
 import mysql_lib from "nodejs-mysql";
 const sqlstring = require("sqlstring");
 
 export class mysql implements database {
   connection;
-  constructor(options) {
+  constructor(options: any) {
     const connection = mysql_lib.getInstance(options);
     this.connection = connection;
   }
@@ -28,6 +28,8 @@ export class mysql implements database {
     } else if (typeof value == "number") {
       return value.toString();
     }
+
+    return "";
   }
 
   escapeIdentifier(identifier: string) {

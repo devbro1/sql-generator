@@ -4,7 +4,7 @@ import { open } from 'sqlite';
 import { Query } from "../../index";
 
 describe("sqlite database", () => {
-  let query;
+  let query: any;
   beforeEach(async () => {
 
     const db = await open({

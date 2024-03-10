@@ -34,7 +34,7 @@ export class ConditionClause {
 
   client;
 
-  constructor(client) {
+  constructor(client:any) {
     this.client = client;
   }
 

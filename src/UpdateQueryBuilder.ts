@@ -8,7 +8,7 @@ export class UpdateQueryBuilder {
     where: (cc: ConditionClause) => {},
   };
 
-  constructor(client) {
+  constructor(client:any) {
     this.client = client;
   }
 
@@ -24,7 +24,7 @@ export class UpdateQueryBuilder {
     return this;
   }
 
-  public where(func) {
+  public where(func:any) {
     this.nodes.where = func;
     return this;
   }
@@ -36,7 +36,7 @@ export class UpdateQueryBuilder {
     rc.push(this.nodes.table);
     rc.push("SET");
 
-    const sets = [];
+    const sets: any[] = [];
     Object.entries(this.nodes.values).map(([key, value]) => {
       sets.push(
         this.client.escapeIdentifier(key) + " = " + this.client.escape(value),
