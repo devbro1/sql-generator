@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query, RawSQL } from "../index";
+import { Query } from "../index";
 
 describe("raw queries", () => {
   let query;

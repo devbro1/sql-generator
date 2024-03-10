@@ -1,6 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query } from "../../index";
-import { ConditionClause } from "../../src/ConditionClause";
+import { Query, ConditionClause } from "../../index";
 
 describe("basic delete statements", () => {
   let query;
