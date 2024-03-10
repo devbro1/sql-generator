@@ -1,6 +1,6 @@
 import { RawSQL } from "./Raw";
 import { ConditionClause, operation } from "./ConditionClause";
-import { Postgresql } from "../databases/postgresql";
+import { Postgresql } from "./databases/postgresql";
 
 type node = {
   select: any[];
