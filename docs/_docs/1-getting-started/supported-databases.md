@@ -17,7 +17,7 @@ query = new Query({
   client: "postgresql",
   connection: {
     host: "my.database-server.com",
-    port: 5332,
+    port: 5432,
     database: "database-name",
     user: "database-user",
     password: "secretpassword!!",
