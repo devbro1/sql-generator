@@ -1,7 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { Query } from "../../index";
+import { Query } from "../../src/index";
 
 describe("sqlite database", () => {
   let query: any;

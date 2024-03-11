@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query } from "../../index";
+import { Query } from "../../src/index";
 
 describe("basic insert statements", () => {
   let query:any;

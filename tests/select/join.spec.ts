@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Query, ConditionClause } from "../../index";
+import { Query, ConditionClause } from "../../src/index";
 
 describe("joins", () => {
   let query:any;
