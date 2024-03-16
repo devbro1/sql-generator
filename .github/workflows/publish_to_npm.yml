@@ -17,8 +17,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: publish to npm
         run: |
+          whoami
+          pwd
+          sudo apt-get install -y oathtool
           yarn
           yarn build
-          apt-get install -y oathtool
           OTP=$(oathtool --totp ${{ secrets.OTP_CODE }})
           npm publish --otp $OTP
