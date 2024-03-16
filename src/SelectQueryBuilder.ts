@@ -221,6 +221,16 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public conditionClauseWhere(cc: ConditionClause) {
+    this.nodes.where.andConditionClause(cc);
+    return this;
+  }
+
+  public orConditionClauseWhere(cc: ConditionClause) {
+    this.nodes.where.orConditionClause(cc);
+    return this;
+  }
+
   public whereIn(column: string, values: any[]) {
     this.nodes.where.and(column, "IN", values);
     return this;

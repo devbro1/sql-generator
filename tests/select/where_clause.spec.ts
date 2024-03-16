@@ -65,4 +65,26 @@ describe("where clause", () => {
       "SELECT * FROM table WHERE col1 = 'value' OR col2 = 'value2'",
     );
   });
+
+  test("orWhere", () => {
+    const cc1 = query.conditionClause();
+    const cc2 = query.conditionClause();
+
+    cc1.and("sound","=","meow");
+    cc1.and("sound","=","rawr");
+
+    cc2.and("price",">",1000);
+    cc2.and("price","<",10);
+
+    const qb = query
+      .select("*")
+      .from("table")
+      .where("col1", "=", "value")
+      .conditionClauseWhere(cc1)
+      .orConditionClauseWhere(cc2);
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE col1 = 'value' AND ( sound = 'meow' AND sound = 'rawr' ) OR ( price > 1000 AND price < 10 )",
+    );
+  });
 });
