@@ -71,4 +71,10 @@ describe("raw queries", () => {
 
     expect(qb.toFullSQL()).toBe("SELECT * FROM (select * from table1) t1");
   });
+
+  test("raw.query identifier", () => {
+    const raw = query.raw("::columnName_name: like :name:", { columnName_name: "first_name", name: "far%" });
+
+    expect(raw.toFullSQL()).toBe("first_name like 'far%'");
+  });
 });
