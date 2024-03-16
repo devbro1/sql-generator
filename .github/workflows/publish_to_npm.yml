@@ -15,8 +15,9 @@ jobs:
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
-      - run: |
-        yarn
-        yarn build
-        OTP=$(oathtool --totp ${{ secrets.OTP_CODE }})
-        npm publish --otp $OTP
+      - name: publish to npm
+        run: |
+          yarn
+          yarn build
+          OTP=$(oathtool --totp ${{ secrets.OTP_CODE }})
+          npm publish --otp $OTP
