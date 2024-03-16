@@ -26,13 +26,13 @@ describe("raw queries", () => {
   });
 
   test("where condition numeric", () => {
-    const raw = query.raw("age > $age", { age: 22 });
+    const raw = query.raw("age > :age:", { age: 22 });
 
     expect(raw.toFullSQL()).toBe("age > 22");
   });
 
   test("where condition text", () => {
-    const raw = query.raw("name like $name", { name: "far%" });
+    const raw = query.raw("name like :name:", { name: "far%" });
 
     expect(raw.toFullSQL()).toBe("name like 'far%'");
   });
@@ -59,7 +59,7 @@ describe("raw queries", () => {
     const qb = query
       .select("*")
       .from("table")
-      .where(query.raw("name ilike $name", { name: "FARZAD%" }));
+      .where(query.raw("name ilike :name:", { name: "FARZAD%" }));
 
     expect(qb.toFullSQL()).toBe(
       "SELECT * FROM table WHERE name ilike 'FARZAD%'",
@@ -70,5 +70,11 @@ describe("raw queries", () => {
     const qb = query.select("*").from(query.raw("(select * from table1) t1"));
 
     expect(qb.toFullSQL()).toBe("SELECT * FROM (select * from table1) t1");
+  });
+
+  test("raw.query identifier", () => {
+    const raw = query.raw("::columnName_name: like :name:", { columnName_name: "first_name", name: "far%" });
+
+    expect(raw.toFullSQL()).toBe("first_name like 'far%'");
   });
 });

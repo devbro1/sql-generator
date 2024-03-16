@@ -1,3 +1,5 @@
+import { replaceBindings } from "./utils/stringUtils";
+
 export class RawSQL {
   sql = "";
   bindings = {};
@@ -12,12 +14,6 @@ export class RawSQL {
   }
 
   toFullSQL() {
-    let rc = this.sql;
-
-    Object.entries(this.bindings).map(([key, value]) => {
-      rc = rc.replace("$" + key, this.client.escape(value));
-    });
-
-    return rc;
+    return replaceBindings(this.sql,this.bindings,this.client.escape);
   }
 }

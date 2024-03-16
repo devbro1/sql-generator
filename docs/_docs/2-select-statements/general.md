@@ -209,3 +209,18 @@ query
 ```javascript
 query.select("*").from("table").limit(20).offset(5000);
 ```
+
+## Using RawSQL
+
+you can use `query.raw()` as an alternative sql code in various places. You can pass one different type of values as second argument for creating dynamic queries.
+
+```javascript
+query.raw("col1 > col2").toFullSql();
+// col1 > col2
+query.raw("col1 > ::col2: and col3 != :val1:", {col2: "column2", val1: "val's first value"}).toFullSQL();
+// col1 > column2 and col3 != 'val\' first value'
+```
+
+using ::place_holder: will treat value as identifier.
+
+using :place holder: will treat value as literal.
