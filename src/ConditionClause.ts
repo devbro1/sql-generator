@@ -16,8 +16,9 @@ type node = {
   operation: operation;
   value: string;
   raw: RawSQL | null;
+  condition_clause: ConditionClause | null;
   join_condition: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW";
+  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE";
 };
 
 type options = {
@@ -25,8 +26,9 @@ type options = {
   operation?: operation;
   value?: string | any[];
   raw?: RawSQL;
+  condition_clause?: ConditionClause;
   join_condition?: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW";
+  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE";
 };
 
 export class ConditionClause {
@@ -56,6 +58,7 @@ export class ConditionClause {
         join_condition: "AND",
         type: "VALUE_COMPARE",
         raw: null,
+        condition_clause: null,
       },
       ...options,
     });
@@ -90,6 +93,14 @@ export class ConditionClause {
     });
   }
 
+  public andConditionClause(cc: ConditionClause) {
+    return this.and("", "=", "", { condition_clause: cc, type: "CONDITION_CLAUSE" });
+  }
+
+  public orConditionClause(cc: ConditionClause) {
+    return this.and("", "=", "", { condition_clause: cc, type: "CONDITION_CLAUSE", join_condition: "OR" });
+  }
+
   public toFullSQL() {
     const rc: string[] = [];
     let condition_count = 0;
@@ -104,6 +115,10 @@ export class ConditionClause {
         rc.push(w.raw.toFullSQL());
       } else if (w.type === "COLUMN_COMPARE") {
         rc.push(w.column_name + " " + w.operation + " " + w.value);
+      } else if (w.type === "CONDITION_CLAUSE" && w.condition_clause) {
+        rc.push("(");
+        rc.push(w.condition_clause.toFullSQL());
+        rc.push(")");
       } else if (w.operation == "IN") {
         rc.push(w.column_name + " = ANY(" + value + ")");
       } else if (w.operation == "BETWEEN") {

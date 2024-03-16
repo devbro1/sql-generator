@@ -79,4 +79,9 @@ export class Query {
     rc.set(sql, bindings);
     return rc;
   }
+
+  public conditionClause(): ConditionClause {
+    const rc = new ConditionClause(this.client);
+    return rc;
+  }
 }
