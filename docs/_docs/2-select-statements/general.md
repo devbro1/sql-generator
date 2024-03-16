@@ -145,6 +145,8 @@ query
   .where("col2", "=", "value2");
 
 query.select("*").from("table").where(query.raw("col2 < col1 + 100"));
+
+
 ```
 
 possible values for operation are: =, <, >, !=, <=, >=, ILIKE, LIKE
@@ -190,6 +192,27 @@ query.select("*").from("table").whereBetween("col1", [111, 222]);
 query.select("*").from("table").whereIn("col1", [1, 2, 3, 4]);
 ```
 
+# nested condtions
+
+it is possible to created complex nested where clauses. make sure to get your ConditionClause object from your query object specially if you are using different types of database.
+
+```javascript
+const cc1 = query.conditionClause();
+const cc2 = query.conditionClause();
+
+cc1.and("sound","=","meow");
+cc1.and("sound","=","rawr");
+
+cc2.and("price",">",1000);
+cc2.and("price","<",10);
+
+const qb = query
+    .select("*")
+    .from("table")
+    .where("col1", "=", "value")
+    .conditionClauseWhere(cc1)
+    .orConditionClauseWhere(cc2);
+```
 ## grouping
 
 to group rows, `groupBy` and `having` can be used:
