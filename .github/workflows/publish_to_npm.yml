@@ -19,6 +19,6 @@ jobs:
         run: |
           yarn
           yarn build
-          apt install oathtool gnupg2
+          apt-get install -y oathtool
           OTP=$(oathtool --totp ${{ secrets.OTP_CODE }})
           npm publish --otp $OTP
