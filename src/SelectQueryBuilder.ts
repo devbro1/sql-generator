@@ -241,6 +241,26 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereColumn(column1: string, operation:operation,column2: string) {
+    this.nodes.where.andColumn(column1,operation,column2);
+    return this;
+  }
+
+  public whereColumnNot(column1: string, operation:operation,column2: string) {
+    this.nodes.where.andColumnNot(column1,operation,column2);
+    return this;
+  }
+
+  public orWhereColumn(column1: string, operation:operation,column2: string) {
+    this.nodes.where.orColumn(column1,operation,column2);
+    return this;
+  }
+
+  public orWhereColumnNot(column1: string, operation:operation,column2: string) {
+    this.nodes.where.orColumnNot(column1,operation,column2);
+    return this;
+  }
+
   public groupBy(column: RawSQL) {
     this.nodes.group_by.push({ raw: column });
 

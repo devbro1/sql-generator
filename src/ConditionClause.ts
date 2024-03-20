@@ -38,6 +38,16 @@ export class ConditionClause {
 
   constructor(client:any) {
     this.client = client;
+
+
+    ['Column','Raw', 'ConditionClause'].forEach((method) => {
+        // @ts-ignore
+        this['or' + method] = (...args:any) => { this['and'+method](...args,{join_condition: 'OR'})};
+        // @ts-ignore
+        this['and' + method + 'Not'] = (...args:any) => { this['and'+method](...args,{join_condition: 'AND NOT'})};
+        // @ts-ignore
+        this['or' + method + 'Not'] = (...args:any) => { this['and'+method](...args,{join_condition: 'OR NOT'})};
+    });
   }
 
   public length() {
@@ -66,39 +76,33 @@ export class ConditionClause {
     return this;
   }
 
-  public andColumn(column: string, operation: operation, value: any) {
-    return this.and(column, operation, value, { type: "COLUMN_COMPARE" });
-  }
-
-  public andRaw(raw: RawSQL) {
-    return this.and("", "=", "", { raw: raw, type: "RAW" });
-  }
-
   public or(column: string, operation: operation, value: any) {
     return this.and(column, operation, value, { join_condition: "OR" });
   }
 
-  public orColumn(column: string, operation: operation, value: any) {
-    return this.and(column, operation, value, {
-      join_condition: "OR",
-      type: "COLUMN_COMPARE",
-    });
+  public orNot(column: string, operation: operation, value: any) {
+    return this.and(column, operation, value, { join_condition: "OR NOT" });
   }
 
-  public orRaw(raw: RawSQL) {
-    return this.and("", "=", "", {
-      join_condition: "OR",
-      raw: raw,
-      type: "RAW",
-    });
+  public orColumn = (column: string, operation: operation, value: any, options: options = {}) => this;
+  public orColumnNot = (column: string, operation: operation, value: any, options: options = {}) => this;
+  public andColumnNot = (column: string, operation: operation, value: any, options: options = {}) => this;
+  public andColumn(column: string, operation: operation, value: any, options: options = {}) {
+    return this.and(column, operation, value, {...{ type: "COLUMN_COMPARE" },...options});
   }
 
-  public andConditionClause(cc: ConditionClause) {
-    return this.and("", "=", "", { condition_clause: cc, type: "CONDITION_CLAUSE" });
+  public orRaw = (raw: RawSQL, options: options = {}) => this;
+  public orRawNot = (raw: RawSQL, options: options = {}) => this;
+  public andRawNot = (raw: RawSQL, options: options = {}) => this;
+  public andRaw(raw: RawSQL, options: options = {}) {
+    return this.and("", "=", "", {...{ raw: raw, type: "RAW" }, ...options});
   }
 
-  public orConditionClause(cc: ConditionClause) {
-    return this.and("", "=", "", { condition_clause: cc, type: "CONDITION_CLAUSE", join_condition: "OR" });
+  public orConditionClause = (cc: ConditionClause, options:options = {})=> this;
+  public orConditionClauseNot = (cc: ConditionClause, options:options = {}) => this;
+  public andConditionClauseNot = (cc: ConditionClause, options:options = {}) => this;
+  public andConditionClause(cc: ConditionClause, options:options = {}) {
+    return this.and("", "=", "", {...{ condition_clause: cc, type: "CONDITION_CLAUSE" }, ...options});
   }
 
   public toFullSQL() {
@@ -109,6 +113,10 @@ export class ConditionClause {
 
       if (0 < condition_count) {
         rc.push(w.join_condition);
+      }
+      else if(w.join_condition.indexOf("NOT") !== -1)
+      {
+        rc.push("NOT");
       }
 
       if (w.type === "RAW" && w.raw) {

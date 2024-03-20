@@ -87,4 +87,22 @@ describe("where clause", () => {
       "SELECT * FROM table WHERE col1 = 'value' AND ( sound = 'meow' AND sound = 'rawr' ) OR ( price > 1000 AND price < 10 )",
     );
   });
+
+  test("where not", () => {
+    const qb = query.select("*").from("table").orWhereColumnNot("col1", "=", "col2");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE NOT col1 = col2",
+    );
+  });
+
+  test("where not2", () => {
+    const qb = query.select("*").from("table")
+      .where("col3","=","val1")
+      .orWhereColumnNot("col1", "=", "col2");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE col3 = 'val1' OR NOT col1 = col2",
+    );
+  });
 });

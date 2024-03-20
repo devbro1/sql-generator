@@ -20,3 +20,10 @@ Please consider adding sample codes that I can test.
 
 wanna help? just submit a PR with new features, test cases, documentation improvements, or etc.
 If you want to help with money or coffee, please consider donating to your local animal shelter or men's shelters.
+
+
+### random useful commands
+
+```
+clear; jest --findRelatedTests tests/select/join.spec.ts
+```
