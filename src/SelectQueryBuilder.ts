@@ -205,6 +205,27 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereNot(
+    column: string | any[] | RawSQL,
+    operation: operation = "=",
+    value: any = "",
+  ) {
+    if (typeof column == "string") {
+      this.nodes.where.andNot(column, operation, value);
+    } else if (Array.isArray(column)) {
+      column.map((col) => {
+        this.whereNot(col[0], col[1], col[2]);
+      });
+    } else if (
+      typeof column == "object" &&
+      column.constructor.name === "RawSQL"
+    ) {
+      this.nodes.where.andRawNot(column);
+    }
+
+    return this;
+  }
+
   public orWhere(
     column: string | any[],
     operation: operation = "=",
@@ -226,7 +247,17 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public conditionClauseWhereNot(cc: ConditionClause) {
+    this.nodes.where.andConditionClauseNot(cc);
+    return this;
+  }
+
   public orConditionClauseWhere(cc: ConditionClause) {
+    this.nodes.where.orConditionClause(cc);
+    return this;
+  }
+
+  public orConditionClauseWhereNot(cc: ConditionClause) {
     this.nodes.where.orConditionClause(cc);
     return this;
   }
@@ -236,8 +267,38 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereInNot(column: string, values: any[]) {
+    this.nodes.where.andNot(column, "IN", values);
+    return this;
+  }
+
+  public orWhereIn(column: string, values: any[]) {
+    this.nodes.where.or(column, "IN", values);
+    return this;
+  }
+
+  public orWhereInNot(column: string, values: any[]) {
+    this.nodes.where.orNot(column, "IN", values);
+    return this;
+  }
+
   public whereBetween(column: string, values: any[]) {
     this.nodes.where.and(column, "BETWEEN", values);
+    return this;
+  }
+
+  public whereBetweenNot(column: string, values: any[]) {
+    this.nodes.where.andNot(column, "BETWEEN", values);
+    return this;
+  }
+
+  public orWhereBetween(column: string, values: any[]) {
+    this.nodes.where.or(column, "BETWEEN", values);
+    return this;
+  }
+
+  public orWhereBetweenNot(column: string, values: any[]) {
+    this.nodes.where.orNot(column, "BETWEEN", values);
     return this;
   }
 

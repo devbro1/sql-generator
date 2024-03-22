@@ -76,6 +76,10 @@ export class ConditionClause {
     return this;
   }
 
+  public andNot(column: string, operation: operation, value: any) {
+    return this.and(column, operation, value, { join_condition: "AND NOT" });
+  }
+
   public or(column: string, operation: operation, value: any) {
     return this.and(column, operation, value, { join_condition: "OR" });
   }
