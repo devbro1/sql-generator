@@ -1,4 +1,6 @@
 import { RawSQL } from "./Raw";
+const { DateTime } = require('luxon');
+
 
 export type operation =
   | "="
@@ -14,21 +16,21 @@ export type operation =
 type node = {
   column_name: string;
   operation: operation;
-  value: string;
+  value: number | string | string[] | number[] | Date;
   raw: RawSQL | null;
   condition_clause: ConditionClause | null;
   join_condition: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS" | "NULL";
+  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS" | "NULL" | "DATE_COMPARE";
 };
 
 type options = {
   column_name?: string;
   operation?: operation;
-  value?: string | any[];
+  value?: number | string | string[] | number[] | Date;
   raw?: RawSQL;
   condition_clause?: ConditionClause;
   join_condition?: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS" | "NULL";
+  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS" | "NULL" | "DATE_COMPARE";
 };
 
 export class ConditionClause {
@@ -40,7 +42,7 @@ export class ConditionClause {
     this.client = client;
 
 
-    ['Column','Raw', 'ConditionClause', 'Exists', 'Null'].forEach((method) => {
+    ['Column','Raw', 'ConditionClause', 'Exists', 'Null', 'Date'].forEach((method) => {
         // @ts-ignore
         this['or' + method] = (...args:any) => { this['and'+method](...args,{join_condition: 'OR'})};
         // @ts-ignore
@@ -57,7 +59,7 @@ export class ConditionClause {
   public and(
     column: string,
     operation: operation,
-    value: any,
+    value: number | string | string[] | number[] | Date,
     options: options = {},
   ) {
     this.nodes.push({
@@ -124,6 +126,14 @@ export class ConditionClause {
     return this.and("", "=", "", {...{ column_name: column, type: "NULL" }, ...options});
   }
 
+
+  public orDate = (column: string,operation: operation,date: Date, options: options = {}) => this;
+  public orDateNot = (column: string,operation: operation,date: Date, options: options = {}) => this;
+  public andDateNot = (column: string,operation: operation,date: Date, options: options = {}) => this;
+  public andDate(column: string,operation: operation,date: Date, options: options = {}) {
+    return this.and(column, operation, date, {...{ column_name: column, type: "DATE_COMPARE" }, ...options});
+  }
+
   public toFullSQL() {
     const rc: string[] = [];
     let condition_count = 0;
@@ -151,9 +161,14 @@ export class ConditionClause {
         rc.push("(");
         rc.push(w.condition_clause.toFullSQL());
         rc.push(")");
+      } else if (w.type === "DATE_COMPARE") {
+        const date = DateTime.fromJSDate(w.value);
+        console.log(date);
+        const formattedDate = date.toFormat('yyyy-MM-dd');
+        rc.push(w.column_name + " " + w.operation + " " + this.client.escape(formattedDate));
       } else if (w.operation == "IN") {
         rc.push(w.column_name + " = ANY(" + value + ")");
-      } else if (w.operation == "BETWEEN") {
+      } else if (w.operation == "BETWEEN" && Array.isArray(w.value)) {
         rc.push(
           w.column_name +
             " BETWEEN " +

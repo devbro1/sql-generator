@@ -123,4 +123,13 @@ describe("where clause", () => {
       "SELECT * FROM table WHERE col1 IS NULL"
     );
   });
+
+  test("whereDate", () => {
+    const qb = query.select("*").from("table")
+    .whereDate("created_at", ">", "2024-09-13 EST");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE created_at > '2024-09-13'"
+    );
+  });
 });

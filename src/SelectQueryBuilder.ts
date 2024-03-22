@@ -342,8 +342,28 @@ export class SelectQueryBuilder {
     return this;
   }
 
-  public andWhereNullNot(column_name: string) {
+  public WhereNullNot(column_name: string) {
     this.nodes.where.andNullNot(column_name);
+    return this;
+  }
+
+  public whereDate(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.andDate(column,operation,new Date(date));
+    return this;
+  }
+
+  public orWhereDate(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.orDate(column,operation,new Date(date));
+    return this;
+  }
+
+  public orWhereDateNot(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.orDateNot(column,operation,new Date(date));
+    return this;
+  }
+
+  public andWhereDate(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.andDateNot(column,operation,new Date(date));
     return this;
   }
 
