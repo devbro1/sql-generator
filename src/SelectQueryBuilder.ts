@@ -205,6 +205,27 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereNot(
+    column: string | any[] | RawSQL,
+    operation: operation = "=",
+    value: any = "",
+  ) {
+    if (typeof column == "string") {
+      this.nodes.where.andNot(column, operation, value);
+    } else if (Array.isArray(column)) {
+      column.map((col) => {
+        this.whereNot(col[0], col[1], col[2]);
+      });
+    } else if (
+      typeof column == "object" &&
+      column.constructor.name === "RawSQL"
+    ) {
+      this.nodes.where.andRawNot(column);
+    }
+
+    return this;
+  }
+
   public orWhere(
     column: string | any[],
     operation: operation = "=",
@@ -226,7 +247,17 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public conditionClauseWhereNot(cc: ConditionClause) {
+    this.nodes.where.andConditionClauseNot(cc);
+    return this;
+  }
+
   public orConditionClauseWhere(cc: ConditionClause) {
+    this.nodes.where.orConditionClause(cc);
+    return this;
+  }
+
+  public orConditionClauseWhereNot(cc: ConditionClause) {
     this.nodes.where.orConditionClause(cc);
     return this;
   }
@@ -236,8 +267,103 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereInNot(column: string, values: any[]) {
+    this.nodes.where.andNot(column, "IN", values);
+    return this;
+  }
+
+  public orWhereIn(column: string, values: any[]) {
+    this.nodes.where.or(column, "IN", values);
+    return this;
+  }
+
+  public orWhereInNot(column: string, values: any[]) {
+    this.nodes.where.orNot(column, "IN", values);
+    return this;
+  }
+
   public whereBetween(column: string, values: any[]) {
     this.nodes.where.and(column, "BETWEEN", values);
+    return this;
+  }
+
+  public whereBetweenNot(column: string, values: any[]) {
+    this.nodes.where.andNot(column, "BETWEEN", values);
+    return this;
+  }
+
+  public orWhereBetween(column: string, values: any[]) {
+    this.nodes.where.or(column, "BETWEEN", values);
+    return this;
+  }
+
+  public orWhereBetweenNot(column: string, values: any[]) {
+    this.nodes.where.orNot(column, "BETWEEN", values);
+    return this;
+  }
+
+  public whereColumn(column1: string, operation:operation,column2: string) {
+    this.nodes.where.andColumn(column1,operation,column2);
+    return this;
+  }
+
+  public whereColumnNot(column1: string, operation:operation,column2: string) {
+    this.nodes.where.andColumnNot(column1,operation,column2);
+    return this;
+  }
+
+  public orWhereColumn(column1: string, operation:operation,column2: string) {
+    this.nodes.where.orColumn(column1,operation,column2);
+    return this;
+  }
+
+  public orWhereColumnNot(column1: string, operation:operation,column2: string) {
+    this.nodes.where.orColumnNot(column1,operation,column2);
+    return this;
+  }
+
+  public whereExists(subquery: RawSQL) {
+    this.nodes.where.andExists(subquery);
+    return this;
+  }
+
+  public whereNull(column_name: string) {
+    this.nodes.where.andNull(column_name);
+    return this;
+  }
+
+  public orWhereNull(column_name: string) {
+    this.nodes.where.orNull(column_name);
+    return this;
+  }
+
+  public orWhereNullNot(column_name: string) {
+    this.nodes.where.orNullNot(column_name);
+    return this;
+  }
+
+  public WhereNullNot(column_name: string) {
+    this.nodes.where.andNullNot(column_name);
+    return this;
+  }
+
+  public whereDate(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.andDate(column,operation,new Date(date));
+    return this;
+  }
+
+  public orWhereDate(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.orDate(column,operation,new Date(date));
+    return this;
+  }
+
+  public orWhereDateNot(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.orDateNot(column,operation,new Date(date));
+    return this;
+  }
+
+  public andWhereDate(column:string,operation:operation,date: Date | string) {
+    this.nodes.where.andDateNot(column,operation,new Date(date));
     return this;
   }
 

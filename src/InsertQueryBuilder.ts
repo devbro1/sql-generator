@@ -60,4 +60,8 @@ export class InsertQueryBuilder {
 
     return rc.join(" ");
   }
+
+  public get() {
+    return this.client.query(this.toFullSQL());
+  }
 }

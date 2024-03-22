@@ -87,4 +87,49 @@ describe("where clause", () => {
       "SELECT * FROM table WHERE col1 = 'value' AND ( sound = 'meow' AND sound = 'rawr' ) OR ( price > 1000 AND price < 10 )",
     );
   });
+
+  test("where not", () => {
+    const qb = query.select("*").from("table").orWhereColumnNot("col1", "=", "col2");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE NOT col1 = col2",
+    );
+  });
+
+  test("where not2", () => {
+    const qb = query.select("*").from("table")
+      .where("col3","=","val1")
+      .orWhereColumnNot("col1", "=", "col2");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE col3 = 'val1' OR NOT col1 = col2",
+    );
+  });
+
+  test("whereExists", () => {
+    const qb = query.select("*").from("table")
+      .whereExists(query.raw("select 1 from table2 where col2 = :val1:",{val1: "value1"}));
+
+      expect(qb.toFullSQL()).toBe(
+        "SELECT * FROM table WHERE EXISTS ( select 1 from table2 where col2 = 'value1' )"
+      );
+  });
+
+  test("whereNull", () => {
+    const qb = query.select("*").from("table")
+    .whereNull("col1");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE col1 IS NULL"
+    );
+  });
+
+  test("whereDate", () => {
+    const qb = query.select("*").from("table")
+    .whereDate("created_at", ">", "2024-09-13 EST");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE created_at > '2024-09-13'"
+    );
+  });
 });
