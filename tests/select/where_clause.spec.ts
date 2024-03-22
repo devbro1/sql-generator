@@ -105,4 +105,13 @@ describe("where clause", () => {
       "SELECT * FROM table WHERE col3 = 'val1' OR NOT col1 = col2",
     );
   });
+
+  test("whereExists", () => {
+    const qb = query.select("*").from("table")
+      .whereExists(query.raw("select 1 from table2 where col2 = :val1:",{val1: "value1"}));
+
+      expect(qb.toFullSQL()).toBe(
+        "SELECT * FROM table WHERE EXISTS ( select 1 from table2 where col2 = 'value1' )"
+      );
+  });
 });

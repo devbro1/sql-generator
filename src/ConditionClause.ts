@@ -18,7 +18,7 @@ type node = {
   raw: RawSQL | null;
   condition_clause: ConditionClause | null;
   join_condition: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE";
+  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS";
 };
 
 type options = {
@@ -28,7 +28,7 @@ type options = {
   raw?: RawSQL;
   condition_clause?: ConditionClause;
   join_condition?: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE";
+  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS";
 };
 
 export class ConditionClause {
@@ -109,6 +109,11 @@ export class ConditionClause {
     return this.and("", "=", "", {...{ condition_clause: cc, type: "CONDITION_CLAUSE" }, ...options});
   }
 
+
+  public andExists(subquery: RawSQL, options: options = {}) {
+    return this.and("", "=", "", {...{ raw: subquery, type: "EXISTS" }, ...options});
+  }
+
   public toFullSQL() {
     const rc: string[] = [];
     let condition_count = 0;
@@ -125,6 +130,8 @@ export class ConditionClause {
 
       if (w.type === "RAW" && w.raw) {
         rc.push(w.raw.toFullSQL());
+      } else if (w.type === "EXISTS" && w.raw) {
+        rc.push("EXISTS ( " + w.raw.toFullSQL() + " )");
       } else if (w.type === "COLUMN_COMPARE") {
         rc.push(w.column_name + " " + w.operation + " " + w.value);
       } else if (w.type === "CONDITION_CLAUSE" && w.condition_clause) {

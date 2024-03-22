@@ -322,6 +322,11 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereExists(subquery: RawSQL) {
+    this.nodes.where.andExists(subquery);
+    return this;
+  }
+
   public groupBy(column: RawSQL) {
     this.nodes.group_by.push({ raw: column });
 
