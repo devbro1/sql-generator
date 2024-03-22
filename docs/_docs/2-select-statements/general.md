@@ -213,6 +213,23 @@ const qb = query
     .conditionClauseWhere(cc1)
     .orConditionClauseWhere(cc2);
 ```
+
+## other where clauses
+all where clauses come in optional or and not mode. They will follow original where clause parameters.
+```javascript
+whereBetween();
+orWhereBetween();
+whereBetweenNot();
+orWhereBetweenNot();
+```
+
+other where clause methods available are:
+```javascript
+whereDate(column_name,operation,string_date or new Date("date_string")); // where created_at > '2024-09-12'
+whereExists(RawSQL);// where EXISTS ( RawSQL )
+whereNull(column_name);//where column_name IS NULL
+```
+
 ## grouping
 
 to group rows, `groupBy` and `having` can be used:
