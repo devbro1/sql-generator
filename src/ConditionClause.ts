@@ -18,7 +18,7 @@ type node = {
   raw: RawSQL | null;
   condition_clause: ConditionClause | null;
   join_condition: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS";
+  type: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS" | "NULL";
 };
 
 type options = {
@@ -28,7 +28,7 @@ type options = {
   raw?: RawSQL;
   condition_clause?: ConditionClause;
   join_condition?: "AND" | "OR" | "AND NOT" | "OR NOT";
-  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS";
+  type?: "VALUE_COMPARE" | "COLUMN_COMPARE" | "RAW" | "CONDITION_CLAUSE" | "EXISTS" | "NULL";
 };
 
 export class ConditionClause {
@@ -40,7 +40,7 @@ export class ConditionClause {
     this.client = client;
 
 
-    ['Column','Raw', 'ConditionClause'].forEach((method) => {
+    ['Column','Raw', 'ConditionClause', 'Exists', 'Null'].forEach((method) => {
         // @ts-ignore
         this['or' + method] = (...args:any) => { this['and'+method](...args,{join_condition: 'OR'})};
         // @ts-ignore
@@ -110,8 +110,18 @@ export class ConditionClause {
   }
 
 
+  public orExists = (subquery: RawSQL, options: options = {}) => this;
+  public orExistsNot = (subquery: RawSQL, options: options = {}) => this;
+  public andExistsNot = (subquery: RawSQL, options: options = {}) => this;
   public andExists(subquery: RawSQL, options: options = {}) {
     return this.and("", "=", "", {...{ raw: subquery, type: "EXISTS" }, ...options});
+  }
+
+  public orNull = (column: string, options: options = {}) => this;
+  public orNullNot = (column: string, options: options = {}) => this;
+  public andNullNot = (column: string, options: options = {}) => this;
+  public andNull(column: string, options: options = {}) {
+    return this.and("", "=", "", {...{ column_name: column, type: "NULL" }, ...options});
   }
 
   public toFullSQL() {
@@ -134,6 +144,9 @@ export class ConditionClause {
         rc.push("EXISTS ( " + w.raw.toFullSQL() + " )");
       } else if (w.type === "COLUMN_COMPARE") {
         rc.push(w.column_name + " " + w.operation + " " + w.value);
+      } else if (w.type === "NULL") {
+        rc.push(w.column_name);
+        rc.push("IS NULL");
       } else if (w.type === "CONDITION_CLAUSE" && w.condition_clause) {
         rc.push("(");
         rc.push(w.condition_clause.toFullSQL());

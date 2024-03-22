@@ -327,6 +327,26 @@ export class SelectQueryBuilder {
     return this;
   }
 
+  public whereNull(column_name: string) {
+    this.nodes.where.andNull(column_name);
+    return this;
+  }
+
+  public orWhereNull(column_name: string) {
+    this.nodes.where.orNull(column_name);
+    return this;
+  }
+
+  public orWhereNullNot(column_name: string) {
+    this.nodes.where.orNullNot(column_name);
+    return this;
+  }
+
+  public andWhereNullNot(column_name: string) {
+    this.nodes.where.andNullNot(column_name);
+    return this;
+  }
+
   public groupBy(column: RawSQL) {
     this.nodes.group_by.push({ raw: column });
 

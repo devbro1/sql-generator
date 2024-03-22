@@ -114,4 +114,13 @@ describe("where clause", () => {
         "SELECT * FROM table WHERE EXISTS ( select 1 from table2 where col2 = 'value1' )"
       );
   });
+
+  test("whereNull", () => {
+    const qb = query.select("*").from("table")
+    .whereNull("col1");
+
+    expect(qb.toFullSQL()).toBe(
+      "SELECT * FROM table WHERE col1 IS NULL"
+    );
+  });
 });
