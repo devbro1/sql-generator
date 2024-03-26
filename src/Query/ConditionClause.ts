@@ -1,4 +1,4 @@
-import { RawSQL } from "./Raw";
+import { RawSQL } from "../RawSQL";
 const { DateTime } = require('luxon');
 
 

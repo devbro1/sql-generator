@@ -1,13 +1,13 @@
-import { RawSQL } from "./Raw";
+import { RawSQL } from "../RawSQL";
 import { ConditionClause, operation } from "./ConditionClause";
-import { Postgresql } from "./databases/postgresql";
+import { Postgresql } from "../databases/postgresql";
 import { SelectQueryBuilder } from "./SelectQueryBuilder";
 import { InsertQueryBuilder } from "./InsertQueryBuilder";
 import { UpdateQueryBuilder } from "./UpdateQueryBuilder";
 import { DeleteQueryBuilder } from "./DeleteQueryBuilder";
-import { TestDB } from "./databases/TestDB";
-import { mysql } from "./databases/mysql";
-import { Sqlite } from "./databases/sqlite";
+import { TestDB } from "../databases/TestDB";
+import { mysql } from "../databases/mysql";
+import { Sqlite } from "../databases/sqlite";
 
 type node = {
   select: any[];

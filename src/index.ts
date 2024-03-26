@@ -1,10 +1,10 @@
-import { Query } from "./Query";
-import { RawSQL } from "./Raw";
-import { ConditionClause } from "./ConditionClause";
-import { SelectQueryBuilder } from "./SelectQueryBuilder";
-import { InsertQueryBuilder } from "./InsertQueryBuilder";
-import { UpdateQueryBuilder } from "./UpdateQueryBuilder";
-import { DeleteQueryBuilder } from "./DeleteQueryBuilder";
+import { Query } from "./Query/Query";
+import { RawSQL } from "./RawSQL";
+import { ConditionClause } from "./Query/ConditionClause";
+import { SelectQueryBuilder } from "./Query/SelectQueryBuilder";
+import { InsertQueryBuilder } from "./Query/InsertQueryBuilder";
+import { UpdateQueryBuilder } from "./Query/UpdateQueryBuilder";
+import { DeleteQueryBuilder } from "./Query/DeleteQueryBuilder";
 
 export { Query as Query };
 export { RawSQL as RawSQL };
