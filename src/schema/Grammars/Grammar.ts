@@ -85,7 +85,7 @@ export class Grammar extends BaseGrammar
     // converts a Blueprint type to db specific type
     protected getType(column: ColumnDefinition): string
     {
-        let method_name = `type${ column.properties.type.charAt(0).toUpperCase() + column.properties.type.slice(1) }` as keyof typeof this;
+        const method_name = `type${ column.properties.type.charAt(0).toUpperCase() + column.properties.type.slice(1) }` as keyof typeof this;
 
         if(typeof this[method_name] == 'function')
         {

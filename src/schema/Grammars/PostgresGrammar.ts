@@ -470,7 +470,7 @@ export class PostgresGrammar extends Grammar {
             if ('virtualAs' in column.getAttributes() && column.properties.virtualAs === '') {
                 return 'drop expression if exists';
             }
-            throw new Error('This database driver does not support modifying generated columns.');;
+            throw new Error('This database driver does not support modifying generated columns.');
         }
         if (column.virtualAs !== null) {
             return " generated always as (" + this.getValue(column.virtualAs) + ")";

@@ -3,7 +3,7 @@ export function replaceBindings(s: string, bindings: object = {}, escape_method 
     let rc = "";
     while (0 < s.length)
     {
-        let match : RegExpMatchArray | null = s.match(/:?:(.*?):/);
+        const match : RegExpMatchArray | null = s.match(/:?:(.*?):/);
         if (match)
         {
             rc += s.substring(0, match.index);

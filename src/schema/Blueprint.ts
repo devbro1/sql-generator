@@ -1,10 +1,11 @@
-import { Connection } from "typeorm";
+import { Connection } from "../Illuminate/Connection";
 import { Grammar } from "./Grammars/Grammar";
-import { ColumnDefinition } from "./ColumnDefinition";
+import { ColumnDefinition, ColumnProperties } from "./ColumnDefinition";
 import { ForeignKeyDefinition } from "./ForeignKeyDefinition";
 import { IndexDefinition } from "./IndexDefinition";
 import { ForeignIdColumnDefinition } from "./ForeignIdColumnDefinition";
 import { Builder } from "./Builder";
+import { Expression } from "../Illuminate/Expression";
 
 export class Blueprint {
     protected table: string;
@@ -26,7 +27,7 @@ export class Blueprint {
     }
 
     public build(connection: Connection, grammar: Grammar): void {
-        for (let statement of this.toSql(connection, grammar)) {
+        for (const statement of this.toSql(connection, grammar)) {
             connection.query(statement);
         }
     }
@@ -38,13 +39,13 @@ export class Blueprint {
 
         this.ensureCommandsAreValid(connection);
 
-        for (let command of this.commands) {
+        for (const command of this.commands) {
             if (command.shouldBeSkipped) {
                 continue;
             }
 
-            let method = ('compile' + command.name.charAt(0).toUpperCase() + command.name.slice(1));
-            let sql = grammar.compile(method as keyof Grammar,this,command,connection);
+            const method = ('compile' + command.name.charAt(0).toUpperCase() + command.name.slice(1));
+            const sql = grammar.compile(method as keyof Grammar,this,command,connection);
             if (sql !== null) {
                 statements = statements.concat(sql);
             }
@@ -76,22 +77,22 @@ export class Blueprint {
     }
 
     protected addFluentIndexes(grammar: Grammar): void {
-        for (let column of this.columns) {
-            for (let index of ['primary', 'unique', 'index', 'fulltext', 'spatialIndex']) {
-                if (column[index] === true) {
-                    this[index](column.name);
-                    column[index] = null;
-                } else if (column[index] !== undefined) {
-                    this[index](column.name, column[index]);
-                    column[index] = null;
+        for (const column of this.columns) {
+            for (const index of ['primary', 'unique', 'index', 'fulltext', 'spatialIndex']) {
+                if (column.properties[index as keyof ColumnProperties] === true) {
+                    (this[index as keyof this] as Function)(column.properties.name);
+                    (column[index as keyof ColumnDefinition] as Function)(false);
+                } else if (column.properties[index as keyof ColumnProperties] !== false) {
+                    (this[index as keyof this] as Function)(column.name, column.properties[index as keyof ColumnProperties]);
+                    (column[index as keyof ColumnDefinition] as Function)(false);
                 }
             }
         }
     }
 
     protected addFluentCommands(grammar: Grammar): void {
-        for (let column of this.columns) {
-            for (let commandName of grammar.getFluentCommands()) {
+        for (const column of this.columns) {
+            for (const commandName of grammar.getFluentCommands()) {
                 this.addCommand(commandName, { column });
             }
         }
@@ -226,7 +227,7 @@ export class Blueprint {
         return this.indexCommand('unique', columns, name, algorithm);
     }
 
-    public index(columns: string | string[], name: string = '', algorithm: string = ''): IndexDefinition {
+    public index(columns: string | (string | Expression)[], name: string = '', algorithm: string = ''): IndexDefinition {
         return this.indexCommand('index', columns, name, algorithm);
     }
 
@@ -243,7 +244,7 @@ export class Blueprint {
     }
 
     public foreign(columns: string | string[], name: string = ''): ForeignKeyDefinition {
-        let command = new ForeignKeyDefinition(
+        const command = new ForeignKeyDefinition(
             this.indexCommand('foreign', columns, name).getAttributes()
         );
         this.commands[this.commands.length - 1] = command;
@@ -344,7 +345,7 @@ export class Blueprint {
         return this.bigInteger(column, autoIncrement, true);
     }
 
-    public foreignId(column: string): ForeignIdColumnDefinition {
+    public foreignId(column: string): ColumnDefinition {
         return this.addColumnDefinition(new ForeignIdColumnDefinition(this, {
             type: 'bigInteger',
             name: column,
@@ -471,7 +472,7 @@ export class Blueprint {
         return this.addColumn('uuid', column);
     }
 
-    public foreignUuid(column: string): ForeignIdColumnDefinition {
+    public foreignUuid(column: string): ColumnDefinition {
         return this.addColumnDefinition(new ForeignIdColumnDefinition(this, {
             type: 'uuid',
             name: column,
@@ -482,7 +483,7 @@ export class Blueprint {
         return this.char(column, length);
     }
 
-    public foreignUlid(column: string, length: number = 26): ForeignIdColumnDefinition {
+    public foreignUlid(column: string, length: number = 26): ColumnDefinition {
         return this.addColumnDefinition(new ForeignIdColumnDefinition(this, {
             type: 'char',
             name: column,
@@ -574,7 +575,7 @@ export class Blueprint {
         return this.addCommand('tableComment', { comment });
     }
 
-    protected indexCommand(type: string, columns: string | string[], index: string, algorithm: string = ''): IndexDefinition {
+    protected indexCommand(type: string, columns: string | (string|Expression)[], index: string, algorithm: string = ''): IndexDefinition {
         columns = Array.isArray(columns) ? columns : [columns];
         index = index || this.createIndexName(type, columns);
         return this.addCommand(type, { index, columns, algorithm }) as IndexDefinition;
@@ -588,9 +589,17 @@ export class Blueprint {
         return this.indexCommand(command, columns, index);
     }
 
-    protected createIndexName(type: string, columns: string[]): string {
-        let table = this.table.includes('.') ? this.table.replace('.', `.${this.prefix}`) : `${this.prefix}${this.table}`;
-        let index = `${table}_${columns.join('_')}_${type}`.toLowerCase();
+    protected createIndexName(type: string, columns: (string | Expression)[]): string {
+        columns = columns.map((col: string | Expression) => {
+            if(typeof col === 'string') {
+                return col;
+            }
+            else {
+                return col.getValue('');
+            }
+        });
+        const table = this.table.includes('.') ? this.table.replace('.', `.${this.prefix}`) : `${this.prefix}${this.table}`;
+        const index = `${table}_${columns.join('_')}_${type}`.toLowerCase();
         return index.replace(/[-.]/g, '_');
     }
 
@@ -619,13 +628,13 @@ export class Blueprint {
     }
 
     protected addCommand(name: string, parameters: any = {}): any {
-        let command = this.createCommand(name, parameters);
+        const command = this.createCommand(name, parameters);
         this.commands.push(command);
         return command;
     }
 
     protected createCommand(name: string, parameters: any = {}): any {
-        return new Fluent({ name, ...parameters });
+        return { name, ...parameters };
     }
 
     public getTable(): string {

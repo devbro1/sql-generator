@@ -2,20 +2,20 @@ import { Expression } from "../Illuminate/Expression";
 
 
 type ColumnType = "string" | "text" | "tinyText" | "longText"
-| "tinyInteger" | "bigInteger" | "integer" 
-| "decimal" | "double"
-| "bigIncrement"
-| "boolean" | "json" | "jsonb"
-| "date" | "dateTime" | "dateTimeTz" | "time" | "timeTz" ;
+    | "tinyInteger" | "bigInteger" | "integer"
+    | "decimal" | "double"
+    | "bigIncrement"
+    | "boolean" | "json" | "jsonb"
+    | "date" | "dateTime" | "dateTimeTz" | "time" | "timeTz";
 
-type ColumnProperties = {
-    column_name: string;
+export type ColumnProperties = {
+    name: string;
     type: ColumnType;
     nullable: boolean;
-    default: number | string | Expression | number[] | string[] ;
-    primary_key: boolean;
+    default: number | string | Expression | number[] | string[];
+    primary: boolean;
     autoIncrement: boolean;
-    index: boolean;
+    index: boolean | string;
     length: number;
     precision: number;
     total: number;
@@ -29,123 +29,143 @@ type ColumnProperties = {
     virtualAs: string;
     storedAs: string;
     always: boolean;
+    unique: boolean | string;
+    fulltext: boolean | string;
+    spatialIndex: boolean | string;
 }
 
-export class ColumnDefinition {
-    
+export class ColumnDefinition
+{
+
     public name: string = '';
     public needs_change: boolean = false;
     public properties: ColumnProperties = {
-        column_name: '',
+        name: '',
         type: 'string',
         nullable: false,
         default: '',
-        primary_key: false,
+        primary: false,
         autoIncrement: false,
         index: false,
         length: 0,
         precision: 0,
-        total:0,
+        total: 0,
         places: 0,
         allowed: [],
         useCurrent: false,
         subtype: '',
         srid: '',
-        collation:'',
-        generatedAs:false,
+        collation: '',
+        generatedAs: false,
         virtualAs: '',
         storedAs: '',
         always: false,
+        unique: false,
+        fulltext: false,
+        spatialIndex: false,
     };
 
-    constructor(details: any) {
-        
+    constructor(details: any)
+    {
+
     }
 
     // Place the column "after" another column (MySQL)
-    public after(column: string) {}
+    public after(column: string) { }
 
     //  Used as a modifier for generatedAs() (PostgreSQL)
-    public always(value: boolean = true) {}
+    public always(value: boolean = true) { }
 
     // Set INTEGER columns as auto-increment (primary key)
-    public autoIncrement() {}
+    public autoIncrement() { }
 
     // Change the column
-    public change() {}
+    public change() { }
 
     // Specify a character set for the column (MySQL)
-    public charset(charset: string) {}
+    public charset(charset: string) { }
 
     //  Specify a collation for the column
-    public collation(collation: string) {}
+    public collation(collation: string) { }
 
     // Add a comment to the column (MySQL/PostgreSQL)
-    public comment(comment: string) {}
+    public comment(comment: string) { }
 
     // Specify a "default" value for the column
-    public default(value: any) {}
+    public default(value: any) { }
 
     // Place the column "first" in the table (MySQL)
-    public first() {}
+    public first() { }
 
     //  Set the starting value of an auto-incrementing field (MySQL / PostgreSQL)
-    public from(startingValue: number) {}
+    public from(startingValue: number) { }
 
     //  Create a SQL compliant identity column (PostgreSQL)
-    public generatedAs(value: string|Expression = '') {}
+    public generatedAs(value: string | Expression = '') { }
 
     // Add an index
-    public index(indexName: boolean|string = false) {}
+    public index(indexName: boolean | string = false) {
+        this.properties.index = indexName;
+    }
 
     // Specify that the column should be invisible to "SELECT *" (MySQL)
-    public invisible() {}
+    public invisible() { }
 
     //  Allow NULL values to be inserted into the column
-    public nullable(value: boolean = true) {
+    public nullable(value: boolean = true)
+    {
         this.properties.nullable = value;
 
         return this;
     }
 
     // Mark the computed generated column as persistent (SQL Server)
-    public persisted() {}
+    public persisted() { }
 
 
     //  Add a primary index
-    public primary(value: boolean = true) {}
+    public primary(value: boolean = true) {
+        this.properties.primary=value;
+    }
 
     //  Add a fulltext index
-    public fulltext(indexName: boolean | string = false) {}
+    public fulltext(indexName: boolean | string = false) {
+        this.properties.fulltext = indexName;
+    }
 
     // Add a spatial index
-    public spatialIndex(indexName: boolean | string = false) {}
+    public spatialIndex(indexName: boolean | string = false) {
+        this.properties.spatialIndex=indexName;
+    }
 
     // Set the starting value of an auto-incrementing field (MySQL/PostgreSQL)
-    public startingValue(startingValue: number) {}
+    public startingValue(startingValue: number) { }
 
     // Create a stored generated column (MySQL/PostgreSQL/SQLite)
-    public storedAs(expression: string) {}
+    public storedAs(expression: string) { }
 
     // Specify a type for the column
-    public type(type: string) {}
+    public type(type: string) { }
 
     // Add a unique index
-    public unique(indexName: boolean | string = false) {}
+    public unique(indexName: boolean | string = false) {
+        this.properties.unique = indexName;
+    }
 
     //  Set the INTEGER column as UNSIGNED (MySQL)
-    public unsigned() {}
+    public unsigned() { }
 
     // Set the TIMESTAMP column to use CURRENT_TIMESTAMP as default value
-    public useCurrent() {}
+    public useCurrent() { }
 
     // Set the TIMESTAMP column to use CURRENT_TIMESTAMP when updating (MySQL)
-    public useCurrentOnUpdate() {}
+    public useCurrentOnUpdate() { }
 
     // Create a virtual generated column (MySQL/PostgreSQL/SQLite)
-    public virtualAs(expression: string) {}
+    public virtualAs(expression: string) { }
 
-    public getAttributes(){
+    public getAttributes()
+    {
         return [];
     }
 }

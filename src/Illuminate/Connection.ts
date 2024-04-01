@@ -17,4 +17,8 @@ export class Connection
     statement(statement:string) {
         
     }
+
+    query(c:string):any {
+
+    }
 }

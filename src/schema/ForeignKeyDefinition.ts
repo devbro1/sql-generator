@@ -1,5 +1,8 @@
 export class ForeignKeyDefinition {
 
+    constructor(arg1:any) {
+        
+    }
     with(key:string,value:any) {
         return this;
     }
