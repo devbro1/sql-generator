@@ -1,10 +1,5 @@
 import { Connection } from "./Connection";
 
-interface Expression
-{
-    getValue(grammar: Grammar): any;
-}
-
 export class Grammar
 {
     protected connection: Connection | null = null;
