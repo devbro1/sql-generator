@@ -87,47 +87,47 @@ export class SqlServerGrammar extends Grammar
             `group by fk.name, fs.name, ft.name, fk.update_referential_action_desc, fk.delete_referential_action_desc`;
     }
 
-    public compileCreate(blueprint: Blueprint, command: Fluent): string
+    public compileCreate(blueprint: Blueprint, command: any): string
     {
         return `create table ${ this.wrapTable(blueprint) } (${ this.getColumns(blueprint).join(', ') })`;
     }
 
-    public compileAdd(blueprint: Blueprint, command: Fluent): string
+    public compileAdd(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } add ${ this.getColumns(blueprint).join(', ') }`;
     }
 
-    public compileRenameColumn(blueprint: Blueprint, command: Fluent, connection: Connection): string
+    public compileRenameColumn(blueprint: Blueprint, command: any, connection: Connection): string
     {
         return `sp_rename ${ this.quoteString(this.wrapTable(blueprint) + '.' + this.wrap(command.from)) }, ${ this.wrap(command.to) }, 'COLUMN'`;
     }
 
-    public compileChange(blueprint: Blueprint, command: Fluent, connection: Connection): string[]
+    public compileChange(blueprint: Blueprint, command: any, connection: Connection): string[]
     {
         throw new RuntimeException('SQL Server does not support altering columns.');
     }
 
-    public compilePrimary(blueprint: Blueprint, command: Fluent): string
+    public compilePrimary(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } add constraint ${ this.wrap(command.index) } primary key (${ this.columnize(command.columns) })`;
     }
 
-    public compileUnique(blueprint: Blueprint, command: Fluent): string
+    public compileUnique(blueprint: Blueprint, command: any): string
     {
         return `create unique index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) } (${ this.columnize(command.columns) })`;
     }
 
-    public compileIndex(blueprint: Blueprint, command: Fluent): string
+    public compileIndex(blueprint: Blueprint, command: any): string
     {
         return `create index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) } (${ this.columnize(command.columns) })`;
     }
 
-    public compileSpatialIndex(blueprint: Blueprint, command: Fluent): string
+    public compileSpatialIndex(blueprint: Blueprint, command: any): string
     {
         return `create spatial index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) } (${ this.columnize(command.columns) })`;
     }
 
-    public compileDefault(blueprint: Blueprint, command: Fluent): string | null
+    public compileDefault(blueprint: Blueprint, command: any): string | null
     {
         if (command.column.change && command.column.default !== null)
         {
@@ -137,12 +137,12 @@ export class SqlServerGrammar extends Grammar
         return null;
     }
 
-    public compileDrop(blueprint: Blueprint, command: Fluent): string
+    public compileDrop(blueprint: Blueprint, command: any): string
     {
         return `drop table ${ this.wrapTable(blueprint) }`;
     }
 
-    public compileDropIfExists(blueprint: Blueprint, command: Fluent): string
+    public compileDropIfExists(blueprint: Blueprint, command: any): string
     {
         return `if object_id(${ this.quoteString(this.wrapTable(blueprint)) }, 'U') is not null drop table ${ this.wrapTable(blueprint) }`;
     }
@@ -152,14 +152,14 @@ export class SqlServerGrammar extends Grammar
         return "EXEC sp_msforeachtable 'DROP TABLE ?'";
     }
 
-    public compileDropColumn(blueprint: Blueprint, command: Fluent): string
+    public compileDropColumn(blueprint: Blueprint, command: any): string
     {
         const columns = this.wrapArray(command.columns);
         const dropExistingConstraintsSql = this.compileDropDefaultConstraint(blueprint, command) + ';';
         return `${ dropExistingConstraintsSql }alter table ${ this.wrapTable(blueprint) } drop column ${ columns.join(', ') }`;
     }
 
-    public compileDropDefaultConstraint(blueprint: Blueprint, command: Fluent): string
+    public compileDropDefaultConstraint(blueprint: Blueprint, command: any): string
     {
         const columns = command.name === 'change'
             ? "'" + collect(blueprint.getChangedColumns()).pluck('name').join("','") + "'"
@@ -177,37 +177,37 @@ export class SqlServerGrammar extends Grammar
         return sql;
     }
 
-    public compileDropPrimary(blueprint: Blueprint, command: Fluent): string
+    public compileDropPrimary(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } drop constraint ${ this.wrap(command.index) }`;
     }
 
-    public compileDropUnique(blueprint: Blueprint, command: Fluent): string
+    public compileDropUnique(blueprint: Blueprint, command: any): string
     {
         return `drop index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) }`;
     }
 
-    public compileDropIndex(blueprint: Blueprint, command: Fluent): string
+    public compileDropIndex(blueprint: Blueprint, command: any): string
     {
         return `drop index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) }`;
     }
 
-    public compileDropSpatialIndex(blueprint: Blueprint, command: Fluent): string
+    public compileDropSpatialIndex(blueprint: Blueprint, command: any): string
     {
         return this.compileDropIndex(blueprint, command);
     }
 
-    public compileDropForeign(blueprint: Blueprint, command: Fluent): string
+    public compileDropForeign(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } drop constraint ${ this.wrap(command.index) }`;
     }
 
-    public compileRename(blueprint: Blueprint, command: Fluent): string
+    public compileRename(blueprint: Blueprint, command: any): string
     {
         return `sp_rename ${ this.quoteString(this.wrapTable(blueprint)) }, ${ this.wrapTable(command.to) }`;
     }
 
-    public compileRenameIndex(blueprint: Blueprint, command: Fluent): string
+    public compileRenameIndex(blueprint: Blueprint, command: any): string
     {
         return `sp_rename ${ this.quoteString(this.wrapTable(blueprint) + '.' + this.wrap(command.from)) }, ${ this.wrap(command.to) }, 'INDEX'`;
     }
@@ -238,122 +238,122 @@ export class SqlServerGrammar extends Grammar
             "EXEC sp_executesql @sql;";
     }
 
-    protected typeChar(column: Fluent): string
+    protected typeChar(column: any): string
     {
         return `nchar(${ column.length })`;
     }
 
-    protected typeString(column: Fluent): string
+    protected typeString(column: any): string
     {
         return `nvarchar(${ column.length })`;
     }
 
-    protected typeTinyText(column: Fluent): string
+    protected typeTinyText(column: any): string
     {
         return 'nvarchar(255)';
     }
 
-    protected typeText(column: Fluent): string
+    protected typeText(column: any): string
     {
         return 'nvarchar(max)';
     }
 
-    protected typeMediumText(column: Fluent): string
+    protected typeMediumText(column: any): string
     {
         return 'nvarchar(max)';
     }
 
-    protected typeLongText(column: Fluent): string
+    protected typeLongText(column: any): string
     {
         return 'nvarchar(max)';
     }
 
-    protected typeBigInteger(column: Fluent): string
+    protected typeBigInteger(column: any): string
     {
         return 'bigint';
     }
 
-    protected typeInteger(column: Fluent): string
+    protected typeInteger(column: any): string
     {
         return 'int';
     }
 
-    protected typeMediumInteger(column: Fluent): string
+    protected typeMediumInteger(column: any): string
     {
         return 'int';
     }
 
-    protected typeTinyInteger(column: Fluent): string
+    protected typeTinyInteger(column: any): string
     {
         return 'tinyint';
     }
 
-    protected typeSmallInteger(column: Fluent): string
+    protected typeSmallInteger(column: any): string
     {
         return 'smallint';
     }
 
-    protected typeFloat(column: Fluent): string
+    protected typeFloat(column: any): string
     {
         return column.precision ? `float(${ column.precision })` : 'float';
     }
 
-    protected typeDouble(column: Fluent): string
+    protected typeDouble(column: any): string
     {
         return 'double precision';
     }
 
-    protected typeDecimal(column: Fluent): string
+    protected typeDecimal(column: any): string
     {
         return `decimal(${ column.total }, ${ column.places })`;
     }
 
-    protected typeBoolean(column: Fluent): string
+    protected typeBoolean(column: any): string
     {
         return 'bit';
     }
 
-    protected typeEnum(column: Fluent): string
+    protected typeEnum(column: any): string
     {
         return `nvarchar(255) check ("${ column.name }" in (${ this.quoteString(column.allowed) }))`;
     }
 
-    protected typeJson(column: Fluent): string
+    protected typeJson(column: any): string
     {
         return 'nvarchar(max)';
     }
 
-    protected typeJsonb(column: Fluent): string
+    protected typeJsonb(column: any): string
     {
         return 'nvarchar(max)';
     }
 
-    protected typeDate(column: Fluent): string
+    protected typeDate(column: any): string
     {
         return 'date';
     }
 
-    protected typeDateTime(column: Fluent): string
+    protected typeDateTime(column: any): string
     {
         return this.typeTimestamp(column);
     }
 
-    protected typeDateTimeTz(column: Fluent): string
+    protected typeDateTimeTz(column: any): string
     {
         return this.typeTimestampTz(column);
     }
 
-    protected typeTime(column: Fluent): string
+    protected typeTime(column: any): string
     {
         return column.precision ? `time(${ column.precision })` : 'time';
     }
 
-    protected typeTimeTz(column: Fluent): string
+    protected typeTimeTz(column: any): string
     {
         return this.typeTime(column);
     }
 
-    protected typeTimestamp(column: Fluent): string
+    protected typeTimestamp(column: any): string
     {
         if (column.useCurrent)
         {
@@ -362,7 +362,7 @@ export class SqlServerGrammar extends Grammar
         return column.precision ? `datetime2(${ column.precision })` : 'datetime';
     }
 
-    protected typeTimestampTz(column: Fluent): string
+    protected typeTimestampTz(column: any): string
     {
         if (column.useCurrent)
         {
@@ -371,68 +371,68 @@ export class SqlServerGrammar extends Grammar
         return column.precision ? `datetimeoffset(${ column.precision })` : 'datetimeoffset';
     }
 
-    protected typeYear(column: Fluent): string
+    protected typeYear(column: any): string
     {
         return this.typeInteger(column);
     }
 
-    protected typeBinary(column: Fluent): string
+    protected typeBinary(column: any): string
     {
         return column.length ? (column.fixed ? `binary(${ column.length })` : `varbinary(${ column.length })`) : 'varbinary(max)';
     }
 
-    protected typeUuid(column: Fluent): string
+    protected typeUuid(column: any): string
     {
         return 'uniqueidentifier';
     }
 
-    protected typeIpAddress(column: Fluent): string
+    protected typeIpAddress(column: any): string
     {
         return 'nvarchar(45)';
     }
 
-    protected typeMacAddress(column: Fluent): string
+    protected typeMacAddress(column: any): string
     {
         return 'nvarchar(17)';
     }
 
-    protected typeGeometry(column: Fluent): string
+    protected typeGeometry(column: any): string
     {
         return 'geometry';
     }
 
-    protected typeGeography(column: Fluent): string
+    protected typeGeography(column: any): string
     {
         return 'geography';
     }
 
-    protected typeComputed(column: Fluent): string | null
+    protected typeComputed(column: any): string | null
     {
         return `as (${ this.getValue(column.expression) })`;
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyCollate(blueprint: Blueprint, column: any): string | null
     {
         return column.collation ? ` collate ${ column.collation }` : null;
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyNullable(blueprint: Blueprint, column: any): string | null
     {
         return column.type !== 'computed' ? (column.nullable ? ' null' : ' not null') : null;
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyDefault(blueprint: Blueprint, column: any): string | null
     {
         return (!column.change && column.default !== null) ? ` default ${ this.getDefaultValue(column.default) }` : null;
     }
 
-    protected modifyIncrement(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyIncrement(blueprint: Blueprint, column: any): string | null
     {
         return (!column.change && this.serials.includes(column.type) && column.autoIncrement) ?
             (this.hasCommand(blueprint, 'primary') ? ' identity' : ' identity primary key') : null;
     }
 
-    protected modifyPersisted(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyPersisted(blueprint: Blueprint, column: any): string | null
     {
         return column.change ? (column.type === 'computed' ? (column.persisted ? ' add persisted' : ' drop persisted') : null) : (column.persisted ? ' persisted' : null);
     }

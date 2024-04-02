@@ -1,5 +1,7 @@
 import { Grammar } from "./Grammar";
 import { Blueprint } from "../Blueprint";
+import { ForeignKeyDefinition } from '../ForeignKeyDefinition';
+import { Connection } from "../../Illuminate/Connection";
 
 export class SQLiteGrammar extends Grammar
 {
@@ -56,9 +58,9 @@ export class SQLiteGrammar extends Grammar
             `group by id, "table", on_update, on_delete`;
     }
 
-    public compileCreate(blueprint: Blueprint, command: Fluent): string
+    public compileCreate(blueprint: Blueprint, command: any): string
     {
-        return `${ blueprint.temporary ? 'create temporary' : 'create' } table ${ this.wrapTable(blueprint) } (${ this.getColumns(blueprint).join(', ') }${ this.addForeignKeys(this.getCommandsByName(blueprint, 'foreign')) }${ this.addPrimaryKeys(this.getCommandByName(blueprint, 'primary')) })`;
+        return `${ blueprint.properties.temporary ? 'create temporary' : 'create' } table ${ this.wrapTable(blueprint) } (${ this.getColumns(blueprint).join(', ') }${ this.addForeignKeys(this.getCommandsByName(blueprint, 'foreign')) }${ this.addPrimaryKeys(this.getCommandByName(blueprint, 'primary')) })`;
     }
 
     protected addForeignKeys(foreignKeys: ForeignKeyDefinition[]): string
@@ -69,7 +71,7 @@ export class SQLiteGrammar extends Grammar
         }, '');
     }
 
-    protected getForeignKey(foreign: Fluent): string
+    protected getForeignKey(foreign: any): string
     {
         let sql = `, foreign key(${ this.columnize(foreign.columns) }) references ${ this.wrapTable(foreign.on) }(${ this.columnize(foreign.references) })`;
 
@@ -86,7 +88,7 @@ export class SQLiteGrammar extends Grammar
         return sql;
     }
 
-    protected addPrimaryKeys(primary: Fluent | null): string
+    protected addPrimaryKeys(primary: any | null): string
     {
         if (primary !== null)
         {
@@ -96,7 +98,7 @@ export class SQLiteGrammar extends Grammar
         return '';
     }
 
-    public compileAdd(blueprint: Blueprint, command: Fluent): string[]
+    public compileAdd(blueprint: Blueprint, command: any): string[]
     {
         const columns = this.prefixArray('add column', this.getColumns(blueprint));
 
@@ -106,38 +108,38 @@ export class SQLiteGrammar extends Grammar
         });
     }
 
-    public compileChange(blueprint: Blueprint, command: Fluent, connection: Connection): string[]
+    public compileChange(blueprint: Blueprint, command: any, connection: Connection): string[]
     {
         throw new RuntimeException('SQLite does not support altering columns.');
     }
 
-    public compileUnique(blueprint: Blueprint, command: Fluent): string
+    public compileUnique(blueprint: Blueprint, command: any): string
     {
         return `create unique index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) } (${ this.columnize(command.columns) })`;
     }
 
-    public compileIndex(blueprint: Blueprint, command: Fluent): string
+    public compileIndex(blueprint: Blueprint, command: any): string
     {
         return `create index ${ this.wrap(command.index) } on ${ this.wrapTable(blueprint) } (${ this.columnize(command.columns) })`;
     }
 
-    public compileSpatialIndex(blueprint: Blueprint, command: Fluent): void
+    public compileSpatialIndex(blueprint: Blueprint, command: any): void
     {
-        throw new RuntimeException('The database driver in use does not support spatial indexes.');
+        throw new Error('The database driver in use does not support spatial indexes.');
     }
 
-    public compileForeign(blueprint: Blueprint, command: Fluent): string | null
+    public compileForeign(blueprint: Blueprint, command: any): string | null
     {
         // Handled on table creation...
         return null;
     }
 
-    public compileDrop(blueprint: Blueprint, command: Fluent): string
+    public compileDrop(blueprint: Blueprint, command: any): string
     {
         return `drop table ${ this.wrapTable(blueprint) }`;
     }
 
-    public compileDropIfExists(blueprint: Blueprint, command: Fluent): string
+    public compileDropIfExists(blueprint: Blueprint, command: any): string
     {
         return `drop table if exists ${ this.wrapTable(blueprint) }`;
     }
@@ -157,34 +159,34 @@ export class SQLiteGrammar extends Grammar
         return 'vacuum';
     }
 
-    public compileDropColumn(blueprint: Blueprint, command: Fluent, connection: Connection): string[]
+    public compileDropColumn(blueprint: Blueprint, command: any, connection: Connection): string[]
     {
-        throw new RuntimeException('SQLite does not support dropping columns.');
+        throw new Error('SQLite does not support dropping columns.');
     }
 
-    public compileDropUnique(blueprint: Blueprint, command: Fluent): string
-    {
-        return `drop index ${ this.wrap(command.index) }`;
-    }
-
-    public compileDropIndex(blueprint: Blueprint, command: Fluent): string
+    public compileDropUnique(blueprint: Blueprint, command: any): string
     {
         return `drop index ${ this.wrap(command.index) }`;
     }
 
-    public compileDropSpatialIndex(blueprint: Blueprint, command: Fluent): void
+    public compileDropIndex(blueprint: Blueprint, command: any): string
     {
-        throw new RuntimeException('The database driver in use does not support spatial indexes.');
+        return `drop index ${ this.wrap(command.index) }`;
     }
 
-    public compileRename(blueprint: Blueprint, command: Fluent): string
+    public compileDropSpatialIndex(blueprint: Blueprint, command: any): void
+    {
+        throw new Error('The database driver in use does not support spatial indexes.');
+    }
+
+    public compileRename(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } rename to ${ this.wrapTable(command.to) }`;
     }
 
-    public compileRenameIndex(blueprint: Blueprint, command: Fluent, connection: Connection): string[]
+    public compileRenameIndex(blueprint: Blueprint, command: any, connection: Connection): string[]
     {
-        throw new RuntimeException('SQLite does not support renaming indexes.');
+        throw new Error('SQLite does not support renaming indexes.');
     }
 
     public compileEnableForeignKeyConstraints(): string
@@ -207,122 +209,122 @@ export class SQLiteGrammar extends Grammar
         return 'PRAGMA writable_schema = 0;';
     }
 
-    protected typeChar(column: Fluent): string
+    protected typeChar(column: any): string
     {
         return 'varchar';
     }
 
-    protected typeString(column: Fluent): string
+    protected typeString(column: any): string
     {
         return 'varchar';
     }
 
-    protected typeTinyText(column: Fluent): string
+    protected typeTinyText(column: any): string
     {
         return 'text';
     }
 
-    protected typeText(column: Fluent): string
+    protected typeText(column: any): string
     {
         return 'text';
     }
 
-    protected typeMediumText(column: Fluent): string
+    protected typeMediumText(column: any): string
     {
         return 'text';
     }
 
-    protected typeLongText(column: Fluent): string
+    protected typeLongText(column: any): string
     {
         return 'text';
     }
 
-    protected typeBigInteger(column: Fluent): string
+    protected typeBigInteger(column: any): string
     {
         return 'integer';
     }
 
-    protected typeInteger(column: Fluent): string
+    protected typeInteger(column: any): string
     {
         return 'integer';
     }
 
-    protected typeMediumInteger(column: Fluent): string
+    protected typeMediumInteger(column: any): string
     {
         return 'integer';
     }
 
-    protected typeTinyInteger(column: Fluent): string
+    protected typeTinyInteger(column: any): string
     {
         return 'integer';
     }
 
-    protected typeSmallInteger(column: Fluent): string
+    protected typeSmallInteger(column: any): string
     {
         return 'integer';
     }
 
-    protected typeFloat(column: Fluent): string
+    protected typeFloat(column: any): string
     {
         return 'float';
     }
 
-    protected typeDouble(column: Fluent): string
+    protected typeDouble(column: any): string
     {
         return 'double';
     }
 
-    protected typeDecimal(column: Fluent): string
+    protected typeDecimal(column: any): string
     {
         return 'numeric';
     }
 
-    protected typeBoolean(column: Fluent): string
+    protected typeBoolean(column: any): string
     {
         return 'tinyint(1)';
     }
 
-    protected typeEnum(column: Fluent): string
+    protected typeEnum(column: any): string
     {
         return `varchar check ("${ column.name }" in (${ this.quoteString(column.allowed) }))`;
     }
 
-    protected typeJson(column: Fluent): string
+    protected typeJson(column: any): string
     {
         return 'text';
     }
 
-    protected typeJsonb(column: Fluent): string
+    protected typeJsonb(column: any): string
     {
         return 'text';
     }
 
-    protected typeDate(column: Fluent): string
+    protected typeDate(column: any): string
     {
         return 'date';
     }
 
-    protected typeDateTime(column: Fluent): string
+    protected typeDateTime(column: any): string
     {
         return this.typeTimestamp(column);
     }
 
-    protected typeDateTimeTz(column: Fluent): string
+    protected typeDateTimeTz(column: any): string
     {
         return this.typeDateTime(column);
     }
 
-    protected typeTime(column: Fluent): string
+    protected typeTime(column: any): string
     {
         return 'time';
     }
 
-    protected typeTimeTz(column: Fluent): string
+    protected typeTimeTz(column: any): string
     {
         return this.typeTime(column);
     }
 
-    protected typeTimestamp(column: Fluent): string
+    protected typeTimestamp(column: any): string
     {
         if (column.useCurrent)
         {
@@ -332,52 +334,52 @@ export class SQLiteGrammar extends Grammar
         return 'datetime';
     }
 
-    protected typeTimestampTz(column: Fluent): string
+    protected typeTimestampTz(column: any): string
     {
         return this.typeTimestamp(column);
     }
 
-    protected typeYear(column: Fluent): string
+    protected typeYear(column: any): string
     {
         return this.typeInteger(column);
     }
 
-    protected typeBinary(column: Fluent): string
+    protected typeBinary(column: any): string
     {
         return 'blob';
     }
 
-    protected typeUuid(column: Fluent): string
+    protected typeUuid(column: any): string
     {
         return 'varchar';
     }
 
-    protected typeIpAddress(column: Fluent): string
+    protected typeIpAddress(column: any): string
     {
         return 'varchar';
     }
 
-    protected typeMacAddress(column: Fluent): string
+    protected typeMacAddress(column: any): string
     {
         return 'varchar';
     }
 
-    protected typeGeometry(column: Fluent): string
+    protected typeGeometry(column: any): string
     {
         return 'geometry';
     }
 
-    protected typeGeography(column: Fluent): string
+    protected typeGeography(column: any): string
     {
         return this.typeGeometry(column);
     }
 
-    protected typeComputed(column: Fluent): void
+    protected typeComputed(column: any): void
     {
         throw new RuntimeException('This database driver requires a type, see the virtualAs / storedAs modifiers.');
     }
 
-    protected modifyVirtualAs(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyVirtualAs(blueprint: Blueprint, column: any): string | null
     {
         if (column.virtualAs !== null)
         {
@@ -387,7 +389,7 @@ export class SQLiteGrammar extends Grammar
         return null;
     }
 
-    protected modifyStoredAs(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyStoredAs(blueprint: Blueprint, column: any): string | null
     {
         if (column.storedAs !== null)
         {
@@ -397,7 +399,7 @@ export class SQLiteGrammar extends Grammar
         return null;
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyNullable(blueprint: Blueprint, column: any): string | null
     {
         if (column.nullable !== false)
         {
@@ -407,7 +409,7 @@ export class SQLiteGrammar extends Grammar
         return ' not null';
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyDefault(blueprint: Blueprint, column: any): string | null
     {
         if (column.default !== null)
         {
@@ -417,7 +419,7 @@ export class SQLiteGrammar extends Grammar
         return null;
     }
 
-    protected modifyIncrement(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyIncrement(blueprint: Blueprint, column: any): string | null
     {
         if (this.serials.includes(column.type) && column.autoIncrement)
         {
@@ -427,7 +429,7 @@ export class SQLiteGrammar extends Grammar
         return null;
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyCollate(blueprint: Blueprint, column: any): string | null
     {
         if (column.collation !== null)
         {

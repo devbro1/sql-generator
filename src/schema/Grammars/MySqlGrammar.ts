@@ -1,3 +1,8 @@
+import { Grammar } from "./Grammar";
+import { Blueprint } from "../Blueprint";
+import { Connection } from "../../Illuminate/Connection";
+import { ColumnDefinition } from "../ColumnDefinition";
+import { Expression } from "../../Illuminate/Expression";
 
 export class MySqlGrammar extends Grammar
 {
@@ -76,7 +81,7 @@ export class MySqlGrammar extends Grammar
             `group by kc.constraint_name, kc.referenced_table_schema, kc.referenced_table_name, rc.update_rule, rc.delete_rule`;
     }
 
-    public compileCreate(blueprint: Blueprint, command: Fluent, connection: Connection): string
+    public compileCreate(blueprint: Blueprint, command: any, connection: Connection): string
     {
         let sql = this.compileCreateTable(blueprint, command, connection);
 
@@ -85,7 +90,7 @@ export class MySqlGrammar extends Grammar
         return this.compileCreateEngine(sql, connection, blueprint);
     }
 
-    protected compileCreateTable(blueprint: Blueprint, command: Fluent, connection: Connection): string
+    protected compileCreateTable(blueprint: Blueprint, command: any, connection: Connection): string
     {
         const tableStructure = this.getColumns(blueprint);
 
@@ -96,7 +101,7 @@ export class MySqlGrammar extends Grammar
             primaryKey.shouldBeSkipped = true;
         }
 
-        return `${ blueprint.temporary ? 'create temporary' : 'create' } table ${ this.wrapTable(blueprint) } (${ tableStructure.join(', ') })`;
+        return `${ blueprint.properties.temporary ? 'create temporary' : 'create' } table ${ this.wrapTable(blueprint) } (${ tableStructure.join(', ') })`;
     }
 
     protected compileCreateEncoding(sql: string, connection: Connection, blueprint: Blueprint): string
@@ -133,22 +138,24 @@ export class MySqlGrammar extends Grammar
         return sql;
     }
 
-    public compileAdd(blueprint: Blueprint, command: Fluent): string
+    public compileAdd(blueprint: Blueprint, command: any): string
     {
         const columns = this.prefixArray('add', this.getColumns(blueprint));
 
         return `alter table ${ this.wrapTable(blueprint) } ${ columns.join(', ') }`;
     }
 
-    public compileAutoIncrementStartingValues(blueprint: Blueprint, command: Fluent): string
+    public compileAutoIncrementStartingValues(blueprint: Blueprint, command: any): string
     {
         if (command.column.autoIncrement && command.column.get('startingValue', command.column.get('from')))
         {
             return `alter table ${ this.wrapTable(blueprint) } auto_increment = ${ command.column.get('startingValue', command.column.get('from')) }`;
         }
+
+        return '';
     }
 
-    public compileRenameColumn(blueprint: Blueprint, command: Fluent, connection: Connection): string | string[]
+    public compileRenameColumn(blueprint: Blueprint, command: any, connection: Connection): string
     {
         const version = connection.getServerVersion();
 
@@ -156,7 +163,7 @@ export class MySqlGrammar extends Grammar
             (!connection.isMaria() && version.localeCompare('8.0.3', '<')))
         {
             const column = connection.getSchemaBuilder().getColumns(blueprint.getTable())
-                .find(column => column.name === command.from);
+                .find((column: ColumnDefinition) => column.name === command.from);
 
             const modifiers = this.addModifiers(column['type'], blueprint, new ColumnDefinition({
                 'change': true,
@@ -183,7 +190,7 @@ export class MySqlGrammar extends Grammar
         return super.compileRenameColumn(blueprint, command, connection);
     }
 
-    public compileChange(blueprint: Blueprint, command: Fluent, connection: Connection): string | string[]
+    public compileChange(blueprint: Blueprint, command: any, connection: Connection): string | string[]
     {
         const columns = [];
 
@@ -197,97 +204,97 @@ export class MySqlGrammar extends Grammar
         return `alter table ${ this.wrapTable(blueprint) } ${ columns.join(', ') }`;
     }
 
-    public compilePrimary(blueprint: Blueprint, command: Fluent): string
+    public compilePrimary(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } add primary key ${ command.algorithm ? 'using ' + command.algorithm : '' }(${ this.columnize(command.columns) })`;
     }
 
-    public compileUnique(blueprint: Blueprint, command: Fluent): string
+    public compileUnique(blueprint: Blueprint, command: any): string
     {
         return this.compileKey(blueprint, command, 'unique');
     }
 
-    public compileIndex(blueprint: Blueprint, command: Fluent): string
+    public compileIndex(blueprint: Blueprint, command: any): string
     {
         return this.compileKey(blueprint, command, 'index');
     }
 
-    public compileFullText(blueprint: Blueprint, command: Fluent): string
+    public compileFullText(blueprint: Blueprint, command: any): string
     {
         return this.compileKey(blueprint, command, 'fulltext');
     }
 
-    public compileSpatialIndex(blueprint: Blueprint, command: Fluent): string
+    public compileSpatialIndex(blueprint: Blueprint, command: any): string
     {
         return this.compileKey(blueprint, command, 'spatial index');
     }
 
-    protected compileKey(blueprint: Blueprint, command: Fluent, type: string): string
+    protected compileKey(blueprint: Blueprint, command: any, type: string): string
     {
         return `alter table ${ this.wrapTable(blueprint) } add ${ type } ${ this.wrap(command.index) }${ command.algorithm ? ' using ' + command.algorithm : '' }(${ this.columnize(command.columns) })`;
     }
 
-    public compileDrop(blueprint: Blueprint, command: Fluent): string
+    public compileDrop(blueprint: Blueprint, command: any): string
     {
         return `drop table ${ this.wrapTable(blueprint) }`;
     }
 
-    public compileDropIfExists(blueprint: Blueprint, command: Fluent): string
+    public compileDropIfExists(blueprint: Blueprint, command: any): string
     {
         return `drop table if exists ${ this.wrapTable(blueprint) }`;
     }
 
-    public compileDropColumn(blueprint: Blueprint, command: Fluent): string
+    public compileDropColumn(blueprint: Blueprint, command: any): string
     {
         const columns = this.prefixArray('drop', this.wrapArray(command.columns));
 
         return `alter table ${ this.wrapTable(blueprint) } ${ columns.join(', ') }`;
     }
 
-    public compileDropPrimary(blueprint: Blueprint, command: Fluent): string
+    public compileDropPrimary(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } drop primary key`;
     }
 
-    public compileDropUnique(blueprint: Blueprint, command: Fluent): string
+    public compileDropUnique(blueprint: Blueprint, command: any): string
     {
         const index = this.wrap(command.index);
 
         return `alter table ${ this.wrapTable(blueprint) } drop index ${ index }`;
     }
 
-    public compileDropIndex(blueprint: Blueprint, command: Fluent): string
+    public compileDropIndex(blueprint: Blueprint, command: any): string
     {
         const index = this.wrap(command.index);
 
         return `alter table ${ this.wrapTable(blueprint) } drop index ${ index }`;
     }
 
-    public compileDropFullText(blueprint: Blueprint, command: Fluent): string
+    public compileDropFullText(blueprint: Blueprint, command: any): string
     {
         return this.compileDropIndex(blueprint, command);
     }
 
-    public compileDropSpatialIndex(blueprint: Blueprint, command: Fluent): string
+    public compileDropSpatialIndex(blueprint: Blueprint, command: any): string
     {
         return this.compileDropIndex(blueprint, command);
     }
 
-    public compileDropForeign(blueprint: Blueprint, command: Fluent): string
+    public compileDropForeign(blueprint: Blueprint, command: any): string
     {
         const index = this.wrap(command.index);
 
         return `alter table ${ this.wrapTable(blueprint) } drop foreign key ${ index }`;
     }
 
-    public compileRename(blueprint: Blueprint, command: Fluent): string
+    public compileRename(blueprint: Blueprint, command: any): string
     {
         const from = this.wrapTable(blueprint);
 
         return `rename table ${ from } to ${ this.wrapTable(command.to) }`;
     }
 
-    public compileRenameIndex(blueprint: Blueprint, command: Fluent): string
+    public compileRenameIndex(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } rename index ${ this.wrap(command.from) } to ${ this.wrap(command.to) }`;
     }
@@ -312,67 +319,67 @@ export class MySqlGrammar extends Grammar
         return 'SET FOREIGN_KEY_CHECKS=0;';
     }
 
-    public compileTableComment(blueprint: Blueprint, command: Fluent): string
+    public compileTableComment(blueprint: Blueprint, command: any): string
     {
         return `alter table ${ this.wrapTable(blueprint) } comment = '${ command.comment.replace("'", "''") }'`;
     }
 
-    protected typeChar(column: Fluent): string
+    protected typeChar(column: any): string
     {
         return `char(${ column.length })`;
     }
 
-    protected typeString(column: Fluent): string
+    protected typeString(column: any): string
     {
         return `varchar(${ column.length })`;
     }
 
-    protected typeTinyText(column: Fluent): string
+    protected typeTinyText(column: any): string
     {
         return 'tinytext';
     }
 
-    protected typeText(column: Fluent): string
+    protected typeText(column: any): string
     {
         return 'text';
     }
 
-    protected typeMediumText(column: Fluent): string
+    protected typeMediumText(column: any): string
     {
         return 'mediumtext';
     }
 
-    protected typeLongText(column: Fluent): string
+    protected typeLongText(column: any): string
     {
         return 'longtext';
     }
 
-    protected typeBigInteger(column: Fluent): string
+    protected typeBigInteger(column: any): string
     {
         return 'bigint';
     }
 
-    protected typeInteger(column: Fluent): string
+    protected typeInteger(column: any): string
     {
         return 'int';
     }
 
-    protected typeMediumInteger(column: Fluent): string
+    protected typeMediumInteger(column: any): string
     {
         return 'mediumint';
     }
 
-    protected typeTinyInteger(column: Fluent): string
+    protected typeTinyInteger(column: any): string
     {
         return 'tinyint';
     }
 
-    protected typeSmallInteger(column: Fluent): string
+    protected typeSmallInteger(column: any): string
     {
         return 'smallint';
     }
 
-    protected typeFloat(column: Fluent): string
+    protected typeFloat(column: any): string
     {
         if (column.precision)
         {
@@ -382,47 +389,47 @@ export class MySqlGrammar extends Grammar
         return 'float';
     }
 
-    protected typeDouble(column: Fluent): string
+    protected typeDouble(column: any): string
     {
         return 'double';
     }
 
-    protected typeDecimal(column: Fluent): string
+    protected typeDecimal(column: any): string
     {
         return `decimal(${ column.total }, ${ column.places })`;
     }
 
-    protected typeBoolean(column: Fluent): string
+    protected typeBoolean(column: any): string
     {
         return 'tinyint(1)';
     }
 
-    protected typeEnum(column: Fluent): string
+    protected typeEnum(column: any): string
     {
         return `enum(${ this.quoteString(column.allowed) })`;
     }
 
-    protected typeSet(column: Fluent): string
+    protected typeSet(column: any): string
     {
         return `set(${ this.quoteString(column.allowed) })`;
     }
 
-    protected typeJson(column: Fluent): string
+    protected typeJson(column: any): string
     {
         return 'json';
     }
 
-    protected typeJsonb(column: Fluent): string
+    protected typeJsonb(column: any): string
     {
         return 'json';
     }
 
-    protected typeDate(column: Fluent): string
+    protected typeDate(column: any): string
     {
         return 'date';
     }
 
-    protected typeDateTime(column: Fluent): string
+    protected typeDateTime(column: any): string
     {
         const current = column.precision ? `CURRENT_TIMESTAMP(${ column.precision })` : 'CURRENT_TIMESTAMP';
 
@@ -439,22 +446,22 @@ export class MySqlGrammar extends Grammar
         return column.precision ? `datetime(${ column.precision })` : 'datetime';
     }
 
-    protected typeDateTimeTz(column: Fluent): string
+    protected typeDateTimeTz(column: any): string
     {
         return this.typeDateTime(column);
     }
 
-    protected typeTime(column: Fluent): string
+    protected typeTime(column: any): string
     {
         return column.precision ? `time(${ column.precision })` : 'time';
     }
 
-    protected typeTimeTz(column: Fluent): string
+    protected typeTimeTz(column: any): string
     {
         return this.typeTime(column);
     }
 
-    protected typeTimestamp(column: Fluent): string
+    protected typeTimestamp(column: any): string
     {
         const current = column.precision ? `CURRENT_TIMESTAMP(${ column.precision })` : 'CURRENT_TIMESTAMP';
 
@@ -471,17 +478,17 @@ export class MySqlGrammar extends Grammar
         return column.precision ? `timestamp(${ column.precision })` : 'timestamp';
     }
 
-    protected typeTimestampTz(column: Fluent): string
+    protected typeTimestampTz(column: any): string
     {
         return this.typeTimestamp(column);
     }
 
-    protected typeYear(column: Fluent): string
+    protected typeYear(column: any): string
     {
         return 'year';
     }
 
-    protected typeBinary(column: Fluent): string
+    protected typeBinary(column: any): string
     {
         if (column.length)
         {
@@ -491,44 +498,44 @@ export class MySqlGrammar extends Grammar
         return 'blob';
     }
 
-    protected typeUuid(column: Fluent): string
+    protected typeUuid(column: any): string
     {
         return 'char(36)';
     }
 
-    protected typeIpAddress(column: Fluent): string
+    protected typeIpAddress(column: any): string
     {
         return 'varchar(45)';
     }
 
-    protected typeMacAddress(column: Fluent): string
+    protected typeMacAddress(column: any): string
     {
         return 'varchar(17)';
     }
 
-    protected typeGeometry(column: Fluent): string
+    protected typeGeometry(column: any): string
     {
-        const subtype = column.subtype ? column.subtype.toLowerCase() : null;
+        let subtype = column.subtype ? column.subtype.toLowerCase() : '';
 
         if (!['point', 'linestring', 'polygon', 'geometrycollection', 'multipoint', 'multilinestring', 'multipolygon'].includes(subtype))
         {
-            subtype = null;
+            subtype = '';
         }
 
-        return `${ subtype ?? 'geometry' }${ column.srid && this.connection?.isMaria() ? ' ref_system_id=' + column.srid : (column.srid ? ' srid ' + column.srid : '') }`;
+        return `${ subtype || 'geometry' }${ column.srid && this.connection?.isMaria() ? ' ref_system_id=' + column.srid : (column.srid ? ' srid ' + column.srid : '') }`;
     }
 
-    protected typeGeography(column: Fluent): string
+    protected typeGeography(column: any): string
     {
         return this.typeGeometry(column);
     }
 
-    protected typeComputed(column: Fluent): void
+    protected typeComputed(column: any): void
     {
-        throw new RuntimeException('This database driver requires a type, see the virtualAs / storedAs modifiers.');
+        throw new Error('This database driver requires a type, see the virtualAs / storedAs modifiers.');
     }
 
-    protected modifyVirtualAs(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyVirtualAs(blueprint: Blueprint, column: any): string | null
     {
         if (column.virtualAsJson !== null)
         {
@@ -548,7 +555,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyStoredAs(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyStoredAs(blueprint: Blueprint, column: any): string | null
     {
         if (column.storedAsJson !== null)
         {
@@ -568,7 +575,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyUnsigned(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyUnsigned(blueprint: Blueprint, column: any): string | null
     {
         if (column.unsigned)
         {
@@ -578,7 +585,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyCharset(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyCharset(blueprint: Blueprint, column: any): string | null
     {
         if (column.charset !== null)
         {
@@ -588,7 +595,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyCollate(blueprint: Blueprint, column: any): string | null
     {
         if (column.collation !== null)
         {
@@ -598,7 +605,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyNullable(blueprint: Blueprint, column: any): string | null
     {
         if (column.virtualAs === null &&
             column.virtualAsJson === null &&
@@ -616,7 +623,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyInvisible(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyInvisible(blueprint: Blueprint, column: any): string | null
     {
         if (column.invisible !== null)
         {
@@ -626,7 +633,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyDefault(blueprint: Blueprint, column: any): string | null
     {
         if (column.default !== null)
         {
@@ -636,7 +643,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyOnUpdate(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyOnUpdate(blueprint: Blueprint, column: any): string | null
     {
         if (column.onUpdate !== null)
         {
@@ -646,7 +653,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyIncrement(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyIncrement(blueprint: Blueprint, column: any): string | null
     {
         if (this.serials.includes(column.type) && column.autoIncrement)
         {
@@ -656,7 +663,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyFirst(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyFirst(blueprint: Blueprint, column: any): string | null
     {
         if (column.first !== null)
         {
@@ -666,7 +673,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyAfter(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyAfter(blueprint: Blueprint, column: any): string | null
     {
         if (column.after !== null)
         {
@@ -676,7 +683,7 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyComment(blueprint: Blueprint, column: Fluent): string | null
+    protected modifyComment(blueprint: Blueprint, column: any): string | null
     {
         if (column.comment !== null)
         {

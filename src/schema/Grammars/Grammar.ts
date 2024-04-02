@@ -1,6 +1,7 @@
 import { Connection } from '../../Illuminate/Connection';
 import { Grammar as BaseGrammar } from '../../Illuminate/Grammar';
 import { Blueprint } from '../Blueprint';
+import { ColumnDefinition } from '../ColumnDefinition';
 
 export class Grammar extends BaseGrammar
 {
@@ -144,7 +145,7 @@ export class Grammar extends BaseGrammar
     {
         if(typeof value === 'object' && value.constructor.name === 'ColumnDefinition')
         {
-            return super.wrap(value.properties.column_name);            
+            return super.wrap(value.properties.name);            
         }
         return super.wrap(value);
     }
@@ -168,4 +169,39 @@ export class Grammar extends BaseGrammar
     {
         return this.transactions;
     }
+
+
+    protected wrapJsonFieldAndPath(column: string): [string, string] {
+        const parts = column.split('->', 2);
+        const field = this.wrap(parts[0]);
+        const path = parts.length > 1 ? `, ${this.wrapJsonPath(parts[1], '->')}` : '';
+        return [field, path];
+    }
+
+    protected wrapJsonPath(value: string, delimiter: string = '->'): string {
+        value = value.replace(/(\\+)?\'/g, "''");
+    
+        const jsonPath = value.split(delimiter)
+                              .map(segment => this.wrapJsonPathSegment(segment))
+                              .join('.');
+    
+        return `'$${jsonPath.startsWith('[') ? '' : '.'}${jsonPath}'`;
+    }
+
+    protected wrapJsonPathSegment(segment: string): string {
+        const parts = segment.match(/(\[[^\]]+\])+$/);
+    
+        if (parts) {
+            const key = segment.substring(0, segment.lastIndexOf(parts[0]));
+    
+            if (key !== '') {
+                return `"${key}"${parts[0]}`;
+            }
+    
+            return parts[0];
+        }
+    
+        return `"${segment}"`;
+    }
+    
 }

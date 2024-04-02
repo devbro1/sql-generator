@@ -1,9 +1,11 @@
 import { MySqlGrammar } from "./MySqlGrammar";
+import { Blueprint } from "../Blueprint";
+import { Connection } from "../../Illuminate/Connection";
 
 export class MariaDbGrammar extends MySqlGrammar
 {
 
-    public compileRenameColumn(blueprint: Blueprint, command: Fluent, connection: Connection): string | string[]
+    public compileRenameColumn(blueprint: Blueprint, command: any, connection: Connection): string | string[]
     {
         if (connection.getServerVersion().localeCompare('10.5.2', '<'))
         {
@@ -31,12 +33,12 @@ export class MariaDbGrammar extends MySqlGrammar
         return super.compileRenameColumn(blueprint, command, connection);
     }
 
-    protected typeUuid(column: Fluent): string
+    protected typeUuid(column: any): string
     {
         return 'uuid';
     }
 
-    protected typeGeometry(column: Fluent): string
+    protected typeGeometry(column: any): string
     {
         const subtype = column.subtype ? column.subtype.toLowerCase() : null;
 

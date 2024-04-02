@@ -21,4 +21,12 @@ export class Connection
     query(c:string):any {
 
     }
+
+    isMaria(): boolean {
+        return false;
+    }
+
+    getSchemaBuilder(): any {
+        
+    }
 }
