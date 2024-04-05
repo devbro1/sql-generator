@@ -32,6 +32,7 @@ export type ColumnProperties = {
     unique: boolean | string;
     fulltext: boolean | string;
     spatialIndex: boolean | string;
+    renameTo: string;
 }
 
 export class ColumnDefinition
@@ -63,6 +64,7 @@ export class ColumnDefinition
         unique: false,
         fulltext: false,
         spatialIndex: false,
+        renameTo: '',
     };
 
     constructor(details: any)

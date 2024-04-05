@@ -110,7 +110,7 @@ export class SQLiteGrammar extends Grammar
 
     public compileChange(blueprint: Blueprint, command: any, connection: Connection): string[]
     {
-        throw new RuntimeException('SQLite does not support altering columns.');
+        throw new Error('SQLite does not support altering columns.');
     }
 
     public compileUnique(blueprint: Blueprint, command: any): string
@@ -128,10 +128,10 @@ export class SQLiteGrammar extends Grammar
         throw new Error('The database driver in use does not support spatial indexes.');
     }
 
-    public compileForeign(blueprint: Blueprint, command: any): string | null
+    public compileForeign(blueprint: Blueprint, command: any): string
     {
         // Handled on table creation...
-        return null;
+        return '';
     }
 
     public compileDrop(blueprint: Blueprint, command: any): string
@@ -376,7 +376,7 @@ export class SQLiteGrammar extends Grammar
 
     protected typeComputed(column: any): void
     {
-        throw new RuntimeException('This database driver requires a type, see the virtualAs / storedAs modifiers.');
+        throw new Error('This database driver requires a type, see the virtualAs / storedAs modifiers.');
     }
 
     protected modifyVirtualAs(blueprint: Blueprint, column: any): string | null

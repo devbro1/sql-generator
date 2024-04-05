@@ -9,9 +9,9 @@ export class PostgresGrammar extends Grammar {
     protected modifiers: string[] = ['Collate', 'Nullable', 'Default', 'VirtualAs', 'StoredAs', 'GeneratedAs', 'Increment'];
     protected serials: string[] = ['bigInteger', 'integer', 'mediumInteger', 'smallInteger', 'tinyInteger'];
     protected fluentCommands: string[] = ['AutoIncrementStartingValues', 'Comment'];
-    protected connection: Connection;
+    protected connection: Connection | null;
 
-    public constructor(connection: Connection) {
+    public constructor(connection: Connection | null = null) {
         super();
         this.connection = connection;
     }

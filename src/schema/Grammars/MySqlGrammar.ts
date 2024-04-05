@@ -196,7 +196,7 @@ export class MySqlGrammar extends Grammar
 
         for (const column of blueprint.getChangedColumns())
         {
-            const sql = `${ column.renameTo === null ? 'modify' : 'change' } ${ this.wrap(column) }${ column.renameTo === null ? '' : ' ' + this.wrap(column.renameTo) } ${ this.getType(column) }`;
+            const sql = `${ column.properties.renameTo === '' ? 'modify' : 'change' } ${ this.wrap(column) }${ column.properties.renameTo === '' ? '' : ' ' + this.wrap(column.properties.renameTo) } ${ this.getType(column) }`;
 
             columns.push(this.addModifiers(sql, blueprint, column));
         }
@@ -708,5 +708,9 @@ export class MySqlGrammar extends Grammar
         const [field, path] = this.wrapJsonFieldAndPath(value);
 
         return 'json_unquote(json_extract(' + field + path + '))';
+    }
+
+    isJsonSelector(a:any) {
+        return false;
     }
 }
