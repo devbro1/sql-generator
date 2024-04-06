@@ -46,7 +46,7 @@ export class Blueprint {
 
             const method = ('compile' + command.name.charAt(0).toUpperCase() + command.name.slice(1));
             const sql = grammar.compile(method as keyof Grammar,this,command,connection);
-            if (sql !== null) {
+            if (sql !== '') {
                 statements = statements.concat(sql);
             }
         }
