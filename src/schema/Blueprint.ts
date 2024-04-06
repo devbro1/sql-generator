@@ -83,7 +83,7 @@ export class Blueprint {
                     (this[index as keyof this] as Function)(column.properties.name);
                     (column[index as keyof ColumnDefinition] as Function)(false);
                 } else if (column.properties[index as keyof ColumnProperties] !== false) {
-                    (this[index as keyof this] as Function)(column.name, column.properties[index as keyof ColumnProperties]);
+                    (this[index as keyof this] as Function)(column.properties.name, column.properties[index as keyof ColumnProperties]);
                     (column[index as keyof ColumnDefinition] as Function)(false);
                 }
             }
@@ -229,6 +229,10 @@ export class Blueprint {
 
     public index(columns: string | (string | Expression)[], name: string = '', algorithm: string = ''): IndexDefinition {
         return this.indexCommand('index', columns, name, algorithm);
+    }
+
+    public fulltext(columns: string | string[], name: string = '', algorithm: string = ''): IndexDefinition {
+        return this.fullText(columns,name,algorithm);
     }
 
     public fullText(columns: string | string[], name: string = '', algorithm: string = ''): IndexDefinition {
@@ -611,7 +615,7 @@ export class Blueprint {
         this.columns.push(definition);
         if (this.properties.after) {
             definition.after(this.properties.after);
-            this.properties.after = definition.name;
+            this.properties.after = definition.properties.name;
         }
         return definition;
     }
@@ -623,7 +627,7 @@ export class Blueprint {
     }
 
     public removeColumn(name: string): Blueprint {
-        this.columns = this.columns.filter(column => column.name !== name);
+        this.columns = this.columns.filter(column => column.properties.name !== name);
         return this;
     }
 
@@ -654,10 +658,10 @@ export class Blueprint {
     }
 
     public getAddedColumns(): ColumnDefinition[] {
-        return this.columns.filter(column => !column.change);
+        return this.columns.filter(column => !column.properties.change);
     }
 
     public getChangedColumns(): ColumnDefinition[] {
-        return this.columns.filter(column => column.change);
+        return this.columns.filter(column => column.properties.change);
     }
 }

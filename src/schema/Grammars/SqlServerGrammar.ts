@@ -164,7 +164,7 @@ export class SqlServerGrammar extends Grammar
     public compileDropDefaultConstraint(blueprint: Blueprint, command: any): string
     {
         const columns = command.name === 'change'
-            ? "'" + blueprint.getChangedColumns().map(obj => obj.name).join("','") + "'"
+            ? "'" + blueprint.getChangedColumns().map(obj => obj.properties.name).join("','") + "'"
             : "'" + command.columns.join("','") + "'";
 
         const table = this.wrapTable(blueprint);

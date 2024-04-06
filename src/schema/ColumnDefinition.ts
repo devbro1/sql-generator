@@ -9,11 +9,13 @@ type ColumnType = "string" | "text" | "tinyText" | "longText"
     | "date" | "dateTime" | "dateTimeTz" | "time" | "timeTz";
 
 export type ColumnProperties = {
+    first: string;
+    onUpdate: string;
     comment: string;
     name: string;
     type: ColumnType;
     nullable: boolean;
-    default: number | string | Expression | number[] | string[];
+    default: number | string | Expression | number[] | string[] | null;
     primary: boolean;
     autoIncrement: boolean;
     index: boolean | string;
@@ -35,20 +37,22 @@ export type ColumnProperties = {
     spatialIndex: boolean | string;
     renameTo: string;
     change: boolean;
+    charset: string;
+    after: string;
+    storedAsJson: string;
+    invisible: boolean;
+    unsigned: boolean;
+    virtualAsJson: string;
 }
-function partialToFull<T>(x: Partial<T>): T { return x as T; }
 
 export class ColumnDefinition
 {
-
-    public name: string = '';
-    public needs_change: boolean = false;
     public properties: ColumnProperties = {
         comment: '',
         name: '',
         type: 'string',
         nullable: false,
-        default: '',
+        default: null,
         primary: false,
         autoIncrement: false,
         index: false,
@@ -61,6 +65,7 @@ export class ColumnDefinition
         subtype: '',
         srid: '',
         collation: '',
+        charset: '',
         generatedAs: false,
         virtualAs: '',
         storedAs: '',
@@ -70,15 +75,26 @@ export class ColumnDefinition
         spatialIndex: false,
         renameTo: '',
         change: false,
+        onUpdate: '',
+        first: '',
+        after: '',
+        storedAsJson: '',
+        invisible: false,
+        unsigned: false,
+        virtualAsJson: '',
     };
 
     constructor(properties: Partial<ColumnProperties>)
     {
-        this.properties = partialToFull(properties);
+        this.properties = { ...this.properties, ...properties };
     }
 
     // Place the column "after" another column (MySQL)
-    public after(column: string) { }
+    public after(column: string) {
+        this.properties.after = column;
+
+        return this;
+    }
 
     //  Used as a modifier for generatedAs() (PostgreSQL)
     public always(value: boolean = true) { }
@@ -87,19 +103,36 @@ export class ColumnDefinition
     public autoIncrement() { }
 
     // Change the column
-    public change() { }
+    public change() { 
+        this.properties.change = true;
+    }
 
     // Specify a character set for the column (MySQL)
-    public charset(charset: string) { }
+    public charset(charset: string) {
+        this.properties.charset = charset;
+        return this;
+    }
 
     //  Specify a collation for the column
-    public collation(collation: string) { }
+    public collation(collation: string) {
+        this.properties.collation = collation;
+
+        return this;
+    }
 
     // Add a comment to the column (MySQL/PostgreSQL)
-    public comment(comment: string) { }
+    public comment(comment: string) {
+        this.properties.comment = comment;
+
+        return this;
+    }
 
     // Specify a "default" value for the column
-    public default(value: any) { }
+    public default(value: any) {
+        this.properties.default = value;
+
+        return this;
+    }
 
     // Place the column "first" in the table (MySQL)
     public first() { }
@@ -116,7 +149,11 @@ export class ColumnDefinition
     }
 
     // Specify that the column should be invisible to "SELECT *" (MySQL)
-    public invisible() { }
+    public invisible(invisible: boolean = true) {
+        this.properties.invisible = invisible;
+
+        return this;
+    }
 
     //  Allow NULL values to be inserted into the column
     public nullable(value: boolean = true)
@@ -143,6 +180,8 @@ export class ColumnDefinition
     // Add a spatial index
     public spatialIndex(indexName: boolean | string = false) {
         this.properties.spatialIndex=indexName;
+
+        return this;
     }
 
     // Set the starting value of an auto-incrementing field (MySQL/PostgreSQL)
@@ -157,6 +196,8 @@ export class ColumnDefinition
     // Add a unique index
     public unique(indexName: boolean | string = false) {
         this.properties.unique = indexName;
+
+        return this;
     }
 
     //  Set the INTEGER column as UNSIGNED (MySQL)

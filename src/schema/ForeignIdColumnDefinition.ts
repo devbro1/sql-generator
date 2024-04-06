@@ -14,11 +14,11 @@ export class ForeignIdColumnDefinition extends ColumnDefinition {
 
 
     public constrained(table: string | null = null, column: string = 'id', indexName: string = ''): ForeignKeyDefinition {
-        return this.references(column, indexName).on(table ?? this.name.substring(0, this.name.lastIndexOf('_' + column)) + 's');
+        return this.references(column, indexName).on(table ?? this.properties.name.substring(0, this.properties.name.lastIndexOf('_' + column)) + 's');
     }
 
 
     public references(column: string, indexName: string = ''): ForeignKeyDefinition {
-        return this.blueprint.foreign(this.name, indexName).references(column);
+        return this.blueprint.foreign(this.properties.name, indexName).references(column);
     }
 }

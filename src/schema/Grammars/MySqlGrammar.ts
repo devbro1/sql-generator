@@ -163,7 +163,7 @@ export class MySqlGrammar extends Grammar
             (!connection.isMaria() && version.localeCompare('8.0.3', '<')))
         {
             const column = connection.getSchemaBuilder().getColumns(blueprint.getTable())
-                .find((column: ColumnDefinition) => column.name === command.from);
+                .find((column: ColumnDefinition) => column.properties.name === command.from);
 
             const modifiers = this.addModifiers(column['type'], blueprint, new ColumnDefinition({
                 'change': true,
@@ -535,152 +535,152 @@ export class MySqlGrammar extends Grammar
         throw new Error('This database driver requires a type, see the virtualAs / storedAs modifiers.');
     }
 
-    protected modifyVirtualAs(blueprint: Blueprint, column: any): string | null
+    protected modifyVirtualAs(blueprint: Blueprint, column: any): string
     {
-        if (column.virtualAsJson !== null)
+        if (column.properties.virtualAsJson !== '')
         {
-            if (this.isJsonSelector(column.virtualAsJson))
+            if (this.isJsonSelector(column.properties.virtualAsJson))
             {
-                column.virtualAsJson = this.wrapJsonSelector(column.virtualAsJson);
+                column.properties.virtualAsJson = this.wrapJsonSelector(column.properties.virtualAsJson);
             }
 
-            return ` as (${ column.virtualAsJson })`;
+            return ` as (${ column.properties.virtualAsJson })`;
         }
 
-        if (column.virtualAs !== null)
+        if (column.properties.virtualAs !== '')
         {
-            return ` as (${ this.getValue(column.virtualAs) })`;
+            return ` as (${ this.getValue(column.properties.virtualAs) })`;
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyStoredAs(blueprint: Blueprint, column: any): string | null
+    protected modifyStoredAs(blueprint: Blueprint, column: any): string
     {
-        if (column.storedAsJson !== null)
+        if (column.properties.storedAsJson !== '')
         {
-            if (this.isJsonSelector(column.storedAsJson))
+            if (this.isJsonSelector(column.properties.storedAsJson))
             {
-                column.storedAsJson = this.wrapJsonSelector(column.storedAsJson);
+                column.properties.storedAsJson = this.wrapJsonSelector(column.properties.storedAsJson);
             }
 
-            return ` as (${ column.storedAsJson }) stored`;
+            return ` as (${ column.properties.storedAsJson }) stored`;
         }
 
-        if (column.storedAs !== null)
+        if (column.properties.storedAs !== '')
         {
-            return ` as (${ this.getValue(column.storedAs) }) stored`;
+            return ` as (${ this.getValue(column.properties.storedAs) }) stored`;
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyUnsigned(blueprint: Blueprint, column: any): string | null
+    protected modifyUnsigned(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.unsigned)
+        if (column.properties.unsigned)
         {
             return ' unsigned';
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyCharset(blueprint: Blueprint, column: any): string | null
+    protected modifyCharset(blueprint: Blueprint, column: any): string
     {
-        if (column.charset !== null)
+        if (column.properties.charset !== '')
         {
             return ' character set ' + column.charset;
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: any): string | null
+    protected modifyCollate(blueprint: Blueprint, column: any): string
     {
-        if (column.collation !== null)
+        if (column.properties.collation !== '')
         {
             return ` collate '${ column.collation }'`;
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: any): string | null
+    protected modifyNullable(blueprint: Blueprint, column: any): string
     {
         if (column.virtualAs === null &&
             column.virtualAsJson === null &&
             column.storedAs === null &&
             column.storedAsJson === null)
         {
-            return column.nullable ? ' null' : ' not null';
+            return column.properties.nullable ? ' null' : ' not null';
         }
 
-        if (!column.nullable)
+        if (!column.properties.nullable)
         {
             return ' not null';
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyInvisible(blueprint: Blueprint, column: any): string | null
+    protected modifyInvisible(blueprint: Blueprint, column: any): string
     {
-        if (column.invisible !== null)
+        if (column.properties.invisible === true)
         {
             return ' invisible';
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: any): string | null
+    protected modifyDefault(blueprint: Blueprint, column: any): string
     {
-        if (column.default !== null)
+        if (column.properties.default !== null)
         {
             return ' default ' + this.getDefaultValue(column.default);
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyOnUpdate(blueprint: Blueprint, column: any): string | null
+    protected modifyOnUpdate(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.onUpdate !== null)
+        if (column.properties.onUpdate !== '')
         {
-            return ' on update ' + this.getValue(column.onUpdate);
+            return ' on update ' + this.getValue(column.properties.onUpdate);
         }
 
-        return null;
+        return '';
     }
 
     protected modifyIncrement(blueprint: Blueprint, column: any): string | null
     {
-        if (this.serials.includes(column.type) && column.autoIncrement)
+        if (this.serials.includes(column.properties.type) && column.properties.autoIncrement)
         {
-            return this.hasCommand(blueprint, 'primary') || (column.change && !column.primary) ? ' auto_increment' : ' auto_increment primary key';
+            return this.hasCommand(blueprint, 'primary') || (column.properties.change && !column.properties.primary) ? ' auto_increment' : ' auto_increment primary key';
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyFirst(blueprint: Blueprint, column: any): string | null
+    protected modifyFirst(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.first !== null)
+        if (column.properties.first !== '')
         {
             return ' first';
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyAfter(blueprint: Blueprint, column: any): string | null
+    protected modifyAfter(blueprint: Blueprint, column: any): string
     {
-        if (column.after !== null)
+        if (column.properties.after !== '')
         {
-            return ' after ' + this.wrap(column.after);
+            return ' after ' + this.wrap(column.properties.after);
         }
 
-        return null;
+        return '';
     }
 
     protected modifyComment(blueprint: Blueprint, column: ColumnDefinition): string 

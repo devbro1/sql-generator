@@ -351,7 +351,7 @@ export class PostgresGrammar extends Grammar {
     }
 
     protected typeEnum(column: ColumnDefinition): string {
-        return `varchar(255) check ("${column.name}" in (${this.quoteString(column.properties.allowed)}))`;
+        return `varchar(255) check ("${column.properties.name}" in (${this.quoteString(column.properties.allowed)}))`;
     }
 
     protected typeJson(column: ColumnDefinition): string {
@@ -440,14 +440,14 @@ export class PostgresGrammar extends Grammar {
     }
 
     protected modifyNullable(blueprint: Blueprint, column: ColumnDefinition): string | null {
-        if (column.needs_change) {
+        if (column.properties.change) {
             return column.properties.nullable ? 'drop not null' : 'set not null';
         }
         return column.properties.nullable ? ' null' : ' not null';
     }
 
     protected modifyDefault(blueprint: Blueprint, column: ColumnDefinition): string | null {
-        if (column.needs_change) {
+        if (column.properties.change) {
             if (!column.properties.autoIncrement || column.properties.generatedAs !== false) {
                 return column.properties.default === null ? 'drop default' : 'set default ' + this.getDefaultValue(column.properties.default);
             }
@@ -470,7 +470,7 @@ export class PostgresGrammar extends Grammar {
     }
 
     protected modifyVirtualAs(blueprint: Blueprint, column: ColumnDefinition): string {
-        if (column.needs_change) {
+        if (column.properties.change) {
             if ('virtualAs' in column.getAttributes() && column.properties.virtualAs === '') {
                 return 'drop expression if exists';
             }
@@ -483,7 +483,7 @@ export class PostgresGrammar extends Grammar {
     }
 
     protected modifyStoredAs(blueprint: Blueprint, column: ColumnDefinition): string {
-        if (column.needs_change) {
+        if (column.properties.change) {
             if ('storedAs' in column.getAttributes() && column.properties.storedAs) {
                 return 'drop expression if exists';
             }
@@ -507,7 +507,7 @@ export class PostgresGrammar extends Grammar {
                 column.properties.generatedAs !== true ? ` (${column.properties.generatedAs})` : '');
         }
 
-        if (column.needs_change) {
+        if (column.properties.change) {
             const changes: string[] = column.properties.autoIncrement && sql === null ? [] : ['drop identity if exists'];
 
             if (sql !== null) {

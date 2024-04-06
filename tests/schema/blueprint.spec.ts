@@ -94,7 +94,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     expect(commands[0].index).toBe("prefix_geo_coordinates_spatialindex");
   });
 
-  it.only("testDefaultCurrentDateTime", () => {
+  it("testDefaultCurrentDateTime", () => {
     const blueprint = new Blueprint("users");
     const connection: MockProxy<Connection> = mock<Connection>();
 
@@ -121,6 +121,15 @@ describe("DatabaseSchemaBlueprintTest", () => {
 
     
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["alter table \"users\" add \"created\" datetime not null default CURRENT_TIMESTAMP"]);
+  });
+
+  it.only("testAddColumn", () => {
+    const blueprint = new Blueprint("users");
+
+    const connection: MockProxy<Connection> = mock<Connection>();
+
+    blueprint.string("foo");
+    expect(blueprint.toSql(connection, new MySqlGrammar())).toEqual(["alter table `users` add `foo` varchar(255) not null"]);
   });
 
   it("testRemoveColumn", () => {
