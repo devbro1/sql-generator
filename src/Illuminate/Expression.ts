@@ -4,7 +4,7 @@ export class Expression
     constructor(raw_sql: string) {
         this.raw_sql = raw_sql;
     }
-    getValue(value: any): any {
+    getValue(value: any=''): any {
         return '';
     }
 }

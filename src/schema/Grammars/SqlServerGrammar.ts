@@ -1,5 +1,7 @@
 import { Grammar } from "./Grammar";
 import { Blueprint } from "../Blueprint";
+import { Connection } from "../../Illuminate/Connection";
+import { Expression } from "../../Illuminate/Expression";
 
 export class SqlServerGrammar extends Grammar
 {
@@ -104,7 +106,7 @@ export class SqlServerGrammar extends Grammar
 
     public compileChange(blueprint: Blueprint, command: any, connection: Connection): string[]
     {
-        throw new RuntimeException('SQL Server does not support altering columns.');
+        throw new Error('SQL Server does not support altering columns.');
     }
 
     public compilePrimary(blueprint: Blueprint, command: any): string
@@ -162,7 +164,7 @@ export class SqlServerGrammar extends Grammar
     public compileDropDefaultConstraint(blueprint: Blueprint, command: any): string
     {
         const columns = command.name === 'change'
-            ? "'" + collect(blueprint.getChangedColumns()).pluck('name').join("','") + "'"
+            ? "'" + blueprint.getChangedColumns().map(obj => obj.name).join("','") + "'"
             : "'" + command.columns.join("','") + "'";
 
         const table = this.wrapTable(blueprint);

@@ -1,4 +1,5 @@
 import { Connection } from "./Connection";
+import { Expression } from "./Expression";
 
 export class Grammar
 {

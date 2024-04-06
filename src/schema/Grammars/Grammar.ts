@@ -1,4 +1,5 @@
 import { Connection } from '../../Illuminate/Connection';
+import { Expression } from '../../Illuminate/Expression';
 import { Grammar as BaseGrammar } from '../../Illuminate/Grammar';
 import { Blueprint } from '../Blueprint';
 import { ColumnDefinition } from '../ColumnDefinition';
@@ -135,19 +136,33 @@ export class Grammar extends BaseGrammar
         return values.map(value => `${ prefix } ${ value }`);
     }
 
-    wrapTable(table: Blueprint | string): string
+    wrapTable(table: Blueprint | string | Expression): string
     {
-        return super.wrapTable(table instanceof Blueprint ? table.getTable() : table);
+        if(typeof table === 'string') {
+            return super.wrapTable(table);
+        }
+        else if(typeof table === 'object' && table instanceof Blueprint){
+            return super.wrapTable(table.getTable());
+        }
+        else if(table instanceof Expression) {
+            return super.wrapTable(table.getValue());
+        }
+        return '';
     }
 
     
-    wrap(value: ColumnDefinition | string, prefixAlias: boolean = false): string
+    wrap(value: ColumnDefinition | string | Expression, prefixAlias: boolean = false): string
     {
-        if(typeof value === 'object' && value.constructor.name === 'ColumnDefinition')
+        if(value instanceof ColumnDefinition)
         {
             return super.wrap(value.properties.name);            
         }
-        return super.wrap(value);
+        else if(typeof value === 'string')
+        {
+            return super.wrap(value);
+        }
+
+        return '';
     }
 
     getDefaultValue(value: any): string

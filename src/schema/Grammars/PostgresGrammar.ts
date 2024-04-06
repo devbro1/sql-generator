@@ -49,6 +49,10 @@ export class PostgresGrammar extends Grammar {
     }
 
     public compileColumns(schema: string, table: string): string {
+        if(this.connection === null)
+        {
+            throw new Error('Connection is required to call compileColumns method');
+        }
         return `select a.attname as name, t.typname as type_name, format_type(a.atttypid, a.atttypmod) as type, ` +
             `(select tc.collcollate from pg_catalog.pg_collation tc where tc.oid = a.attcollation) as collation, ` +
             `not a.attnotnull as nullable, ` +
@@ -473,7 +477,7 @@ export class PostgresGrammar extends Grammar {
             throw new Error('This database driver does not support modifying generated columns.');
         }
         if (column.virtualAs !== null) {
-            return " generated always as (" + this.getValue(column.virtualAs) + ")";
+            return " generated always as (" + this.getValue(column.properties.virtualAs) + ")";
         }
         return '';
     }

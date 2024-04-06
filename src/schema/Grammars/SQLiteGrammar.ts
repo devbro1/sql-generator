@@ -2,6 +2,7 @@ import { Grammar } from "./Grammar";
 import { Blueprint } from "../Blueprint";
 import { ForeignKeyDefinition } from '../ForeignKeyDefinition';
 import { Connection } from "../../Illuminate/Connection";
+import { Expression } from "../../Illuminate/Expression";
 
 export class SQLiteGrammar extends Grammar
 {
