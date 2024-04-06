@@ -3,6 +3,7 @@ import { Blueprint } from "../Blueprint";
 import { ForeignKeyDefinition } from '../ForeignKeyDefinition';
 import { Connection } from "../../Illuminate/Connection";
 import { Expression } from "../../Illuminate/Expression";
+import { ColumnDefinition } from "../ColumnDefinition";
 
 export class SQLiteGrammar extends Grammar
 {
@@ -380,29 +381,29 @@ export class SQLiteGrammar extends Grammar
         throw new Error('This database driver requires a type, see the virtualAs / storedAs modifiers.');
     }
 
-    protected modifyVirtualAs(blueprint: Blueprint, column: any): string | null
+    protected modifyVirtualAs(blueprint: Blueprint, column: any): string 
     {
-        if (column.virtualAs !== null)
+        if (column.properties.virtualAs !== '')
         {
-            return ` as (${ this.getValue(column.virtualAs) })`;
+            return ` as (${ this.getValue(column.properties.virtualAs) })`;
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyStoredAs(blueprint: Blueprint, column: any): string | null
+    protected modifyStoredAs(blueprint: Blueprint, column: ColumnDefinition): string 
     {
-        if (column.storedAs !== null)
+        if (column.properties.storedAs !== '')
         {
-            return ` as (${ this.getValue(column.storedAs) }) stored`;
+            return ` as (${ this.getValue(column.properties.storedAs) }) stored`;
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: any): string | null
+    protected modifyNullable(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.nullable !== false)
+        if (column.properties.nullable !== false)
         {
             return '';
         }
@@ -410,34 +411,34 @@ export class SQLiteGrammar extends Grammar
         return ' not null';
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: any): string | null
+    protected modifyDefault(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.default !== null)
+        if (column.properties.default !== null)
         {
-            return ' default ' + this.getDefaultValue(column.default);
+            return ' default ' + this.getDefaultValue(column.properties.default);
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyIncrement(blueprint: Blueprint, column: any): string | null
+    protected modifyIncrement(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (this.serials.includes(column.type) && column.autoIncrement)
+        if (this.serials.includes(column.properties.type) && column.properties.autoIncrement)
         {
             return ' primary key autoincrement';
         }
 
-        return null;
+        return '';
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: any): string | null
+    protected modifyCollate(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.collation !== null)
+        if (column.properties.collation !== '')
         {
-            return ` collate '${ column.collation }'`;
+            return ` collate '${ column.properties.collation }'`;
         }
 
-        return null;
+        return '';
     }
 
     protected wrapJsonSelector(value: string): string

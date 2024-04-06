@@ -112,18 +112,12 @@ describe("DatabaseSchemaBlueprintTest", () => {
 
     blueprint.timestamp("created").useCurrent();
     expect(blueprint.toSql(connection, new MySqlGrammar())).toEqual(["alter table `users` add `created` timestamp not null default CURRENT_TIMESTAMP"]);
-
-    
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" add column \"created\" timestamp(0) without time zone not null default CURRENT_TIMESTAMP"]);
-
-    
     expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
-
-    
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["alter table \"users\" add \"created\" datetime not null default CURRENT_TIMESTAMP"]);
   });
 
-  it.only("testAddColumn", () => {
+  it("testAddColumn", () => {
     const blueprint = new Blueprint("users");
 
     const connection: MockProxy<Connection> = mock<Connection>();
@@ -569,7 +563,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     ]);
   });
 
-  it("testTinyTextNullableColumn", () => {
+  it.only("testTinyTextNullableColumn", () => {
     const blueprint = new Blueprint("posts");
 
     blueprint.tinyText("note").nullable();

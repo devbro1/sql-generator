@@ -607,10 +607,10 @@ export class MySqlGrammar extends Grammar
 
     protected modifyNullable(blueprint: Blueprint, column: any): string
     {
-        if (column.virtualAs === null &&
-            column.virtualAsJson === null &&
-            column.storedAs === null &&
-            column.storedAsJson === null)
+        if (column.properties.virtualAs === '' &&
+            column.properties.virtualAsJson === '' &&
+            column.properties.storedAs === '' &&
+            column.properties.storedAsJson === '')
         {
             return column.properties.nullable ? ' null' : ' not null';
         }

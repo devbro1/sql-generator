@@ -33,6 +33,7 @@ export class Blueprint {
     }
 
     public toSql(connection: Connection, grammar: Grammar): string[] {
+        this.commands = [];
         this.addImpliedCommands(connection, grammar);
 
         let statements: string[] = [];
@@ -46,7 +47,10 @@ export class Blueprint {
 
             const method = ('compile' + command.name.charAt(0).toUpperCase() + command.name.slice(1));
             const sql = grammar.compile(method as keyof Grammar,this,command,connection);
-            if (sql !== '') {
+            if (typeof sql === 'undefined') {
+            } else if(Array.isArray(sql)) {
+                statements = statements.concat(sql);
+            } else if(typeof sql === 'string' && sql !== '') {
                 statements = statements.concat(sql);
             }
         }
