@@ -9,6 +9,7 @@ type ColumnType = "string" | "text" | "tinyText" | "longText"
     | "date" | "dateTime" | "dateTimeTz" | "time" | "timeTz";
 
 export type ColumnProperties = {
+    comment: string;
     name: string;
     type: ColumnType;
     nullable: boolean;
@@ -33,7 +34,9 @@ export type ColumnProperties = {
     fulltext: boolean | string;
     spatialIndex: boolean | string;
     renameTo: string;
+    change: boolean;
 }
+function partialToFull<T>(x: Partial<T>): T { return x as T; }
 
 export class ColumnDefinition
 {
@@ -41,6 +44,7 @@ export class ColumnDefinition
     public name: string = '';
     public needs_change: boolean = false;
     public properties: ColumnProperties = {
+        comment: '',
         name: '',
         type: 'string',
         nullable: false,
@@ -65,11 +69,12 @@ export class ColumnDefinition
         fulltext: false,
         spatialIndex: false,
         renameTo: '',
+        change: false,
     };
 
-    constructor(details: any)
+    constructor(properties: Partial<ColumnProperties>)
     {
-
+        this.properties = partialToFull(properties);
     }
 
     // Place the column "after" another column (MySQL)
@@ -169,5 +174,9 @@ export class ColumnDefinition
     public getAttributes()
     {
         return [];
+    }
+
+    public get(key: keyof ColumnProperties) {
+        return this.properties[key];
     }
 }

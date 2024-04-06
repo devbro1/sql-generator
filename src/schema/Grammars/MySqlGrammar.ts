@@ -324,57 +324,57 @@ export class MySqlGrammar extends Grammar
         return `alter table ${ this.wrapTable(blueprint) } comment = '${ command.comment.replace("'", "''") }'`;
     }
 
-    protected typeChar(column: any): string
+    protected typeChar(column: ColumnDefinition): string
     {
-        return `char(${ column.length })`;
+        return `char(${ column.get('length') })`;
     }
 
-    protected typeString(column: any): string
+    protected typeString(column: ColumnDefinition): string
     {
-        return `varchar(${ column.length })`;
+        return `varchar(${ column.get('length') })`;
     }
 
-    protected typeTinyText(column: any): string
+    protected typeTinyText(column: ColumnDefinition): string
     {
         return 'tinytext';
     }
 
-    protected typeText(column: any): string
+    protected typeText(column: ColumnDefinition): string
     {
         return 'text';
     }
 
-    protected typeMediumText(column: any): string
+    protected typeMediumText(column: ColumnDefinition): string
     {
         return 'mediumtext';
     }
 
-    protected typeLongText(column: any): string
+    protected typeLongText(column: ColumnDefinition): string
     {
         return 'longtext';
     }
 
-    protected typeBigInteger(column: any): string
+    protected typeBigInteger(column: ColumnDefinition): string
     {
         return 'bigint';
     }
 
-    protected typeInteger(column: any): string
+    protected typeInteger(column: ColumnDefinition): string
     {
         return 'int';
     }
 
-    protected typeMediumInteger(column: any): string
+    protected typeMediumInteger(column: ColumnDefinition): string
     {
         return 'mediumint';
     }
 
-    protected typeTinyInteger(column: any): string
+    protected typeTinyInteger(column: ColumnDefinition): string
     {
         return 'tinyint';
     }
 
-    protected typeSmallInteger(column: any): string
+    protected typeSmallInteger(column: ColumnDefinition): string
     {
         return 'smallint';
     }
@@ -683,14 +683,14 @@ export class MySqlGrammar extends Grammar
         return null;
     }
 
-    protected modifyComment(blueprint: Blueprint, column: any): string | null
+    protected modifyComment(blueprint: Blueprint, column: ColumnDefinition): string 
     {
-        if (column.comment !== null)
+        if (column.properties.comment !== '')
         {
-            return ` comment '${ column.comment.replace("'", "''") }'`;
+            return ` comment '${ column.properties.comment.replace("'", "''") }'`;
         }
 
-        return null;
+        return '';
     }
 
     protected wrapValue(value: string): string
