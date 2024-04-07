@@ -389,7 +389,7 @@ export class PostgresGrammar extends Grammar {
             // Assuming Expression class for default value generation
             column.default(new Expression('CURRENT_TIMESTAMP'));
         }
-        return `timestamp${column.properties.precision ? `(${column.properties.precision})` : ''} without time zone`;
+        return `timestamp${`(${column.properties.precision})`} without time zone`;
     }
 
     protected typeTimestampTz(column: ColumnDefinition): string {

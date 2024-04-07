@@ -95,25 +95,32 @@ describe("DatabaseSchemaBlueprintTest", () => {
   });
 
   it("testDefaultCurrentDateTime", () => {
-    const blueprint = new Blueprint("users");
+    const base = new Blueprint("users");
     const connection: MockProxy<Connection> = mock<Connection>();
 
-    blueprint.dateTime("created").useCurrent();
-    console.log(blueprint.getColumns());
+    base.dateTime("created").useCurrent();
+    let blueprint = base.clone();
     expect(blueprint.toSql(connection, new MySqlGrammar())).toEqual(["alter table `users` add `created` datetime not null default CURRENT_TIMESTAMP"]);    
+    blueprint = base.clone();
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" add column \"created\" timestamp(0) without time zone not null default CURRENT_TIMESTAMP"]);
+    blueprint = base.clone();
     expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
+    blueprint = base.clone();
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["alter table \"users\" add \"created\" datetime not null default CURRENT_TIMESTAMP"]);
   });
 
   it("testDefaultCurrentTimestamp", () => {
-    const blueprint = new Blueprint("users");
+    const base = new Blueprint("users");
     const connection: MockProxy<Connection> = mock<Connection>();
 
-    blueprint.timestamp("created").useCurrent();
+    base.timestamp("created").useCurrent();
+    let blueprint = base.clone();
     expect(blueprint.toSql(connection, new MySqlGrammar())).toEqual(["alter table `users` add `created` timestamp not null default CURRENT_TIMESTAMP"]);
+    blueprint = base.clone();
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" add column \"created\" timestamp(0) without time zone not null default CURRENT_TIMESTAMP"]);
+    blueprint = base.clone();
     expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
+    blueprint = base.clone();
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["alter table \"users\" add \"created\" datetime not null default CURRENT_TIMESTAMP"]);
   });
 

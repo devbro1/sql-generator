@@ -21,6 +21,18 @@ export class Blueprint {
         after: '',
     };
 
+    clone()
+    {
+        let rc = new Blueprint(this.table,this.prefix);
+        rc.properties = {...this.properties};
+        rc.commands = structuredClone(this.commands);
+        this.columns.map((column) => {
+            rc.columns.push(new ColumnDefinition(column.properties));
+        })
+
+        return rc;
+    }
+
     constructor(table: string, prefix: string = '') {
         this.table = table;
         this.prefix = prefix;
@@ -33,7 +45,6 @@ export class Blueprint {
     }
 
     public toSql(connection: Connection, grammar: Grammar): string[] {
-        this.commands = [];
         this.addImpliedCommands(connection, grammar);
 
         let statements: string[] = [];

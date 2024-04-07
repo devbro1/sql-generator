@@ -3,6 +3,7 @@ import { Blueprint } from "../Blueprint";
 import { Connection } from "../../Illuminate/Connection";
 import { ColumnDefinition } from "../ColumnDefinition";
 import { Expression } from "../../Illuminate/Expression";
+import semver from "semver";
 
 export class MySqlGrammar extends Grammar
 {
@@ -159,8 +160,8 @@ export class MySqlGrammar extends Grammar
     {
         const version = connection.getServerVersion();
 
-        if ((connection.isMaria() && version.localeCompare('10.5.2', '<')) ||
-            (!connection.isMaria() && version.localeCompare('8.0.3', '<')))
+        if ((connection.isMaria() && semver.lt(version,'10.5.2')) ||
+            (!connection.isMaria() && semver.lt(version,'8.0.3')))
         {
             const column = connection.getSchemaBuilder().getColumns(blueprint.getTable())
                 .find((column: ColumnDefinition) => column.properties.name === command.from);
@@ -433,12 +434,12 @@ export class MySqlGrammar extends Grammar
     {
         const current = column.precision ? `CURRENT_TIMESTAMP(${ column.precision })` : 'CURRENT_TIMESTAMP';
 
-        if (column.useCurrent)
+        if (column.properties.useCurrent)
         {
             column.default(new Expression(current));
         }
 
-        if (column.useCurrentOnUpdate)
+        if (column.properties.useCurrentOnUpdate)
         {
             column.onUpdate(new Expression(current));
         }
@@ -465,12 +466,12 @@ export class MySqlGrammar extends Grammar
     {
         const current = column.precision ? `CURRENT_TIMESTAMP(${ column.precision })` : 'CURRENT_TIMESTAMP';
 
-        if (column.useCurrent)
+        if (column.properties.useCurrent)
         {
             column.default(new Expression(current));
         }
 
-        if (column.useCurrentOnUpdate)
+        if (column.properties.useCurrentOnUpdate)
         {
             column.onUpdate(new Expression(current));
         }
@@ -637,7 +638,7 @@ export class MySqlGrammar extends Grammar
     {
         if (column.properties.default !== null)
         {
-            return ' default ' + this.getDefaultValue(column.default);
+            return ' default ' + this.getDefaultValue(column.properties.default);
         }
 
         return '';
@@ -645,12 +646,12 @@ export class MySqlGrammar extends Grammar
 
     protected modifyOnUpdate(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        if (column.properties.onUpdate !== '')
+        if (column.properties.onUpdate === '')
         {
-            return ' on update ' + this.getValue(column.properties.onUpdate);
+            return '';
         }
-
-        return '';
+        console.log(column.properties.onUpdate);
+        return ' on update ' + this.getValue(column.properties.onUpdate);
     }
 
     protected modifyIncrement(blueprint: Blueprint, column: any): string | null

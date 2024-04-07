@@ -11,7 +11,7 @@ type ColumnType = "string" | "text" | "tinyText" | "longText"
 
 export type ColumnProperties = {
     first: string;
-    onUpdate: string;
+    onUpdate: string | Expression;
     comment: string;
     name: string;
     type: ColumnType;
@@ -45,6 +45,8 @@ export type ColumnProperties = {
     unsigned: boolean;
     virtualAsJson: string;
     persisted: boolean;
+    startingValue: number;
+    useCurrentOnUpdate: boolean;
 }
 
 export class ColumnDefinition
@@ -85,6 +87,8 @@ export class ColumnDefinition
         unsigned: false,
         virtualAsJson: '',
         persisted: false,
+        startingValue: 0,
+        useCurrentOnUpdate: false,
     };
 
     constructor(properties: Partial<ColumnProperties>)
@@ -188,13 +192,25 @@ export class ColumnDefinition
     }
 
     // Set the starting value of an auto-incrementing field (MySQL/PostgreSQL)
-    public startingValue(startingValue: number) { }
+    public startingValue(startingValue: number) {
+        this.properties.startingValue = startingValue;
+
+        return this;
+    }
 
     // Create a stored generated column (MySQL/PostgreSQL/SQLite)
-    public storedAs(expression: string) { }
+    public storedAs(expression: string) {
+        this.properties.storedAs = expression;
+
+        return this;
+    }
 
     // Specify a type for the column
-    public type(type: string) { }
+    public type(type: ColumnType) {
+        this.properties.type = type;
+
+        return this;
+    }
 
     // Add a unique index
     public unique(indexName: boolean | string = false) {
@@ -204,16 +220,38 @@ export class ColumnDefinition
     }
 
     //  Set the INTEGER column as UNSIGNED (MySQL)
-    public unsigned() { }
+    public unsigned() {
+        this.properties.unsigned = true;
+
+        return this;
+    }
 
     // Set the TIMESTAMP column to use CURRENT_TIMESTAMP as default value
-    public useCurrent() { }
+    public useCurrent() {
+        this.properties.useCurrent = true;
+        
+        return this
+    }
 
     // Set the TIMESTAMP column to use CURRENT_TIMESTAMP when updating (MySQL)
-    public useCurrentOnUpdate() { }
+    public useCurrentOnUpdate() {
+        this.properties.useCurrentOnUpdate = true;
+
+        return this;
+    }
 
     // Create a virtual generated column (MySQL/PostgreSQL/SQLite)
-    public virtualAs(expression: string) { }
+    public virtualAs(expression: string) {
+        this.properties.virtualAs = expression;
+
+        return this;
+    }
+
+    public onUpdate(onupdate: Expression | string) {
+        this.properties.onUpdate = onupdate;
+
+        return this;
+    }
 
     public getAttributes()
     {
