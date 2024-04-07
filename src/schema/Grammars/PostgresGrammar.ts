@@ -107,12 +107,14 @@ export class PostgresGrammar extends Grammar {
             `${this.prefixArray('add column', this.getColumns(blueprint)).join(', ')}`;
     }
 
-    public compileAutoIncrementStartingValues(blueprint: Blueprint, command: any): string | undefined {
-        if (command.column.autoIncrement && command.column.startingValue) {
+    public compileAutoIncrementStartingValues(blueprint: Blueprint, command: any): string {
+        if (command.column.properties.autoIncrement && command.column.properties.startingValue) {
             const table = blueprint.getTable().split('.').pop();
-            return `alter sequence ${blueprint.getPrefix()}${table}_${command.column.name}_seq ` +
-                `restart with ${command.column.startingValue}`;
+            return `alter sequence ${blueprint.getPrefix()}${table}_${command.column.properties.name}_seq ` +
+                `restart with ${command.column.properties.startingValue}`;
         }
+
+        return '';
     }
 
     public compileChange(blueprint: Blueprint, command: any, connection: Connection): string {
@@ -269,9 +271,9 @@ export class PostgresGrammar extends Grammar {
     }
 
     public compileComment(blueprint: Blueprint, command: any): string {
-        if (command.column.comment !== null || command.column.change) {
-            const comment = command.column.comment !== null ? `'${command.column.comment}'` : 'NULL';
-            return `comment on column ${this.wrapTable(blueprint)}.${this.wrap(command.column.name)} is ${comment}`;
+        if (command.column.properties.comment !== '' || command.column.properties.change) {
+            const comment = command.column.properties.comment !== '' ? `'${command.column.properties.comment}'` : 'NULL';
+            return `comment on column ${this.wrapTable(blueprint)}.${this.wrap(command.column.properties.name)} is ${comment}`;
         }
 
         return '';
@@ -311,11 +313,11 @@ export class PostgresGrammar extends Grammar {
     }
 
     protected typeInteger(column: ColumnDefinition): string {
-        return column.properties.autoIncrement && column.generatedAs === null && !column.change ? 'serial' : 'integer';
+        return column.properties.autoIncrement && column.properties.generatedAs === false && !column.properties.change ? 'serial' : 'integer';
     }
 
     protected typeBigInteger(column: ColumnDefinition): string {
-        return column.properties.autoIncrement && column.generatedAs === null && !column.change ? 'bigserial' : 'bigint';
+        return column.properties.autoIncrement && column.properties.generatedAs === false && !column.properties.change ? 'bigserial' : 'bigint';
     }
 
     protected typeMediumInteger(column: ColumnDefinition): string {
@@ -327,7 +329,7 @@ export class PostgresGrammar extends Grammar {
     }
 
     protected typeSmallInteger(column: ColumnDefinition): string {
-        return column.properties.autoIncrement && column.generatedAs === null && !column.change ? 'smallserial' : 'smallint';
+        return column.properties.autoIncrement && column.properties.generatedAs === false && !column.properties.change ? 'smallserial' : 'smallint';
     }
 
     protected typeFloat(column: ColumnDefinition): string {
@@ -432,41 +434,41 @@ export class PostgresGrammar extends Grammar {
         return 'geography';
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: ColumnDefinition): string | null {
+    protected modifyCollate(blueprint: Blueprint, column: ColumnDefinition): string {
         if (column.properties.collation !== '') {
             return ' collate ' + this.wrapValue(column.properties.collation);
         }
-        return null;
+        return '';
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: ColumnDefinition): string | null {
+    protected modifyNullable(blueprint: Blueprint, column: ColumnDefinition): string {
         if (column.properties.change) {
             return column.properties.nullable ? 'drop not null' : 'set not null';
         }
         return column.properties.nullable ? ' null' : ' not null';
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: ColumnDefinition): string | null {
+    protected modifyDefault(blueprint: Blueprint, column: ColumnDefinition): string {
         if (column.properties.change) {
             if (!column.properties.autoIncrement || column.properties.generatedAs !== false) {
-                return column.properties.default === null ? 'drop default' : 'set default ' + this.getDefaultValue(column.properties.default);
+                return column.properties.default === '' ? 'drop default' : 'set default ' + this.getDefaultValue(column.properties.default);
             }
-            return null;
+            return '';
         }
-        if (column.default !== null) {
-            return ' default ' + this.getDefaultValue(column.default);
+        if (column.properties.default !== null) {
+            return ' default ' + this.getDefaultValue(column.properties.default);
         }
-        return null;
+        return '';
     }
 
-    protected modifyIncrement(blueprint: Blueprint, column: ColumnDefinition): string | null {
-        if (!column.change &&
+    protected modifyIncrement(blueprint: Blueprint, column: ColumnDefinition): string {
+        if (!column.properties.change &&
             !this.hasCommand(blueprint, 'primary') &&
             (this.serials.includes(column.properties.type) || column.properties.generatedAs !== false) &&
             column.properties.autoIncrement) {
             return ' primary key';
         }
-        return null;
+        return '';
     }
 
     protected modifyVirtualAs(blueprint: Blueprint, column: ColumnDefinition): string {
@@ -476,7 +478,7 @@ export class PostgresGrammar extends Grammar {
             }
             throw new Error('This database driver does not support modifying generated columns.');
         }
-        if (column.virtualAs !== null) {
+        if (column.properties.virtualAs !== '') {
             return " generated always as (" + this.getValue(column.properties.virtualAs) + ")";
         }
         return '';
@@ -484,7 +486,7 @@ export class PostgresGrammar extends Grammar {
 
     protected modifyStoredAs(blueprint: Blueprint, column: ColumnDefinition): string {
         if (column.properties.change) {
-            if ('storedAs' in column.getAttributes() && column.properties.storedAs) {
+            if (column.properties.storedAs) {
                 return 'drop expression if exists';
             }
             else
@@ -492,25 +494,25 @@ export class PostgresGrammar extends Grammar {
                 throw new Error('This database driver does not support modifying generated columns.');
             }
         }
-        if (column.properties.storedAs !== null) {
+        if (column.properties.storedAs !== '') {
             return " generated always as (" + this.getValue(column.properties.storedAs) + ") stored";
         }
         return '';
     }
 
-    protected modifyGeneratedAs(blueprint: Blueprint, column: ColumnDefinition): string | string[] | null {
-        let sql: string | null = null;
+    protected modifyGeneratedAs(blueprint: Blueprint, column: ColumnDefinition): string | string[] {
+        let sql: string = '';
 
-        if (column.generatedAs !== null) {
+        if (column.properties.generatedAs !== false) {
             sql = ` generated ${column.properties.always ? 'always' : 'by default'}` +
                 (!['boolean', 'integer', 'bigint', 'smallint'].includes(column.properties.type) &&
                 column.properties.generatedAs !== true ? ` (${column.properties.generatedAs})` : '');
         }
 
         if (column.properties.change) {
-            const changes: string[] = column.properties.autoIncrement && sql === null ? [] : ['drop identity if exists'];
+            const changes: string[] = column.properties.autoIncrement && sql === '' ? [] : ['drop identity if exists'];
 
-            if (sql !== null) {
+            if (sql !== '') {
                 changes.push('add ' + sql);
             }
 

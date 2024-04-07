@@ -108,7 +108,7 @@ export class Grammar extends BaseGrammar
             const method = `modify${ modifier }` as keyof typeof this;
             if (typeof this[method] === 'function')
             {
-                sql += (this[method] as Function)(blueprint, column);
+                sql += (this[method] as Function)(blueprint, column) ?? '';
             }
         }
 
@@ -167,7 +167,7 @@ export class Grammar extends BaseGrammar
 
     getDefaultValue(value: any): string
     {
-        if (value.constructor.name === 'Expression')
+        if (value instanceof Expression)
         {
             return this.getValue(value);
         }
