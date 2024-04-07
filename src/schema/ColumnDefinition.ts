@@ -6,7 +6,8 @@ type ColumnType = "string" | "text" | "tinyText" | "longText"
     | "decimal" | "double"
     | "bigIncrement"
     | "boolean" | "json" | "jsonb"
-    | "date" | "dateTime" | "dateTimeTz" | "time" | "timeTz";
+    | "date" | "dateTime" | "dateTimeTz" | "time" | "timeTz"
+    | "computed";
 
 export type ColumnProperties = {
     first: string;
@@ -43,6 +44,7 @@ export type ColumnProperties = {
     invisible: boolean;
     unsigned: boolean;
     virtualAsJson: string;
+    persisted: boolean;
 }
 
 export class ColumnDefinition
@@ -82,6 +84,7 @@ export class ColumnDefinition
         invisible: false,
         unsigned: false,
         virtualAsJson: '',
+        persisted: false,
     };
 
     constructor(properties: Partial<ColumnProperties>)

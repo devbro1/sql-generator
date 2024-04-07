@@ -2,6 +2,7 @@ import { Grammar } from "./Grammar";
 import { Blueprint } from "../Blueprint";
 import { Connection } from "../../Illuminate/Connection";
 import { Expression } from "../../Illuminate/Expression";
+import { ColumnDefinition } from "../ColumnDefinition";
 
 export class SqlServerGrammar extends Grammar
 {
@@ -131,9 +132,9 @@ export class SqlServerGrammar extends Grammar
 
     public compileDefault(blueprint: Blueprint, command: any): string | null
     {
-        if (command.column.change && command.column.default !== null)
+        if (command.column.properties.change && command.column.properties.default !== null)
         {
-            return `alter table ${ this.wrapTable(blueprint) } add default ${ this.getDefaultValue(command.column.default) } for ${ this.wrap(command.column) }`;
+            return `alter table ${ this.wrapTable(blueprint) } add default ${ this.getDefaultValue(command.column.properties.default) } for ${ this.wrap(command.column) }`;
         }
 
         return null;
@@ -413,29 +414,29 @@ export class SqlServerGrammar extends Grammar
         return `as (${ this.getValue(column.expression) })`;
     }
 
-    protected modifyCollate(blueprint: Blueprint, column: any): string | null
+    protected modifyCollate(blueprint: Blueprint, column: any): string
     {
-        return column.collation ? ` collate ${ column.collation }` : null;
+        return column.properties.collation ? ` collate ${ column.properties.collation }` : '';
     }
 
-    protected modifyNullable(blueprint: Blueprint, column: any): string | null
+    protected modifyNullable(blueprint: Blueprint, column: any): string
     {
-        return column.type !== 'computed' ? (column.nullable ? ' null' : ' not null') : null;
+        return column.properties.type !== 'computed' ? (column.properties.nullable ? ' null' : ' not null') : '';
     }
 
-    protected modifyDefault(blueprint: Blueprint, column: any): string | null
+    protected modifyDefault(blueprint: Blueprint, column: any): string
     {
-        return (!column.change && column.default !== null) ? ` default ${ this.getDefaultValue(column.default) }` : null;
+        return (!column.properties.change && column.properties.default !== null) ? ` default ${ this.getDefaultValue(column.properties.default) }` : '';
     }
 
-    protected modifyIncrement(blueprint: Blueprint, column: any): string | null
+    protected modifyIncrement(blueprint: Blueprint, column: any): string
     {
-        return (!column.change && this.serials.includes(column.type) && column.autoIncrement) ?
-            (this.hasCommand(blueprint, 'primary') ? ' identity' : ' identity primary key') : null;
+        return (!column.properties.change && this.serials.includes(column.properties.type) && column.properties.autoIncrement) ?
+            (this.hasCommand(blueprint, 'primary') ? ' identity' : ' identity primary key') : '';
     }
 
-    protected modifyPersisted(blueprint: Blueprint, column: any): string | null
+    protected modifyPersisted(blueprint: Blueprint, column: ColumnDefinition): string
     {
-        return column.change ? (column.type === 'computed' ? (column.persisted ? ' add persisted' : ' drop persisted') : null) : (column.persisted ? ' persisted' : null);
+        return column.properties.change ? (column.properties.type === 'computed' ? (column.properties.persisted ? ' add persisted' : ' drop persisted') : '') : (column.properties.persisted ? ' persisted' : '');
     }
 }
