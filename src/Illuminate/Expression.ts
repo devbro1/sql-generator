@@ -5,6 +5,6 @@ export class Expression
         this.raw_sql = raw_sql;
     }
     getValue(value: any=''): any {
-        return '';
+        return this.raw_sql;
     }
 }

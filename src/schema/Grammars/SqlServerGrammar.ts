@@ -102,7 +102,7 @@ export class SqlServerGrammar extends Grammar
 
     public compileRenameColumn(blueprint: Blueprint, command: any, connection: Connection): string
     {
-        return `sp_rename ${ this.quoteString(this.wrapTable(blueprint) + '.' + this.wrap(command.from)) }, ${ this.wrap(command.to) }, 'COLUMN'`;
+        return `sp_rename ${ this.quoteString(this.wrapTable(blueprint) + '.' + this.wrap(command.from)) }, ${ this.wrap(command.to) }, N'COLUMN'`;
     }
 
     public compileChange(blueprint: Blueprint, command: any, connection: Connection): string[]
@@ -438,5 +438,13 @@ export class SqlServerGrammar extends Grammar
     protected modifyPersisted(blueprint: Blueprint, column: ColumnDefinition): string
     {
         return column.properties.change ? (column.properties.type === 'computed' ? (column.properties.persisted ? ' add persisted' : ' drop persisted') : '') : (column.properties.persisted ? ' persisted' : '');
+    }
+
+    quoteString(value: string | string[]): string {
+        if (Array.isArray(value)) {
+            return value.map(val => this.quoteString(val)).join(', ');
+        }
+    
+        return `N'${value}'`;
     }
 }

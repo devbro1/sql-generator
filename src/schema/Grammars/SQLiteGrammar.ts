@@ -161,9 +161,9 @@ export class SQLiteGrammar extends Grammar
         return 'vacuum';
     }
 
-    public compileDropColumn(blueprint: Blueprint, command: any, connection: Connection): string[]
-    {
-        throw new Error('SQLite does not support dropping columns.');
+    public compileDropColumn(blueprint: Blueprint, command: any): string {
+        const columns = this.prefixArray('drop column', this.wrapArray(command.columns));
+        return 'alter table ' + this.wrapTable(blueprint) + ' ' + columns.join(', ');
     }
 
     public compileDropUnique(blueprint: Blueprint, command: any): string
