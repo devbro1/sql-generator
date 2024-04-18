@@ -1,10 +1,13 @@
+import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
+import { Grammar } from "./Grammars/Grammar";
 
-class MySqlBuilder extends Builder {
+export class MySqlBuilder extends Builder {
     private connection: Connection;
     private grammar: Grammar;
 
     constructor(connection: Connection) {
+        super(connection);
         this.connection = connection;
         this.grammar = this.connection.getSchemaGrammar();
     }
@@ -43,14 +46,6 @@ class MySqlBuilder extends Builder {
             this.grammar.compileColumns(this.connection.getDatabaseName(), table)
         );
         return this.connection.getPostProcessor().processColumns(results);
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     getIndexes(table: string): any[] {
@@ -105,15 +100,5 @@ class MySqlBuilder extends Builder {
         return this.connection.statement(
             this.grammar.compileEnableForeignKeyConstraints()
         );
-    }
-
-    getTables(): any[] {
-        // Implementation to fetch tables should be provided here
-        return [];
-    }
-
-    getViews(): any[] {
-        // Implementation to fetch views should be provided here
-        return [];
     }
 }

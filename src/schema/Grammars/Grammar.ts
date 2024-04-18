@@ -17,12 +17,12 @@ export abstract class Grammar extends BaseGrammar
         }
     }
 
-    compileCreateDatabase(name: string, connection: Connection): void
+    compileCreateDatabase(name: string, connection: Connection): string
     {
         throw new Error('This database driver does not support creating databases.');
     }
 
-    compileDropDatabaseIfExists(name: string): void
+    compileDropDatabaseIfExists(name: string): string
     {
         throw new Error('This database driver does not support dropping databases.');
     }
@@ -229,7 +229,7 @@ export abstract class Grammar extends BaseGrammar
 
     public abstract compileForeignKeys(schema: string, table: string): string;
 
-    public abstract compileDisableForeignKeyConstraints(): string
+    public abstract compileDisableForeignKeyConstraints(): string;
 
-    public abstract compileEnableForeignKeyConstraints(): string
+    public abstract compileEnableForeignKeyConstraints(): string;
 }

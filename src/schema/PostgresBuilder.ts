@@ -1,21 +1,15 @@
+import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
+import { Grammar } from "./Grammars/Grammar";
 
 class PostgresBuilder extends Builder {
     private connection: Connection;
     private grammar: Grammar;
 
     constructor(connection: Connection) {
+        super(connection);
         this.connection = connection;
         this.grammar = this.connection.getSchemaGrammar();
-    }
-
-    baseParseSearchPath(input: string): [string, string] {
-        // Implement base parsing logic here
-        return ["", input];
-    }
-
-    parseSearchPath(input: string): [string, string] {
-        return this.baseParseSearchPath(input);
     }
 
     createDatabase(name: string): boolean {
@@ -72,14 +66,6 @@ class PostgresBuilder extends Builder {
     getViews(): any[] {
         // This method should be implemented to return views
         return [];
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     dropAllTables(): void {
@@ -153,19 +139,6 @@ class PostgresBuilder extends Builder {
         return this.connection.getPostProcessor().processColumns(results);
     }
 
-    private getSchemas(): string[] {
-        // Implementation to fetch schemas should be provided here
-        return [];
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
-    }
-
     getIndexes(table: string): any[] {
         const [schema, tableParsed] = this.parseSchemaAndTable(table);
         table = this.connection.getTablePrefix() + tableParsed;
@@ -204,6 +177,9 @@ class PostgresBuilder extends Builder {
         return [schema, parts[0]];
     }
 
+    parseSearchPath(input: string): [string, string] {
+        return this.baseParseSearchPath(input);
+    }
     protected parseSearchPath(searchPath: string | string[] | null): string[] {
         return this.baseParseSearchPath(searchPath).map(schema => {
             return schema === '$user' ? this.connection.getConfig('username') : schema;

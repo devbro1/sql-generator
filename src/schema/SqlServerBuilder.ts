@@ -1,10 +1,13 @@
+import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
+import { Grammar } from "./Grammars/Grammar";
 
 class SqlServerBuilder extends Builder {
     private connection: Connection;
     private grammar: Grammar;
 
     constructor(connection: Connection) {
+        super(connection);
         this.connection = connection;
         this.grammar = this.connection.getSchemaGrammar();
     }
@@ -39,21 +42,9 @@ class SqlServerBuilder extends Builder {
         return [schema, tableName];
     }
 
-    private getDefaultSchema(): string {
-        return 'default_schema'; // Implement logic to determine the default schema
-    }
-
     private getTables(): any[] {
         // Implementation to fetch tables should be provided here
         return [];
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     hasView(view: string): boolean {
@@ -83,21 +74,9 @@ class SqlServerBuilder extends Builder {
         return [schema, tableName];
     }
 
-    private getDefaultSchema(): string {
-        return 'default_schema'; // Implement logic to determine the default schema
-    }
-
     private getViews(): any[] {
         // Implementation to fetch views should be provided here
         return [];
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     getColumns(table: string): any[] {

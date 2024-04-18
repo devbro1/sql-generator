@@ -1,5 +1,9 @@
 export class Connection
 {
+    getDatabaseName(): string
+    {
+        throw new Error("Method not implemented.");
+    }
     getSchemaGrammar(): import("../schema/Grammars/Grammar").Grammar
     {
         throw new Error("Method not implemented.");
