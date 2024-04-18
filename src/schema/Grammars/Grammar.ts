@@ -4,7 +4,7 @@ import { Grammar as BaseGrammar } from '../../Illuminate/Grammar';
 import { Blueprint } from '../Blueprint';
 import { ColumnDefinition } from '../ColumnDefinition';
 
-export class Grammar extends BaseGrammar
+export abstract class Grammar extends BaseGrammar
 {
     protected modifiers: string[] = [];
     protected transactions: boolean = false;
@@ -218,5 +218,18 @@ export class Grammar extends BaseGrammar
     
         return `"${segment}"`;
     }
-    
+
+    public abstract compileTables(): string;
+
+    public abstract compileViews(): string;
+
+    public abstract compileColumns(schema: string, table: string): string;
+
+    public abstract compileIndexes(schema: string, table: string): string;
+
+    public abstract compileForeignKeys(schema: string, table: string): string;
+
+    public abstract compileDisableForeignKeyConstraints(): string
+
+    public abstract compileEnableForeignKeyConstraints(): string
 }

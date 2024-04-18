@@ -1,44 +1,40 @@
+import { Connection } from "../Illuminate/Connection";
+import { Blueprint } from "./Blueprint";
+import { Grammar } from "./Grammars/Grammar";
+
 export class Builder {
-    public static defaultStringLength = 255;
-    public static defaultMorphKeyType = 'uuid';
-
-    protected connection: any;
-
-    protected grammar: Grammar;
-
-    protected resolver: () => void;
-
-    public static defaultStringLength: number | null = 255;
-
+    
+    public static defaultStringLength: number = 255;
     public static defaultMorphKeyType: string = 'int';
 
-    constructor(private connection: Connection) {
+    protected connection: Connection;
+    protected grammar: Grammar;
+    protected resolver?: (table: string, callback?: (blueprint: Blueprint) => void, prefix?: string) => Blueprint;
+
+    constructor(connection: Connection) {
+        this.connection = connection;
         this.grammar = this.connection.getSchemaGrammar();
     }
 
-    public static defaultStringLength(length: number): void {
-        DatabaseSchema.defaultStringLength = length;
+    public static setDefaultStringLength(length: number): void {
+        this.defaultStringLength = length;
     }
 
-    public static defaultMorphKeyType(type: string): void {
+    public static setDefaultMorphKeyType(type: string): void {
         const validTypes = ['int', 'uuid', 'ulid'];
         if (!validTypes.includes(type)) {
             throw new Error("Morph key type must be 'int', 'uuid', or 'ulid'.");
         }
 
-        DatabaseSchema.defaultMorphKeyType = type;
+        this.defaultMorphKeyType = type;
     }
 
     public static morphUsingUuids(): void {
-        DatabaseSchema.defaultMorphKeyType('uuid');
+        this.setDefaultMorphKeyType('uuid');
     }
 
     public static morphUsingUlids(): void {
-        DatabaseSchema.defaultMorphKeyType('ulid');
-    }
-
-    constructor(private connection: Connection) {
-        this.grammar = this.connection.getSchemaGrammar();
+        this.setDefaultMorphKeyType('ulid');
     }
 
     createDatabase(name: string): void {
@@ -52,7 +48,7 @@ export class Builder {
     hasTable(table: string): boolean {
         table = this.connection.getTablePrefix() + table;
 
-        for (const value of this.getTables(false)) {
+        for (const value of this.getTables()) {
             if (table.toLowerCase() === value['name'].toLowerCase()) {
                 return true;
             }
@@ -77,15 +73,6 @@ export class Builder {
         return this.connection.getPostProcessor().processTables(
             this.connection.selectFromWriteConnection(this.grammar.compileTables())
         );
-    }
-
-    getViews(): any[] { // Specify the actual return type and adjust method logic as needed
-        // Example implementation
-        return [];
-    }
-
-    constructor(private connection: Connection) {
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     getTableListing(): string[] {
@@ -123,22 +110,6 @@ export class Builder {
         }
     }
 
-    getColumnListing(table: string): string[] {
-        // This method should be implemented based on how column listing is retrieved in your TypeScript context.
-        // For example:
-        return [];
-    }
-
-    table(tableName: string, callback: (table: Blueprint) => void): void {
-        // Implementation of table handling logic
-        // For example:
-        callback(new Blueprint());
-    }
-
-    constructor(private connection: Connection) {
-        this.grammar = this.connection.getSchemaGrammar();
-    }
-
     getColumnType(table: string, column: string, fullDefinition: boolean = false): string {
         const columns = this.getColumns(table);
         for (const value of columns) {
@@ -156,14 +127,14 @@ export class Builder {
     getColumns(table: string): any[] {
         table = this.connection.getTablePrefix() + table;
         return this.connection.getPostProcessor().processColumns(
-            this.connection.selectFromWriteConnection(this.grammar.compileColumns(table))
+            this.connection.selectFromWriteConnection(this.grammar.compileColumns("",table))
         );
     }
 
     getIndexes(table: string): any[] {
         table = this.connection.getTablePrefix() + table;
         return this.connection.getPostProcessor().processIndexes(
-            this.connection.selectFromWriteConnection(this.grammar.compileIndexes(table))
+            this.connection.selectFromWriteConnection(this.grammar.compileIndexes("",table))
         );
     }
 
@@ -190,7 +161,7 @@ export class Builder {
     getForeignKeys(table: string): any[] {
         table = this.connection.getTablePrefix() + table;
         return this.connection.getPostProcessor().processForeignKeys(
-            this.connection.selectFromWriteConnection(this.grammar.compileForeignKeys(table))
+            this.connection.selectFromWriteConnection(this.grammar.compileForeignKeys("",table))
         );
     }
 
@@ -203,19 +174,6 @@ export class Builder {
             blueprint.create();
             callback(blueprint);
         }));
-    }
-
-    private build(blueprint: Blueprint): void {
-        // Implementation of the build logic
-    }
-
-    private createBlueprint(tableName: string, callback: (blueprint: Blueprint) => void): Blueprint {
-        // Create and return a new Blueprint instance
-        return new Blueprint();
-    }
-
-    constructor(private connection: Connection) {
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     drop(table: string): void {
@@ -273,24 +231,6 @@ export class Builder {
         } finally {
             this.enableForeignKeyConstraints();
         }
-    }
-
-    private build(blueprint: Blueprint): void {
-        // Implementation of the build logic
-    }
-
-    private createBlueprint(tableName: string, callback: (blueprint: Blueprint) => void): Blueprint {
-        // Create and return a new Blueprint instance
-        return new Blueprint();
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-    private resolver?: (table: string, callback?: (blueprint: Blueprint) => void, prefix?: string) => Blueprint;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     protected build(blueprint: Blueprint): void {

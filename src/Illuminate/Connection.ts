@@ -1,5 +1,9 @@
 export class Connection
 {
+    getSchemaGrammar(): import("../schema/Grammars/Grammar").Grammar
+    {
+        throw new Error("Method not implemented.");
+    }
     escape(value: string | number | boolean | null, binary = false): string
     {
         // Implement escape logic here
@@ -14,8 +18,8 @@ export class Connection
         return '13.0';
     }
 
-    statement(statement:string) {
-        
+    statement(statement:string): boolean {
+        return false;
     }
 
     query(c:string):any {
@@ -28,5 +32,17 @@ export class Connection
 
     getSchemaBuilder(): any {
         
+    }
+
+    getTablePrefix(): string {
+        return "";
+    }
+
+    getPostProcessor(): any {
+
+    }
+
+    selectFromWriteConnection(a: any): any {
+
     }
 }
