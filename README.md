@@ -37,6 +37,9 @@ const result = await qb.get();
 console.log(result);
 ```
 
+## Some mentality about this code conversion
+### No Null when possible
+having to deal with random types is annoying and Null is one of those values that can complicate matters more. I have decided to avoid using Null or Undefined types whenever possible. I understand there are situations that requires defining a default object is not easy but I will try to address them as I continue on this project.
 
 ## report bugs or suggestions
 
