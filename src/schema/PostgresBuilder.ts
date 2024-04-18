@@ -2,9 +2,9 @@ import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
 import { Grammar } from "./Grammars/Grammar";
 
-class PostgresBuilder extends Builder {
-    private connection: Connection;
-    private grammar: Grammar;
+export class PostgresBuilder extends Builder {
+    protected connection: Connection;
+    protected grammar: Grammar;
 
     constructor(connection: Connection) {
         super(connection);

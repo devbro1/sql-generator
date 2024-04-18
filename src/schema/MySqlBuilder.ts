@@ -3,8 +3,8 @@ import { Builder } from "./Builder";
 import { Grammar } from "./Grammars/Grammar";
 
 export class MySqlBuilder extends Builder {
-    private connection: Connection;
-    private grammar: Grammar;
+    protected connection: Connection;
+    protected grammar: Grammar;
 
     constructor(connection: Connection) {
         super(connection);

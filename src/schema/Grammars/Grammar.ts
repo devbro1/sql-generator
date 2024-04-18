@@ -219,17 +219,13 @@ export abstract class Grammar extends BaseGrammar
         return `"${segment}"`;
     }
 
-    public abstract compileTables(): string;
-
-    public abstract compileViews(): string;
-
+    public abstract compileTables(database_name:string): string;
+    public abstract compileViews(database_name:string): string;
     public abstract compileColumns(schema: string, table: string): string;
-
     public abstract compileIndexes(schema: string, table: string): string;
-
     public abstract compileForeignKeys(schema: string, table: string): string;
-
     public abstract compileDisableForeignKeyConstraints(): string;
-
     public abstract compileEnableForeignKeyConstraints(): string;
+    public abstract compileDropAllTables(tables: string[]): string;
+    public abstract compileDropAllViews(tables: string[]): string;
 }
