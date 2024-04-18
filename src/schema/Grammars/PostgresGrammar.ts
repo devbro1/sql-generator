@@ -284,7 +284,7 @@ export class PostgresGrammar extends Grammar {
     }
 
 
-    protected escapeNames(names: string[]): string[] {
+    public escapeNames(names: string[]): string[] {
         return names.map(name => `"${name.split('.').map(segment => segment.replace(/['"]/g, '')).join('"."')}"`);
     }
 

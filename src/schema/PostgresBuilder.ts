@@ -70,8 +70,13 @@ export class PostgresBuilder extends Builder {
 
     dropAllTables(): void {
         let tables: string[] = [];
+        let dont_drop: string | string[] = this.connection.getConfig('dont_drop');
+        if(!Array.isArray(dont_drop))
+        {
+            dont_drop = [dont_drop];
+        }
         const excludedTables = this.grammar.escapeNames(
-            this.connection.getConfig('dont_drop') || ['spatial_ref_sys']
+            dont_drop || ['spatial_ref_sys']
         );
         const schemas = this.grammar.escapeNames(this.getSchemas());
 
@@ -177,22 +182,19 @@ export class PostgresBuilder extends Builder {
         return [schema, parts[0]];
     }
 
-    parseSearchPath(input: string): [string, string] {
-        return this.baseParseSearchPath(input);
-    }
-    protected parseSearchPath(searchPath: string | string[] | null): string[] {
+
+    protected parseSearchPath(searchPath: string | string[]): string[] {
         return this.baseParseSearchPath(searchPath).map(schema => {
             return schema === '$user' ? this.connection.getConfig('username') : schema;
         });
     }
 
-    baseParseSearchPath(input: string | string[] | null): string[] {
-        if (typeof input === 'string') {
-            return input.split(',');
-        } else if (Array.isArray(input)) {
-            return input;
-        } else {
-            return [];
+    protected baseParseSearchPath(searchPath: string | string[]): string[] {
+        if (typeof searchPath === 'string') {
+            const matches = searchPath.match(/[^\s,"']+/g);
+            searchPath = matches || [];
         }
+    
+        return (searchPath as string[]).map(schema => schema.trim().replace(/^['"]|['"]$/g, ''));
     }
 }

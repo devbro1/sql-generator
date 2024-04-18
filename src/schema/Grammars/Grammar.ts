@@ -228,4 +228,8 @@ export abstract class Grammar extends BaseGrammar
     public abstract compileEnableForeignKeyConstraints(): string;
     public abstract compileDropAllTables(tables: string[]): string;
     public abstract compileDropAllViews(tables: string[]): string;
+    public abstract compileTypes(): string;
+    public abstract escapeNames(names: string[]): string[];
+    public abstract compileDropAllTypes(types: string[]): string;
+    public abstract compileDropAllDomains(domains: string[]): string;
 }

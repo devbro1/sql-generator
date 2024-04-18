@@ -14,7 +14,7 @@ export class Connection
         return ''; // Placeholder for actual implementation
     }
 
-    getConfig(c:string) {
+    getConfig(c:string): string {
         return '';
     }
 
