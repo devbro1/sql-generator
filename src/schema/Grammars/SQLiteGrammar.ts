@@ -21,15 +21,18 @@ export class SQLiteGrammar extends Grammar
         return "select exists (select 1 from pragma_compile_options where compile_options = 'ENABLE_DBSTAT_VTAB') as enabled";
     }
 
-    public compileTables(withSize: boolean = false): string
+    public compileTables(): string
     {
-        return withSize
-            ? 'select m.tbl_name as name, sum(s.pgsize) as size from sqlite_master as m ' +
+        return "select name from sqlite_master where type = 'table' and name not like 'sqlite_%' order by name";
+    }
+
+    public compileTablesWithSize(): string
+    {
+        return 'select m.tbl_name as name, sum(s.pgsize) as size from sqlite_master as m ' +
             'join dbstat as s on s.name = m.name ' +
             "where m.type in ('table', 'index') and m.tbl_name not like 'sqlite_%' " +
             'group by m.tbl_name ' +
-            'order by m.tbl_name'
-            : "select name from sqlite_master where type = 'table' and name not like 'sqlite_%' order by name";
+            'order by m.tbl_name';
     }
 
     public compileViews(): string

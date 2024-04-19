@@ -219,8 +219,16 @@ export abstract class Grammar extends BaseGrammar
         return `"${segment}"`;
     }
 
-    public abstract compileTables(database_name:string): string;
-    public abstract compileViews(database_name:string): string;
+    public compileTables(database_name:string=""): string {
+        throw new Error("Not Implemented!");
+        return "";
+    }
+
+    public compileViews(database_name:string=""): string {
+        throw new Error("Not Implemented!");
+        return "";
+    }
+
     public abstract compileColumns(schema: string, table: string): string;
     public abstract compileIndexes(schema: string, table: string): string;
     public abstract compileForeignKeys(schema: string, table: string): string;
@@ -228,8 +236,18 @@ export abstract class Grammar extends BaseGrammar
     public abstract compileEnableForeignKeyConstraints(): string;
     public abstract compileDropAllTables(tables: string[]): string;
     public abstract compileDropAllViews(tables: string[]): string;
-    public abstract compileTypes(): string;
-    public abstract escapeNames(names: string[]): string[];
-    public abstract compileDropAllTypes(types: string[]): string;
-    public abstract compileDropAllDomains(domains: string[]): string;
+
+
+    public compileTypes(): string {
+        return '';
+    }
+    public escapeNames(names: string[]): string[] {
+        return [];
+    }
+    public compileDropAllTypes(types: string[]): string {
+        return '';
+    }
+    public compileDropAllDomains(domains: string[]): string {
+        return '';
+    }
 }

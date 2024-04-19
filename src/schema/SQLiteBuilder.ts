@@ -1,10 +1,13 @@
+import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
+import { SQLiteGrammar } from "./Grammars/SQLiteGrammar";
 
-class SQLiteBuilder  extends Builder {
-    private connection: Connection;
-    private grammar: Grammar;
+export class SQLiteBuilder  extends Builder {
+    protected connection: Connection;
+    protected grammar: SQLiteGrammar;
 
     constructor(connection: Connection) {
+        super(connection);
         this.connection = connection;
         this.grammar = this.connection.getSchemaGrammar();
     }
@@ -27,7 +30,7 @@ class SQLiteBuilder  extends Builder {
         }
 
         return this.connection.getPostProcessor().processTables(
-            this.connection.selectFromWriteConnection(this.grammar.compileTables(withSize))
+            this.connection.selectFromWriteConnection(this.grammar.compileTablesWithSize())
         );
     }
 
@@ -37,14 +40,6 @@ class SQLiteBuilder  extends Builder {
             this.connection.selectFromWriteConnection(this.grammar.compileColumns(table)),
             this.connection.scalar(this.grammar.compileSqlCreateStatement(table))
         );
-    }
-
-    private connection: Connection;
-    private grammar: Grammar;
-
-    constructor(connection: Connection) {
-        this.connection = connection;
-        this.grammar = this.connection.getSchemaGrammar();
     }
 
     dropAllTables(): void {

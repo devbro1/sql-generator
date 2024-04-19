@@ -239,10 +239,15 @@ export class Builder {
 
     protected createBlueprint(table: string, callback?: (blueprint: Blueprint) => void): Blueprint {
         const prefix = this.connection.getConfig('prefix_indexes') ? this.connection.getConfig('prefix') : '';
+
+        const blueprint = new Blueprint(table, prefix);
+        if(callback) {
+            callback(blueprint);
+        }
         if (this.resolver) {
             return this.resolver(table, callback, prefix);
         }
-        return Container.getInstance().make(Blueprint, { table, callback, prefix });
+        return blueprint;
     }
 
     public getConnection(): Connection {

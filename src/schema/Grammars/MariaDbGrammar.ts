@@ -1,16 +1,18 @@
 import { MySqlGrammar } from "./MySqlGrammar";
 import { Blueprint } from "../Blueprint";
 import { Connection } from "../../Illuminate/Connection";
+import { Expression } from "../../Illuminate/Expression";
+import { ColumnDefinition } from "../ColumnDefinition";
 
 export class MariaDbGrammar extends MySqlGrammar
 {
 
-    public compileRenameColumn(blueprint: Blueprint, command: any, connection: Connection): string | string[]
+    public compileRenameColumn(blueprint: Blueprint, command: any, connection: Connection): string
     {
         if (connection.getServerVersion().localeCompare('10.5.2', '<'))
         {
             const column = connection.getSchemaBuilder().getColumns(blueprint.getTable())
-                .find(column => column.name === command.from);
+                .find((column: ColumnDefinition) => column.properties.name === command.from);
 
             const modifiers = this.addModifiers(column['type'], blueprint, new ColumnDefinition({
                 'change': true,
@@ -38,15 +40,15 @@ export class MariaDbGrammar extends MySqlGrammar
         return 'uuid';
     }
 
-    protected typeGeometry(column: any): string
+    protected typeGeometry(column: ColumnDefinition): string
     {
-        const subtype = column.subtype ? column.subtype.toLowerCase() : null;
+        let subtype = column.properties.subtype ? column.properties.subtype.toLowerCase() : '';
 
         if (!['point', 'linestring', 'polygon', 'geometrycollection', 'multipoint', 'multilinestring', 'multipolygon'].includes(subtype))
         {
-            subtype = null;
+            subtype = '';
         }
 
-        return `${ subtype ?? 'geometry' }${ column.srid ? ' ref_system_id=' + column.srid : '' }`;
+        return `${ subtype || 'geometry' }${ column.properties.srid ? ' ref_system_id=' + column.properties.srid : '' }`;
     }
 }
