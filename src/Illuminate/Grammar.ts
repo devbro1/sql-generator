@@ -146,6 +146,38 @@ export class Grammar
     {
         return this.tablePrefix;
     }
-}
 
-class RuntimeException extends Error { }
+    protected wrapJsonFieldAndPath(column: string): [string, string] {
+        const parts = column.split('->', 2);
+        const field = this.wrap(parts[0]);
+        const path = parts.length > 1 ? ', ' + this.wrapJsonPath(parts[1], '->') : '';
+        return [field, path];
+    }
+    
+    protected wrapJsonPath(value: string, delimiter: string = '->'): string {
+        value = value.replace(/([\\]+)?'/g, "''");
+        const jsonPath = value.split(delimiter)
+            .map(segment => this.wrapJsonPathSegment(segment))
+            .join('.');
+        return "'$".concat(jsonPath.startsWith('[') ? '' : '.', jsonPath, "'");
+    }
+    
+    protected wrapJsonPathSegment(segment: string): string {
+        const match = segment.match(/(\[[^\]]+\])+$/);
+        if (match) {
+            const key = segment.slice(0, segment.lastIndexOf(match[0]));
+            return key ? `"${key}"${match[0]}` : match[0];
+        }
+        return `"${segment}"`;
+    }
+
+    protected isJsonSelector(value: string): boolean {
+        return value.includes('->');
+    }
+
+    protected whereBasic(query: Builder, where: { column: string; operator: string; value: any }): string {
+        let value = this.parameter(where.value);
+        let operator = where.operator.replace('?', '??');
+        return this.wrap(where.column) + ' ' + operator + ' ' + value;
+    }
+}

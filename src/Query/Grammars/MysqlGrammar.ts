@@ -1,4 +1,5 @@
 import { Grammar } from "./Grammar";
+import _ from 'lodash';
 
 export class MySqlGrammar extends Grammar {
     operators: string[] = ['sounds like'];
@@ -57,7 +58,7 @@ export class MySqlGrammar extends Grammar {
     }
 
     compileLegacyGroupLimit(query: any): string {
-        const limit = parseInt(query.groupLimit['value']);
+        let limit = parseInt(query.groupLimit['value']);
         let offset = query.offset;
 
         if (offset !== undefined) {
@@ -151,7 +152,7 @@ export class MySqlGrammar extends Grammar {
         }
         sql += ' on duplicate key update ';
         const columns = Array.from(update).map(([key, value]) => {
-            if (!isNumeric(key)) {
+            if (!_.isNumeric(key)) {
                 return `${this.wrap(key)} = ${this.parameter(value)}`;
             }
             return useUpsertAlias
@@ -167,7 +168,7 @@ export class MySqlGrammar extends Grammar {
 
     compileJsonUpdateColumn(key: string, value: any): string {
         const [field, path] = this.wrapJsonFieldAndPath(key);
-        const valueSegment = isBool(value) ? (value ? 'true' : 'false') : this.parameter(value);
+        const valueSegment = typeof value === 'boolean' ? (value ? 'true' : 'false') : this.parameter(value);
         return `${field} = json_set(${field}${path}, ${valueSegment})`;
     }
 

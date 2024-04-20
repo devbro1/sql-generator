@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { Grammar } from "./Grammar";
 
 export class PostgresGrammar extends Grammar {
@@ -71,9 +72,9 @@ export class PostgresGrammar extends Grammar {
         ];
     }
 
-    compileColumns(query: any, columns: any): string | void {
+    compileColumns(query: any, columns: any): string {
         if (query.aggregate !== null) {
-            return;
+            return '';
         }
 
         let select = 'select ';
@@ -109,7 +110,7 @@ export class PostgresGrammar extends Grammar {
         column = segments.join('->').replace('->>', '->');
         column = this.wrap(column);
 
-        if (i !== undefined) {
+        if (typeof i === 'number') {
             return `case when jsonb_typeof((${column})::jsonb) = 'array' then jsonb_array_length((${column})::jsonb) >= ${i < 0 ? Math.abs(i) : i + 1} else false end`;
         }
 
@@ -179,7 +180,7 @@ export class PostgresGrammar extends Grammar {
         sql += ` on conflict (${this.columnize(uniqueBy)}) do update set `;
 
         const columns = Array.from(update).map(([key, value]) => {
-            return isNumeric(key)
+            return _.isNumeric(key)
                 ? `${this.wrap(value)} = excluded.${this.wrap(value)}`
                 : `${this.wrap(key)} = ${this.parameter(value)}`;
         }).join(', ');
@@ -287,14 +288,6 @@ export class PostgresGrammar extends Grammar {
         }
 
         return super.compileDelete(query);
-    }
-
-    compileDeleteWithJoinsOrLimit(query: any): string {
-        // For example, if deletions require special handling with joins/limits:
-        // Generate SQL for delete with necessary conditions (joins/limits) here.
-        const baseSql = super.compileDelete(query);
-        // You could potentially use joins/limit info to modify the base SQL.
-        return baseSql; // Simplified for this example.
     }
 
     compileDeleteWithJoinsOrLimit(query: any): string {

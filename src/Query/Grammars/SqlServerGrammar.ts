@@ -1,6 +1,7 @@
+import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammar";
 
-class SqlServerGrammar extends Grammar {
+export class SqlServerGrammar extends Grammar {
     operators: string[] = [
         '=', '<', '>', '<=', '>=', '!<', '!>', '<>', '!=',
         'like', 'not like', 'ilike',
@@ -29,9 +30,9 @@ class SqlServerGrammar extends Grammar {
         return super.compileSelect(query);
     }
 
-    compileColumns(query: any, columns: string[]): string | null {
+    compileColumns(query: any, columns: string[]): string {
         if (query.aggregate !== null) {
-            return null;
+            return '';
         }
 
         let select = query.distinct ? 'select distinct ' : 'select ';
@@ -99,17 +100,6 @@ class SqlServerGrammar extends Grammar {
     compileJsonValueCast(value: string): string {
         return `json_query(${value})`;
     }
-
-    operators: string[] = [
-        '=', '<', '>', '<=', '>=', '!<', '!>', '<>', '!=',
-        'like', 'not like', 'ilike',
-        '&', '&=', '|', '|=', '^', '^='
-    ];
-
-    selectComponents: string[] = [
-        'aggregate', 'columns', 'from', 'indexHint', 'joins', 'wheres', 'groups',
-        'havings', 'orders', 'offset', 'limit', 'lock'
-    ];
 
     compileHaving(having: any): string {
         if (having.type === 'Bitwise') {

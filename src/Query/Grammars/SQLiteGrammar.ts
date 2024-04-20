@@ -53,20 +53,6 @@ export class SQLiteGrammar extends Grammar {
         return `json_array_length(${field}${path}) ${operator} ${value}`;
     }
 
-    private wrapJsonFieldAndPath(column: string): [string, string] {
-        const segments = column.split('->');
-        const field = this.wrap(segments.shift());
-        const path = segments.length ? `'$.${segments.join('.')}'` : '';
-
-        return [field, path];
-    }
-
-    operators: string[] = [
-        '=', '<', '>', '<=', '>=', '<>', '!=',
-        'like', 'not like', 'ilike',
-        '&', '|', '<<', '>>',
-    ];
-
     compileJsonContains(column: string, value: string): string {
         const [field, path] = this.wrapJsonFieldAndPath(column);
         return `exists (select 1 from json_each(${field}${path}) where ${this.wrap('json_each.value')} is ${value})`;
@@ -116,22 +102,12 @@ export class SQLiteGrammar extends Grammar {
             }).join(', ');
     }
 
-    private wrapJsonFieldAndPath(column: string): [string, string] {
+    wrapJsonFieldAndPath(column: string): [string, string] {
         const segments = column.split('->');
         const field = this.wrap(segments.shift());
         const path = segments.length ? `'$.${segments.join('.')}'` : '';
         return [field, path];
     }
-
-    private compileJsonPatch(column: string, value: any): string {
-        return `jsonb_set(${this.wrap(column)}, '{${value.path.join(',')}}', ${this.parameter(value.value)})`;
-    }
-
-    operators: string[] = [
-        '=', '<', '>', '<=', '>=', '<>', '!=',
-        'like', 'not like', 'ilike',
-        '&', '|', '<<', '>>',
-    ];
 
     compileUpsert(query: any, values: object, uniqueBy: string[], update: object): string {
         let sql = this.compileInsert(query, values);
@@ -193,14 +169,7 @@ export class SQLiteGrammar extends Grammar {
         return `json_extract(${field}${path})`;
     }
 
-    private wrapJsonFieldAndPath(column: string): [string, string] {
-        const segments = column.split('->');
-        const field = this.wrap(segments.shift()!);
-        const path = segments.length ? `'.${segments.join('.')}'` : '';
-        return [field, path];
-    }
-
-    private isJsonSelector(key: string): boolean {
+    isJsonSelector(key: string): boolean {
         return key.includes('->');
     }
 }
