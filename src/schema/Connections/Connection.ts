@@ -9,8 +9,8 @@ export abstract class Connection
     protected database: string;
     protected readWriteType: string | null;
     protected tablePrefix: string = '';
-    protected config: {} = {};
-    protected reconnector: () => void;
+    protected config: object = {};
+    protected reconnector!: (connection: Connection) => void;
     protected queryGrammar: any; // Assuming a similar interface exists in TypeScript
     protected schemaGrammar: any; // Assuming a similar interface exists in TypeScript
     protected postProcessor: any; // Assuming a similar interface exists in TypeScript
@@ -25,7 +25,7 @@ export abstract class Connection
     protected totalQueryDuration: number = 0.0;
     protected queryDurationHandlers: any[] = [];
     protected pretending: boolean = false;
-    protected beforeStartingTransaction: (() => void)[] = [];
+    protected _beforeStartingTransaction: (() => void)[] = [];
     protected beforeExecutingCallbacks: (() => void)[] = [];
     protected static resolvers: (() => any)[] = [];
 
@@ -151,7 +151,7 @@ export abstract class Connection
 
     protected prepared(statement: any): any {
         statement.setFetchMode(this.fetchMode);
-        this.event(new StatementPrepared(this, statement));
+        // this.event(new StatementPrepared(this, statement));
         return statement;
     }
     
@@ -243,7 +243,7 @@ export abstract class Connection
         return result;
     }
     
-    bindValues(statement: any, bindings: any[]): void {
+    bindValues(statement: PDOStatement, bindings: any[]): void {
         bindings.forEach((value, key) => {
             statement.bindValue(
                 typeof key === 'string' ? key : key + 1,
@@ -299,7 +299,7 @@ export abstract class Connection
     
     logQuery(query: string, bindings: any[], time: number | null = null): void {
         this.totalQueryDuration += time ?? 0;
-        this.event(new QueryExecuted(query, bindings, time, this));
+        //this.event(new QueryExecuted(query, bindings, time, this));
     
         if (this.pretending) {
             query = this.queryGrammar?.substituteBindingsIntoRawSql(query, bindings) ?? query;
@@ -377,7 +377,7 @@ export abstract class Connection
     }
     
     beforeStartingTransaction(callback: () => void): this {
-        this.beforeStartingTransaction.push(callback);
+        this._beforeStartingTransaction.push(callback);
         return this;
     }
     
@@ -387,7 +387,8 @@ export abstract class Connection
     }
     
     listen(callback: (event: any) => void): void {
-        this.events?.listen('QueryExecuted', callback);
+        throw new Error('Not Implemented!');
+        //this.events?.listen('QueryExecuted', callback);
     }
     
     // fireConnectionEvent(event: string): any[] | null {
@@ -401,7 +402,8 @@ export abstract class Connection
     // }
     
     event(event: any): void {
-        this.events?.dispatch(event);
+        throw new Error('not Implemented!');
+        //this.events?.dispatch(event);
     }
     
     raw(value: any): Expression {
@@ -508,7 +510,7 @@ export abstract class Connection
         return this;
     }
     
-    setReconnector(reconnector: () => void): this {
+    setReconnector(reconnector: (connection: Connection) => void): this {
         this.reconnector = reconnector;
         return this;
     }
@@ -522,7 +524,7 @@ export abstract class Connection
         return name ? `${name}${this.readWriteType ? '::' + this.readWriteType : ''}` : null;
     }
     
-    getConfig(option: string = ''): any {
+    getConfig(option: string = ''): string {
         return this.config[option] ?? '';
     }
     
@@ -643,16 +645,52 @@ export abstract class Connection
         return this.getPdo().getAttribute(PDO.ATTR_SERVER_VERSION);
     }
     
-    static resolverFor(driver: string, callback: () => any): void {
-        YourClassName.resolvers[driver] = callback;
-    }
+    // static resolverFor(driver: string, callback: () => any): void {
+    //     YourClassName.resolvers[driver] = callback;
+    // }
     
-    static getResolver(driver: string): any {
-        return YourClassName.resolvers[driver] ?? null;
-    }
+    // static getResolver(driver: string): any {
+    //     return YourClassName.resolvers[driver] ?? null;
+    // }
 
 
     isMaria(): boolean {
         return false;
     }
+
+    isValidUtf8(str: string) {
+        const utf8Bytes = new TextEncoder().encode(str);
+        let i = 0;
+        while (i < utf8Bytes.length) {
+          if ((utf8Bytes[i] & 0b10000000) === 0b00000000) {
+            // 1-byte character (0xxxxxxx)
+            i++;
+          } else if ((utf8Bytes[i] & 0b11100000) === 0b11000000) {
+            // 2-byte character (110xxxxx 10xxxxxx)
+            if (((utf8Bytes[i + 1] || 0) & 0b11000000) !== 0b10000000) {
+              return false;
+            }
+            i += 2;
+          } else if ((utf8Bytes[i] & 0b11110000) === 0b11100000) {
+            // 3-byte character (1110xxxx 10xxxxxx 10xxxxxx)
+            if (((utf8Bytes[i + 1] || 0) & 0b11000000) !== 0b10000000 ||
+                ((utf8Bytes[i + 2] || 0) & 0b11000000) !== 0b10000000) {
+              return false;
+            }
+            i += 3;
+          } else if ((utf8Bytes[i] & 0b11111000) === 0b11110000) {
+            // 4-byte character (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
+            if (((utf8Bytes[i + 1] || 0) & 0b11000000) !== 0b10000000 ||
+                ((utf8Bytes[i + 2] || 0) & 0b11000000) !== 0b10000000 ||
+                ((utf8Bytes[i + 3] || 0) & 0b11000000) !== 0b10000000) {
+              return false;
+            }
+            i += 4;
+          } else {
+            // Invalid byte sequence
+            return false;
+          }
+        }
+        return true;
+      }
 }

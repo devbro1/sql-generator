@@ -43,9 +43,9 @@ export class MySqlConnection extends Connection {
         return this.withTablePrefix(grammar);
     }
     
-    getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
-        return new MySqlSchemaState(this, files, processFactory);
-    }
+    // getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
+    //     return new MySqlSchemaState(this, files, processFactory);
+    // }
     
     getDefaultPostProcessor(): any {
         return new MySqlProcessor();
