@@ -1,11 +1,15 @@
-export class Connection
+import { Expression } from "src/Illuminate/Expression";
+import { Grammar as QueryGrammar } from "src/schema/Grammars/Grammar";
+import { Processor } from "src/schema/Processors/Processor";
+import { Builder as SchemaBuilder } from "src/schema/Builder";
+export abstract class Connection
 {
     protected pdo: PDO | (() => PDO);
     protected readPdo: PDO | (() => PDO);
     protected database: string;
     protected readWriteType: string | null;
     protected tablePrefix: string = '';
-    protected config: any[] = [];
+    protected config: {} = {};
     protected reconnector: () => void;
     protected queryGrammar: any; // Assuming a similar interface exists in TypeScript
     protected schemaGrammar: any; // Assuming a similar interface exists in TypeScript
@@ -40,11 +44,7 @@ export class Connection
         this.queryGrammar = this.getDefaultQueryGrammar();
     }
 
-    getDefaultQueryGrammar() {
-        const grammar = new QueryGrammar();
-        grammar.setConnection(this);
-        return grammar;
-    }
+    abstract getDefaultQueryGrammar(): QueryGrammar;
 
     useDefaultSchemaGrammar() {
         this.schemaGrammar = this.getDefaultSchemaGrammar();
@@ -84,15 +84,17 @@ export class Connection
     }
 
     scalar(query: string, bindings: any[] = [], useReadPdo: boolean = true): any {
-        let record = this.selectOne(query, bindings, useReadPdo);
+        const record = this.selectOne(query, bindings, useReadPdo);
         if (record === null) {
             return null;
         }
-        record = Object.values(record);
-        if (record.length > 1) {
-            throw new MultipleColumnsSelectedException();
+    
+        const recordArray = Object.values(record);
+        if (recordArray.length > 1) {
+            throw new Error('MultipleColumnsSelectedException');
         }
-        return record[0];
+    
+        return recordArray[0];
     }
 
     selectFromWriteConnection(query: string, bindings: any[] = []): any[] {
@@ -101,7 +103,7 @@ export class Connection
 
     select(query: string, bindings: any[] = [], useReadPdo: boolean = true): any[] {
         return this.run(query, bindings, (query: string, bindings: any[]) => {
-            if (this.pretending()) {
+            if (this.isPretending()) {
                 return [];
             }
             const statement = this.prepared(this.getPdoForSelect(useReadPdo).prepare(query));
@@ -113,7 +115,7 @@ export class Connection
 
     selectResultSets(query: string, bindings: any[] = [], useReadPdo: boolean = true): any[] {
         return this.run(query, bindings, (query: string, bindings: any[]) => {
-            if (this.pretending()) {
+            if (this.isPretending()) {
                 return [];
             }
             const statement = this.prepared(this.getPdoForSelect(useReadPdo).prepare(query));
@@ -129,7 +131,7 @@ export class Connection
 
     cursor(query: string, bindings: any[] = [], useReadPdo: boolean = true): Generator<any, void, unknown> {
         const statement = this.run(query, bindings, (query: string, bindings: any[]) => {
-            if (this.pretending()) {
+            if (this.isPretending()) {
                 return [];
             }
             const statement = this.prepared(this.getPdoForSelect(useReadPdo).prepare(query));
@@ -171,7 +173,7 @@ export class Connection
     
     statement(query: string, bindings: any[] = []): boolean {
         return this.run(query, bindings, (query: string, bindings: any[]) => {
-            if (this.pretending()) {
+            if (this.isPretending()) {
                 return true;
             }
     
@@ -185,7 +187,7 @@ export class Connection
 
     affectingStatement(query: string, bindings: any[] = []): number {
         return this.run(query, bindings, (query: string, bindings: any[]) => {
-            if (this.pretending()) {
+            if (this.isPretending()) {
                 return 0;
             }
     
@@ -202,7 +204,7 @@ export class Connection
     
     unprepared(query: string): boolean {
         return this.run(query, [], (query: string) => {
-            if (this.pretending()) {
+            if (this.isPretending()) {
                 return true;
             }
     
@@ -285,9 +287,9 @@ export class Connection
             return callback(query, bindings);
         } catch (e) {
             if (this.isUniqueConstraintError(e)) {
-                throw new UniqueConstraintViolationException(this.getName(), query, this.prepareBindings(bindings), e);
+                throw new Error('UniqueConstraintViolationException');//,{this.getName(), query, this.prepareBindings(bindings), e});
             }
-            throw new QueryException(this.getName(), query, this.prepareBindings(bindings), e);
+            throw new Error('QueryException');//(this.getName(), query, this.prepareBindings(bindings), e);
         }
     }
     
@@ -333,7 +335,7 @@ export class Connection
         this.queryDurationHandlers.forEach(handler => handler.has_run = false);
     }
     
-    totalQueryDuration(): number {
+    getTotalQueryDuration(): number {
         return this.totalQueryDuration;
     }
 
@@ -388,15 +390,15 @@ export class Connection
         this.events?.listen('QueryExecuted', callback);
     }
     
-    fireConnectionEvent(event: string): any[] | null {
-        return this.events?.dispatch(match (event) {
-            case 'beganTransaction': return new TransactionBeginning(this);
-            case 'committed': return new TransactionCommitted(this);
-            case 'committing': return new TransactionCommitting(this);
-            case 'rollingBack': return new TransactionRolledBack(this);
-            default: return null;
-        });
-    }
+    // fireConnectionEvent(event: string): any[] | null {
+    //     return this.events?.dispatch(match (event) {
+    //         case 'beganTransaction': return new TransactionBeginning(this);
+    //         case 'committed': return new TransactionCommitted(this);
+    //         case 'committing': return new TransactionCommitting(this);
+    //         case 'rollingBack': return new TransactionRolledBack(this);
+    //         default: return null;
+    //     });
+    // }
     
     event(event: any): void {
         this.events?.dispatch(event);
@@ -409,7 +411,7 @@ export class Connection
     escape(value: string | number | boolean | null, binary: boolean = false): string {
         if (value === null) {
             return 'null';
-        } else if (binary) {
+        } else if (binary && typeof value === 'string') {
             return this.escapeBinary(value);
         } else if (typeof value === 'number') {
             return value.toString();
@@ -520,8 +522,8 @@ export class Connection
         return name ? `${name}${this.readWriteType ? '::' + this.readWriteType : ''}` : null;
     }
     
-    getConfig(option: string | null = null): any {
-        return this.config[option] ?? null;
+    getConfig(option: string = ''): any {
+        return this.config[option] ?? '';
     }
     
     getDriverName(): string {
@@ -577,7 +579,7 @@ export class Connection
         this.transactionsManager = null;
     }
     
-    pretending(): boolean {
+    isPretending(): boolean {
         return this.pretending === true;
     }
     
@@ -648,93 +650,9 @@ export class Connection
     static getResolver(driver: string): any {
         return YourClassName.resolvers[driver] ?? null;
     }
-    
 
-
-    getDatabaseName(): string
-    {
-        throw new Error("Method not implemented.");
-    }
-    getSchemaGrammar(): import("../Grammars/Grammar").Grammar
-    {
-        throw new Error("Method not implemented.");
-    }
-    escape(value: string | number | boolean | null, binary = false): string
-    {
-        // Implement escape logic here
-        return ''; // Placeholder for actual implementation
-    }
-
-    getConfig(c:string): string {
-        return '';
-    }
-
-    getServerVersion() {
-        return '13.0';
-    }
-
-    statement(statement:string): boolean {
-        return false;
-    }
-
-    query(c:string):any {
-
-    }
 
     isMaria(): boolean {
         return false;
-    }
-
-    getSchemaBuilder(): any {
-        
-    }
-
-    getTablePrefix(): string {
-        return "";
-    }
-
-    getPostProcessor(): any {
-
-    }
-
-    selectFromWriteConnection(a: any): any {
-
-    }
-
-    scalar(query: string, bindings: any[] = [], useReadPdo: boolean = true): any {
-        const record = this.selectOne(query, bindings, useReadPdo);
-        if (record === null) {
-            return null;
-        }
-    
-        const recordArray = Object.values(record);
-        if (recordArray.length > 1) {
-            throw new Error('MultipleColumnsSelectedException');
-        }
-    
-        return recordArray[0];
-    }
-
-    selectOne(query: string, bindings: any[] = [], useReadPdo: boolean = true): any {
-        const records = this.select(query, bindings, useReadPdo);
-        return records.shift();
-    }
-
-    async select(query: string, bindings: any[] = [], useReadPdo: boolean = true): Promise<any[]> {
-        return this.run(query, bindings, async (query: string, bindings: any[]) => {
-            if (this.pretending()) {
-                return [];
-            }
-    
-            const statement = this.prepared(
-                await this.getPdoForSelect(useReadPdo).prepare(query)
-            );
-    
-            this.bindValues(statement, this.prepareBindings(bindings));
-    
-            await statement.execute();
-    
-            return statement.fetchAll();
-        });
     }
 }
