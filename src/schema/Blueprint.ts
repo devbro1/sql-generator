@@ -1,4 +1,4 @@
-import { Connection } from "../Illuminate/Connection";
+import { Connection } from "./Connections/Connection";
 import { Grammar } from "./Grammars/Grammar";
 import { ColumnDefinition, ColumnProperties } from "./ColumnDefinition";
 import { ForeignKeyDefinition } from "./ForeignKeyDefinition";

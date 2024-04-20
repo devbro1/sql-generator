@@ -1,4 +1,4 @@
-import { Connection } from "../Illuminate/Connection";
+import { Connection } from "./Connections/Connection";
 import { Blueprint } from "./Blueprint";
 import { Grammar } from "./Grammars/Grammar";
 

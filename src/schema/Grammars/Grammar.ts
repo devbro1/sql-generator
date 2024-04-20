@@ -1,4 +1,4 @@
-import { Connection } from '../../Illuminate/Connection';
+import { Connection } from '../Connections/Connection';
 import { Expression } from '../../Illuminate/Expression';
 import { Grammar as BaseGrammar } from '../../Illuminate/Grammar';
 import { Blueprint } from '../Blueprint';

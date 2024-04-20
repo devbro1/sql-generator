@@ -1,4 +1,4 @@
-import { Connection } from "../../src/Illuminate/Connection";
+import { Connection } from "../../src/schema/Connections/Connection";
 import { Blueprint } from "../../src/schema/Blueprint";
 import { Builder } from "../../src/schema/Builder";
 import { MySqlGrammar } from "../../src/schema/Grammars/MySqlGrammar";

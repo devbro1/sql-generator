@@ -1,6 +1,6 @@
 import { Grammar } from "./Grammar";
 import { Blueprint } from "../Blueprint";
-import { Connection } from "../../Illuminate/Connection";
+import { Connection } from "../Connections/Connection";
 import { Expression } from "../../Illuminate/Expression";
 import { ColumnDefinition } from "../ColumnDefinition";
 

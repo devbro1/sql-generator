@@ -1,5 +1,5 @@
 import { Grammar } from './Grammar';
-import { Connection } from '../../Illuminate/Connection';
+import { Connection } from '../Connections/Connection';
 import { Blueprint } from '../Blueprint';
 import { Expression } from '../../Illuminate/Expression';
 import { ColumnDefinition } from '../ColumnDefinition';
