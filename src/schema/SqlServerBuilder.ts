@@ -1,10 +1,10 @@
 import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
-import { Grammar } from "./Grammars/Grammar";
+import { SqlServerGrammar } from "./Grammars/SqlServerGrammar";
 
-class SqlServerBuilder extends Builder {
-    private connection: Connection;
-    private grammar: Grammar;
+export class SqlServerBuilder extends Builder {
+    protected connection: Connection;
+    protected grammar: SqlServerGrammar;
 
     constructor(connection: Connection) {
         super(connection);
@@ -35,14 +35,7 @@ class SqlServerBuilder extends Builder {
         );
     }
 
-    private parseSchemaAndTable(reference: string): [string?, string] {
-        const parts = reference.split('.');
-        const schema = parts.length === 2 ? parts[0] : undefined;
-        const tableName = parts[parts.length - 1];
-        return [schema, tableName];
-    }
-
-    private getTables(): any[] {
+    getTables(): any[] {
         // Implementation to fetch tables should be provided here
         return [];
     }
@@ -67,14 +60,7 @@ class SqlServerBuilder extends Builder {
         this.connection.statement(this.grammar.compileDropAllViews());
     }
 
-    private parseSchemaAndTable(reference: string): [string?, string] {
-        const parts = reference.split('.');
-        const schema = parts.length === 2 ? parts[0] : undefined;
-        const tableName = parts[parts.length - 1];
-        return [schema, tableName];
-    }
-
-    private getViews(): any[] {
+    getViews(): any[] {
         // Implementation to fetch views should be provided here
         return [];
     }
@@ -108,12 +94,22 @@ class SqlServerBuilder extends Builder {
         return this.connection.scalar(this.grammar.compileDefaultSchema());
     }
 
-    protected parseSchemaAndTable(reference: string): [string?, string] {
+    protected parseSchemaAndTable(reference: string): [string, string] {
         const parts = reference.split('.', 2);
-        if (parts.length === 2 && parts[1].includes('.')) {
-            const database = parts[0];
-            throw new Error(`Using three-part reference is not supported, you may use 'Schema::connection("${database}")' instead.`);
+        let a = '';
+        let b = '';
+        if(parts.length === 1)
+        {
+            b = parts[0];    
         }
-        return parts;
+        else if (parts.length === 2) {
+            a = parts[0];
+            b = parts[1];
+        }
+        else {
+            throw new Error(`Using three-part reference is not supported, you may use 'Schema::connection("${parts[0]}")' instead.`);
+        }
+
+        return [a,b];
     }
 }

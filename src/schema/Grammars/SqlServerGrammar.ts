@@ -447,4 +447,9 @@ export class SqlServerGrammar extends Grammar
     
         return `N'${value}'`;
     }
+
+    public compileDefaultSchema()
+    {
+        return 'select schema_name()';
+    }
 }

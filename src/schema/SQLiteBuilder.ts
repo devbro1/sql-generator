@@ -1,6 +1,7 @@
 import { Connection } from "../Illuminate/Connection";
 import { Builder } from "./Builder";
 import { SQLiteGrammar } from "./Grammars/SQLiteGrammar";
+import fs from 'fs';
 
 export class SQLiteBuilder  extends Builder {
     protected connection: Connection;
@@ -13,11 +14,22 @@ export class SQLiteBuilder  extends Builder {
     }
 
     createDatabase(name: string): boolean {
-        return File.put(name, '') !== false;
+        let rc = true;
+        try {
+            fs.truncateSync(name);
+        }
+        catch(err) {
+            rc = false;
+        }
+        return rc;
     }
 
     dropDatabaseIfExists(name: string): boolean {
-        return File.exists(name) ? File.delete(name) : true;
+        if(fs.existsSync(name))
+        {
+            fs.unlinkSync(name);
+        }
+        return true;
     }
 
     getTables(withSize: boolean = true): any[] {
@@ -62,6 +74,6 @@ export class SQLiteBuilder  extends Builder {
     }
 
     refreshDatabaseFile(): void {
-        File.putContents(this.connection.getDatabaseName(), '');
+        fs.writeFileSync(this.connection.getDatabaseName(),'');
     }
 }
