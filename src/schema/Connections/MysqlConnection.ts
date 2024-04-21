@@ -1,7 +1,7 @@
 import { MySqlGrammar as SchemaGrammar } from "../Grammars/MySqlGrammar";
 import { MySqlGrammar as QueryGrammar } from "../../Query/Grammars/MysqlGrammar";
 import { MySqlBuilder } from "../MySqlBuilder";
-import { MySqlProcessor } from "../Processors/MysqlProcessor";
+import { MySqlProcessor } from "../../Query/Processors/MysqlProcessor";
 import { Connection } from "./Connection";
 
 export class MySqlConnection extends Connection {

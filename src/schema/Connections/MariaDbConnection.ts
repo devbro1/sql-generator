@@ -2,7 +2,7 @@ import { MariaDbBuilder } from "src/schema/MariaDbBuilder";
 import { MySqlConnection } from "./MysqlConnection";
 import { MariaDbGrammar as SchemaGrammar } from "src/schema/Grammars/MariaDbGrammar";
 import { MariaDbGrammar as QueryGrammar } from "src/Query/Grammars/MariaDbGrammar";
-import { MariaDbProcessor } from "src/schema/Processors/MariaDbProcessor";
+import { MariaDbProcessor } from "src/Query/Processors/MariaDbProcessor";
 
 export class MariaDbConnection extends MySqlConnection {
     isMaria(): boolean {

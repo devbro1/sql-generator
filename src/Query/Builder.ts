@@ -1,11 +1,17 @@
 import { Expression } from "src/Illuminate/Expression";
+import { Grammar } from "./Grammars/Grammar";
+import { Processor } from "./Processors/Processor";
+import { IndexHint } from "./IndexHint";
+import { Connection } from "src/schema/Connections/Connection";
+
+type Closure = Function;
 
 export class Builder
 {
-    public connection: any;
-    public grammar: Grammar;
-    public processor: Processor;
-    public bindings = {
+    public _connection: Connection;
+    public _grammar: Grammar;
+    public _processor: Processor;
+    public _bindings = {
         select: [],
         from: [],
         join: [],
@@ -16,27 +22,27 @@ export class Builder
         union: [],
         unionOrder: []
     };
-    public aggregate: any;
-    public columns: any[] | null;
-    public distinct: boolean | any[] = false;
-    public from: Expression | string;
-    public indexHint: IndexHint;
-    public joins: any[];
-    public wheres: any[] = [];
-    public groups: any[];
-    public havings: any[];
-    public orders: any[];
-    public limit: number;
-    public groupLimit: any;
-    public offset: number;
-    public unions: any[];
-    public unionLimit: number;
-    public unionOffset: number;
-    public unionOrders: any[];
-    public lock: string | boolean;
-    public beforeQueryCallbacks: any[] = [];
-    protected afterQueryCallbacks: any[] = [];
-    public operators = [
+    public _aggregate: any;
+    public _columns: any[] = [];
+    public _distinct: boolean | any[] = false;
+    public _from: Expression | string = '';
+    public _indexHint: IndexHint = new IndexHint('','');
+    public _joins: any[] = [];
+    public _wheres: any[] = [];
+    public _groups: any[] = [];
+    public havings: any[] = [];
+    public _orders: any[] = [];
+    public _limit: number = 0;
+    public _groupLimit: any;
+    public _offset: number = 0;
+    public _unions: any[] = [];
+    public _unionLimit: number = 0;
+    public _unionOffset: number = 0;
+    public _unionOrders: any[] = [];
+    public _lock: string | boolean = false;
+    public _beforeQueryCallbacks: any[] = [];
+    protected _afterQueryCallbacks: any[] = [];
+    public _operators = [
         '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
         'like', 'like binary', 'not like', 'ilike',
         '&', '|', '^', '<<', '>>', '&~', 'is', 'is not',
@@ -44,71 +50,23 @@ export class Builder
         '~', '~*', '!~', '!~*', 'similar to',
         'not similar to', 'not ilike', '~~*', '!~~*',
     ];
-    public bitwiseOperators = [
+    public _bitwiseOperators = [
         '&', '|', '^', '<<', '>>', '&~'
     ];
-    public useWritePdo = false;
+    public _useWritePdo = false;
 
 
-
-    public connection: ConnectionInterface;
-    public grammar: Grammar | null = null;
-    public processor: Processor | null = null;
-    public bindings = {
-        select: [],
-        from: [],
-        join: [],
-        where: [],
-        groupBy: [],
-        having: [],
-        order: [],
-        union: [],
-        unionOrder: []
-    };
-    public aggregate: any;
-    public columns: any[] | null = null;
-    public distinct: boolean | any[] = false;
-    public from: Expression | string;
-    public indexHint: IndexHint;
-    public joins: any[] = [];
-    public wheres: any[] = [];
-    public groups: any[];
-    public havings: any[];
-    public orders: any[];
-    public limit: number;
-    public groupLimit: any;
-    public offset: number;
-    public unions: any[];
-    public unionLimit: number;
-    public unionOffset: number;
-    public unionOrders: any[];
-    public lock: string | boolean;
-    public beforeQueryCallbacks: any[] = [];
-    public afterQueryCallbacks: any[] = [];
-    public operators: string[] = [
-        '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
-        'like', 'like binary', 'not like', 'ilike',
-        '&', '|', '^', '<<', '>>', '&~', 'is', 'is not',
-        'rlike', 'not rlike', 'regexp', 'not regexp',
-        '~', '~*', '!~', '!~*', 'similar to',
-        'not similar to', 'not ilike', '~~*', '!~~*',
-    ];
-    public bitwiseOperators: string[] = [
-        '&', '|', '^', '<<', '>>', '&~',
-    ];
-    public useWritePdo: boolean = false;
-
-    constructor(connection: ConnectionInterface, grammar?: Grammar, processor?: Processor)
+    constructor(connection: Connection, grammar?: Grammar, processor?: Processor)
     {
-        this.connection = connection;
-        this.grammar = grammar ?? connection.getQueryGrammar();
-        this.processor = processor ?? connection.getPostProcessor();
+        this._connection = connection;
+        this._grammar = grammar ?? connection.getQueryGrammar();
+        this._processor = processor ?? connection.getPostProcessor();
     }
 
     select(columns: any[] | any = ['*']): this
     {
-        this.columns = [];
-        this.bindings['select'] = [];
+        this._columns = [];
+        this._bindings['select'] = [];
 
         if (!Array.isArray(columns))
         {
@@ -122,7 +80,7 @@ export class Builder
                 this.selectSub(column, as);
             } else
             {
-                this.columns.push(column);
+                this._columns.push(column);
             }
         });
 
@@ -132,7 +90,7 @@ export class Builder
     selectSub(query: Closure | Builder | string, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
-        return this.selectRaw(`(${ sql }) as ${ this.grammar.wrap(as) }`, bindings);
+        return this.selectRaw(`(${ sql }) as ${ this._grammar.wrap(as) }`, bindings);
     }
 
     selectRaw(expression: string, bindings: any[] = []): this
@@ -150,12 +108,12 @@ export class Builder
     fromSub(query: Closure | Builder | string, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
-        return this.fromRaw(`(${ sql }) as ${ this.grammar.wrapTable(as) }`, bindings);
+        return this.fromRaw(`(${ sql }) as ${ this._grammar.wrapTable(as) }`, bindings);
     }
 
     fromRaw(expression: string, bindings: any[] = []): this
     {
-        this.from = new Expression(expression);
+        this._from = new Expression(expression);
         this.addBinding(bindings, 'from');
         return this;
     }
@@ -188,7 +146,7 @@ export class Builder
 
     protected prependDatabaseNameIfCrossDatabaseQuery(query: any): any
     {
-        if (query.getConnection().getDatabaseName() !== this.connection.getDatabaseName())
+        if (query.getConnection().getDatabaseName() !== this._connection.getDatabaseName())
         {
             const databaseName = query.getConnection().getDatabaseName();
             if (!query.from.startsWith(databaseName) && !query.from.includes('.'))
@@ -207,18 +165,18 @@ export class Builder
         {
             if (typeof as === 'string' && this.isQueryable(column))
             {
-                if (this.columns === null)
+                if (this._columns === null)
                 {
-                    this.select(`${ this.from }.*`);
+                    this.select(`${ this._from }.*`);
                 }
                 this.selectSub(column, as);
             } else
             {
-                if (Array.isArray(this.columns) && this.columns.includes(column))
+                if (Array.isArray(this.columns) && this._columns.includes(column))
                 {
                     return;
                 }
-                this.columns.push(column);
+                this._columns.push(column);
             }
         });
 
@@ -229,10 +187,10 @@ export class Builder
     {
         if (columns.length > 0)
         {
-            this.distinct = Array.isArray(columns[0]) || typeof columns[0] === 'boolean' ? columns[0] : columns;
+            this._distinct = Array.isArray(columns[0]) || typeof columns[0] === 'boolean' ? columns[0] : columns;
         } else
         {
-            this.distinct = true;
+            this._distinct = true;
         }
 
         return this;
@@ -245,25 +203,25 @@ export class Builder
             return this.fromSub(table, as);
         }
 
-        this.from = as ? `${ table } as ${ as }` : table;
+        this._from = as ? `${ table } as ${ as }` : table;
         return this;
     }
 
     useIndex(index: string): this
     {
-        this.indexHint = new IndexHint('hint', index);
+        this._indexHint = new IndexHint('hint', index);
         return this;
     }
 
     forceIndex(index: string): this
     {
-        this.indexHint = new IndexHint('force', index);
+        this._indexHint = new IndexHint('force', index);
         return this;
     }
 
     ignoreIndex(index: string): this
     {
-        this.indexHint = new IndexHint('ignore', index);
+        this._indexHint = new IndexHint('ignore', index);
         return this;
     }
 
@@ -273,12 +231,12 @@ export class Builder
         if (first instanceof Closure)
         {
             first(join);
-            this.joins.push(join);
+            this._joins.push(join);
             this.addBinding(join.getBindings(), 'join');
         } else
         {
             const method = where ? 'where' : 'on';
-            this.joins.push(join[method](first, operator, second));
+            this._joins.push(join[method](first, operator, second));
             this.addBinding(join.getBindings(), 'join');
         }
         return this;
@@ -292,7 +250,7 @@ export class Builder
     joinSub(query: Closure | Builder | EloquentBuilder | string, as: string, first: Closure | Expression | string, operator: string | null = null, second: Expression | string | null = null, type: string = 'inner', where: boolean = false): this
     {
         const [sql, bindings] = this.createSub(query);
-        const expression = `(${ sql }) as ${ this.grammar.wrapTable(as) }`;
+        const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
         this.addBinding(bindings, 'join');
         return this.join(new Expression(expression), first, operator, second, type, where);
     }
@@ -300,9 +258,9 @@ export class Builder
     joinLateral(query: Closure | Builder | EloquentBuilder | string, as: string, type: string = 'inner'): this
     {
         const [sql, bindings] = this.createSub(query);
-        const expression = `(${ sql }) as ${ this.grammar.wrapTable(as) }`;
+        const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
         this.addBinding(bindings, 'join');
-        this.joins.push(this.newJoinLateralClause(this, type, new Expression(expression)));
+        this._joins.push(this.newJoinLateralClause(this, type, new Expression(expression)));
         return this;
     }
 
@@ -347,16 +305,16 @@ export class Builder
         {
             return this.join(table, first, operator, second, 'cross');
         }
-        this.joins.push(this.newJoinClause(this, 'cross', table));
+        this._joins.push(this.newJoinClause(this, 'cross', table));
         return this;
     }
 
     crossJoinSub(query: Closure | Builder | EloquentBuilder | string, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
-        const expression = `(${ sql }) as ${ this.grammar.wrapTable(as) }`;
+        const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
         this.addBinding(bindings, 'join');
-        this.joins.push(this.newJoinClause(this, 'cross', new Expression(expression)));
+        this._joins.push(this.newJoinClause(this, 'cross', new Expression(expression)));
         return this;
     }
 
@@ -372,8 +330,8 @@ export class Builder
 
     mergeWheres(wheres: any[], bindings: any[]): this
     {
-        this.wheres = [...this.wheres, ...wheres];
-        this.bindings['where'] = [...this.bindings['where'], ...bindings];
+        this._wheres = [...this.wheres, ...wheres];
+        this._bindings['where'] = [...this._bindings['where'], ...bindings];
         return this;
     }
 
@@ -382,7 +340,7 @@ export class Builder
         if (column instanceof ConditionExpression)
         {
             const type = 'Expression';
-            this.wheres.push({ type, column, boolean });
+            this._wheres.push({ type, column, boolean });
             return this;
         }
 
@@ -421,7 +379,7 @@ export class Builder
         }
 
         let type = 'Basic';
-        const columnString = column instanceof ExpressionContract ? this.grammar.getValue(column) : column;
+        const columnString = column instanceof ExpressionContract ? this._grammar.getValue(column) : column;
 
         if (columnString.includes('->') && typeof value === 'boolean')
         {
@@ -437,7 +395,7 @@ export class Builder
             type = 'Bitwise';
         }
 
-        this.wheres.push({ type, column, operator, value, boolean });
+        this._wheres.push({ type, column, operator, value, boolean });
 
         if (!(value instanceof ExpressionContract))
         {
@@ -485,12 +443,12 @@ export class Builder
 
     invalidOperator(operator: string): boolean
     {
-        return typeof operator !== 'string' || (!this.operators.includes(operator.toLowerCase()) && !this.grammar.getOperators().includes(operator.toLowerCase()));
+        return typeof operator !== 'string' || (!this.operators.includes(operator.toLowerCase()) && !this._grammar.getOperators().includes(operator.toLowerCase()));
     }
 
     isBitwiseOperator(operator: string): boolean
     {
-        return this.bitwiseOperators.includes(operator.toLowerCase()) || this.grammar.getBitwiseOperators().includes(operator.toLowerCase());
+        return this.bitwiseOperators.includes(operator.toLowerCase()) || this._grammar.getBitwiseOperators().includes(operator.toLowerCase());
     }
 
     orWhere(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null): this
@@ -529,7 +487,7 @@ export class Builder
         }
 
         const type = 'Column';
-        this.wheres.push({ type, first, operator, second, boolean });
+        this._wheres.push({ type, first, operator, second, boolean });
         return this;
     }
 
@@ -540,7 +498,7 @@ export class Builder
 
     whereRaw(sql: string, bindings: any[] = [], boolean: string = 'and'): this
     {
-        this.wheres.push({ type: 'raw', sql, boolean });
+        this._wheres.push({ type: 'raw', sql, boolean });
         this.addBinding(bindings, 'where');
         return this;
     }
@@ -566,7 +524,7 @@ export class Builder
             values = values.toArray();
         }
 
-        this.wheres.push({ type, column, values, boolean });
+        this._wheres.push({ type, column, values, boolean });
 
         if (values.length !== Arr.flatten(values, 1).length)
         {
@@ -607,7 +565,7 @@ export class Builder
 
         values = Arr.flatten(values).map(value => parseInt(value instanceof BackedEnum ? value.value : value));
 
-        this.wheres.push({ type, column, values, boolean });
+        this._wheres.push({ type, column, values, boolean });
         return this;
     }
 
@@ -632,7 +590,7 @@ export class Builder
 
         Arr.wrap(columns).forEach(column =>
         {
-            this.wheres.push({ type, column, boolean });
+            this._wheres.push({ type, column, boolean });
         });
         return this;
     }
@@ -656,7 +614,7 @@ export class Builder
             values = [values.getStartDate(), values.getEndDate()];
         }
 
-        this.wheres.push({ type, column, values, boolean, not });
+        this._wheres.push({ type, column, values, boolean, not });
         this.addBinding(Array.from(values).slice(0, 2), 'where');
 
         return this;
@@ -665,7 +623,7 @@ export class Builder
     whereBetweenColumns(column: Expression | string, values: any[], boolean: string = 'and', not: boolean = false): this
     {
         const type = 'betweenColumns';
-        this.wheres.push({ type, column, values, boolean, not });
+        this._wheres.push({ type, column, values, boolean, not });
         return this;
     }
 
@@ -807,7 +765,7 @@ export class Builder
         if (query.wheres.length)
         {
             const type = 'Nested';
-            this.wheres.push({ type, query, boolean });
+            this._wheres.push({ type, query, boolean });
             this.addBinding(query.getRawBindings()['where'], 'where');
         }
         return this;
@@ -824,7 +782,7 @@ export class Builder
         {
             query = callback instanceof EloquentBuilder ? callback.toBase() : callback;
         }
-        this.wheres.push({ type, column, operator, query, boolean });
+        this._wheres.push({ type, column, operator, query, boolean });
         this.addBinding(query.getBindings(), 'where');
         return this;
     }
@@ -861,7 +819,7 @@ export class Builder
     addWhereExistsQuery(query: Builder, boolean: string = 'and', not: boolean = false): this
     {
         const type = not ? 'NotExists' : 'Exists';
-        this.wheres.push({ type, query, boolean });
+        this._wheres.push({ type, query, boolean });
         this.addBinding(query.getBindings(), 'where');
         return this;
     }
@@ -873,7 +831,7 @@ export class Builder
             throw new Error('The number of columns must match the number of values');
         }
         const type = 'RowValues';
-        this.wheres.push({ type, columns, operator, values, boolean });
+        this._wheres.push({ type, columns, operator, values, boolean });
         this.addBinding(this.cleanBindings(values));
         return this;
     }
@@ -886,10 +844,10 @@ export class Builder
     whereJsonContains(column: string, value: any, boolean: string = 'and', not: boolean = false): this
     {
         const type = 'JsonContains';
-        this.wheres.push({ type, column, value, boolean, not });
+        this._wheres.push({ type, column, value, boolean, not });
         if (!(value instanceof ExpressionContract))
         {
-            this.addBinding(this.grammar.prepareBindingForJsonContains(value));
+            this.addBinding(this._grammar.prepareBindingForJsonContains(value));
         }
         return this;
     }
@@ -912,7 +870,7 @@ export class Builder
     whereJsonContainsKey(column: string, boolean: string = 'and', not: boolean = false): this
     {
         const type = 'JsonContainsKey';
-        this.wheres.push({ type, column, boolean, not });
+        this._wheres.push({ type, column, boolean, not });
         return this;
     }
 
@@ -935,7 +893,7 @@ export class Builder
     {
         const type = 'JsonLength';
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
-        this.wheres.push({ type, column, operator, value, boolean });
+        this._wheres.push({ type, column, operator, value, boolean });
         if (!(value instanceof ExpressionContract))
         {
             this.addBinding(parseInt(this.flattenValue(value)));
@@ -979,7 +937,7 @@ export class Builder
     {
         const type = 'Fulltext';
         columns = Array.isArray(columns) ? columns : [columns];
-        this.wheres.push({ type, columns, value, options, boolean });
+        this._wheres.push({ type, columns, value, options, boolean });
         this.addBinding(value);
         return this;
     }
@@ -1029,14 +987,14 @@ export class Builder
     {
         groups.forEach(group =>
         {
-            this.groups = [...this.groups, ...Arr.wrap(group)];
+            this._groups = [...this.groups, ...Arr.wrap(group)];
         });
         return this;
     }
 
     groupByRaw(sql: string, bindings: any[] = []): this
     {
-        this.groups.push(new Expression(sql));
+        this._groups.push(new Expression(sql));
         this.addBinding(bindings, 'groupBy');
         return this;
     }
@@ -1047,7 +1005,7 @@ export class Builder
         if (column instanceof ConditionExpression)
         {
             type = 'Expression';
-            this.havings.push({ type, column, boolean });
+            this._havings.push({ type, column, boolean });
             return this;
         }
 
@@ -1068,7 +1026,7 @@ export class Builder
             type = 'Bitwise';
         }
 
-        this.havings.push({ type, column, operator, value, boolean });
+        this._havings.push({ type, column, operator, value, boolean });
 
         if (!(value instanceof ExpressionContract))
         {
@@ -1095,7 +1053,7 @@ export class Builder
         if (query.havings.length)
         {
             const type = 'Nested';
-            this.havings.push({ type, query, boolean });
+            this._havings.push({ type, query, boolean });
             this.addBinding(query.getRawBindings()['having'], 'having');
         }
         return this;
@@ -1106,7 +1064,7 @@ export class Builder
         const type = not ? 'NotNull' : 'Null';
         Arr.wrap(columns).forEach(column =>
         {
-            this.havings.push({ type, column, boolean });
+            this._havings.push({ type, column, boolean });
         });
         return this;
     }
@@ -1133,7 +1091,7 @@ export class Builder
         {
             values = [values.getStartDate(), values.getEndDate()];
         }
-        this.havings.push({ type, column, values, boolean, not });
+        this._havings.push({ type, column, values, boolean, not });
         this.addBinding(Array.slice(this.cleanBindings(Arr.flatten(values)), 0, 2), 'having');
         return this;
     }
@@ -1141,7 +1099,7 @@ export class Builder
     havingRaw(sql: string, bindings: any[] = [], boolean: string = 'and'): this
     {
         const type = 'Raw';
-        this.havings.push({ type, sql, boolean });
+        this._havings.push({ type, sql, boolean });
         this.addBinding(bindings, 'having');
         return this;
     }
@@ -1157,7 +1115,7 @@ export class Builder
         {
             const [query, bindings] = this.createSub(column);
             column = new Expression(`(${ query })`);
-            this.addBinding(bindings, this.unions ? 'unionOrder' : 'order');
+            this.addBinding(bindings, this._unions ? 'unionOrder' : 'order');
         }
 
         direction = direction.toLowerCase();
@@ -1167,7 +1125,7 @@ export class Builder
             throw new InvalidArgumentException('Order direction must be "asc" or "desc".');
         }
 
-        this[this.unions ? 'unionOrders' : 'orders'].push({ column, direction });
+        this[this._unions ? 'unionOrders' : 'orders'].push({ column, direction });
         return this;
     }
 
@@ -1188,14 +1146,14 @@ export class Builder
 
     inRandomOrder(seed: string | number = ''): this
     {
-        return this.orderByRaw(this.grammar.compileRandom(seed));
+        return this.orderByRaw(this._grammar.compileRandom(seed));
     }
 
     orderByRaw(sql: string, bindings: any[] = []): this
     {
         const type = 'Raw';
-        this[this.unions ? 'unionOrders' : 'orders'].push({ type, sql });
-        this.addBinding(bindings, this.unions ? 'unionOrder' : 'order');
+        this[this._unions ? '_unionOrders' : '_orders'].push({ type, sql });
+        this.addBinding(bindings, this._unions ? 'unionOrder' : 'order');
         return this;
     }
 
@@ -1206,7 +1164,7 @@ export class Builder
 
     offset(value: number): this
     {
-        const property = this.unions ? 'unionOffset' : 'offset';
+        const property = this._unions ? '_unionOffset' : '_offset';
         this[property] = Math.max(0, value);
         return this;
     }
@@ -1218,10 +1176,13 @@ export class Builder
 
     limit(value: number): this
     {
-        const property = this.unions ? 'unionLimit' : 'limit';
-        if (value >= 0)
+        const property = this._unions ? 'unionLimit' : 'limit';
+        if (this._unions && value >= 0)
         {
-            this[property] = value !== null ? value : null;
+            this._unionLimit = value !== null ? value : null;
+        }
+        else {
+            this._limit = value !== null ? value : null;
         }
         return this;
     }
@@ -1230,7 +1191,7 @@ export class Builder
     {
         if (value >= 0)
         {
-            this.groupLimit = { value, column };
+            this._groupLimit = { value, column };
         }
         return this;
     }
@@ -1242,7 +1203,7 @@ export class Builder
 
     forPageBeforeId(perPage: number = 15, lastId: number = 0, column: string = 'id'): this
     {
-        this.orders = this.removeExistingOrdersFor(column);
+        this._orders = this.removeExistingOrdersFor(column);
         if (lastId !== null)
         {
             this.where(column, '<', lastId);
@@ -1252,7 +1213,7 @@ export class Builder
 
     forPageAfterId(perPage: number = 15, lastId: number = 0, column: string = 'id'): this
     {
-        this.orders = this.removeExistingOrdersFor(column);
+        this._orders = this.removeExistingOrdersFor(column);
         if (lastId !== null)
         {
             this.where(column, '>', lastId);
@@ -1262,10 +1223,10 @@ export class Builder
 
     reorder(column: any = null, direction: string = 'asc'): this
     {
-        this.orders = null;
+        this._orders = null;
         this.unionOrders = null;
-        this.bindings['order'] = [];
-        this.bindings['unionOrder'] = [];
+        this._bindings['order'] = [];
+        this._bindings['unionOrder'] = [];
         if (column)
         {
             return this.orderBy(column, direction);
@@ -1279,7 +1240,7 @@ export class Builder
         {
             query(query = this.newQuery());
         }
-        this.unions.push({ query, all });
+        this._unions.push({ query, all });
         this.addBinding(query.getBindings(), 'union');
         return this;
     }
@@ -1342,13 +1303,13 @@ export class Builder
     toSql(): string
     {
         this.applyBeforeQueryCallbacks();
-        return this.grammar.compileSelect(this);
+        return this._grammar.compileSelect(this);
     }
 
     toRawSql(): string
     {
-        return this.grammar.substituteBindingsIntoRawSql(
-            this.toSql(), this.connection.prepareBindings(this.getBindings())
+        return this._grammar.substituteBindingsIntoRawSql(
+            this.toSql(), this._connection.prepareBindings(this.getBindings())
         );
     }
 
@@ -1394,16 +1355,16 @@ export class Builder
     {
         const items = this.onceWithColumns(Arr.wrap(columns), () =>
         {
-            return this.processor.processSelect(this, this.runSelect());
+            return this._processor.processSelect(this, this.runSelect());
         });
         return this.applyAfterQueryCallbacks(
-            this.groupLimit ? this.withoutGroupLimitKeys(items) : items
+            this._groupLimit ? this.withoutGroupLimitKeys(items) : items
         );
     }
 
     protected runSelect(): any[]
     {
-        return this.connection.select(
+        return this._connection.select(
             this.toSql(), this.getBindings(), !this.useWritePdo
         );
     }
@@ -1414,8 +1375,8 @@ export class Builder
         if (typeof this.groupLimit['column'] === 'string')
         {
             const column = last(this.groupLimit['column'].split('.'));
-            keysToRemove.push(`@laravel_group := ${ this.grammar.wrap(column) }`);
-            keysToRemove.push(`@laravel_group := ${ this.grammar.wrap('pivot_' + column) }`);
+            keysToRemove.push(`@laravel_group := ${ this._grammar.wrap(column) }`);
+            keysToRemove.push(`@laravel_group := ${ this._grammar.wrap('pivot_' + column) }`);
         }
         items.forEach((item: any) =>
         {
@@ -1456,7 +1417,7 @@ export class Builder
 
     protected ensureOrderForCursorPagination(shouldReverse = false): any
     {
-        if (!this.orders.length && !this.unionOrders.length)
+        if (!this._orders.length && !this.unionOrders.length)
         {
             this.enforceOrderBy();
         }
@@ -1468,10 +1429,10 @@ export class Builder
         };
         if (shouldReverse)
         {
-            this.orders = this.orders.map(reverseDirection);
-            this.unionOrders = this.unionOrders.map(reverseDirection);
+            this._orders = this._orders.map(reverseDirection);
+            this._unionOrders = this._unionOrders.map(reverseDirection);
         }
-        const orders = this.unionOrders.length ? this.unionOrders : this.orders;
+        const orders = this._unionOrders.length ? this._unionOrders : this._orders;
         return collect(orders).filter((order: any) => Arr.has(order, 'direction')).values();
     }
 
@@ -1490,22 +1451,22 @@ export class Builder
 
     protected runPaginationCountQuery(columns = ['*']): any[]
     {
-        if (this.groups || this.havings)
+        if (this._groups || this.havings)
         {
             const clone = this.cloneForPaginationCount();
-            if (!clone.columns && this.joins.length)
+            if (!clone.columns && this._joins.length)
             {
-                clone.select(`${ this.from }.*`);
+                clone.select(`${ this._from }.*`);
             }
             return this.newQuery()
-                .from(new Expression(`(${ clone.toSql() }) as ${ this.grammar.wrap('aggregate_table') }`))
+                .from(new Expression(`(${ clone.toSql() }) as ${ this._grammar.wrap('aggregate_table') }`))
                 .mergeBindings(clone)
                 .setAggregate('count', this.withoutSelectAliases(columns))
                 .get().all();
         }
-        const without = this.unions ? ['orders', 'limit', 'offset'] : ['columns', 'orders', 'limit', 'offset'];
+        const without = this._unions ? ['orders', 'limit', 'offset'] : ['columns', 'orders', 'limit', 'offset'];
         return this.cloneWithout(without)
-            .cloneWithoutBindings(this.unions ? ['order'] : ['select', 'order'])
+            .cloneWithoutBindings(this._unions ? ['order'] : ['select', 'order'])
             .setAggregate('count', this.withoutSelectAliases(columns))
             .get().all();
     }
@@ -1533,11 +1494,11 @@ export class Builder
     {
         if (!this.columns)
         {
-            this.columns = ['*'];
+            this._columns = ['*'];
         }
         return new LazyCollection(() =>
         {
-            for (const item of this.connection.cursor(
+            for (const item of this._connection.cursor(
                 this.toSql(), this.getBindings(), !this.useWritePdo
             ))
             {
@@ -1551,7 +1512,7 @@ export class Builder
 
     enforceOrderBy(): void
     {
-        if (!this.orders.length && !this.unionOrders.length)
+        if (!this._orders.length && !this.unionOrders.length)
         {
             throw new RuntimeException('You must specify an orderBy clause when using this function.');
         }
@@ -1561,7 +1522,7 @@ export class Builder
     {
         const queryResult = this.onceWithColumns(
             key === null ? [column] : [column, key],
-            () => this.processor.processSelect(this, this.runSelect())
+            () => this._processor.processSelect(this, this.runSelect())
         );
 
         if (!queryResult.length)
@@ -1582,7 +1543,7 @@ export class Builder
     protected stripTableForPluck(column: string | null): string | null
     {
         if (column === null) return column;
-        const columnString = column instanceof ExpressionContract ? this.grammar.getValue(column) : column;
+        const columnString = column instanceof ExpressionContract ? this._grammar.getValue(column) : column;
         const separator = columnString.toLowerCase().includes(' as ') ? ' as ' : '.';
         return last(columnString.split(new RegExp(`${ separator }`, 'i')));
     }
@@ -1621,8 +1582,8 @@ export class Builder
     exists(): boolean
     {
         this.applyBeforeQueryCallbacks();
-        const results = this.connection.select(
-            this.grammar.compileExists(this), this.getBindings(), !this.useWritePdo
+        const results = this._connection.select(
+            this._grammar.compileExists(this), this.getBindings(), !this.useWritePdo
         );
         if (results[0])
         {
@@ -1680,8 +1641,8 @@ export class Builder
 
     protected aggregate(functionName: string, columns: string[] = ['*']): any
     {
-        const results = this.cloneWithout(this.unions || this.havings ? [] : ['columns'])
-            .cloneWithoutBindings(this.unions || this.havings ? [] : ['select'])
+        const results = this.cloneWithout(this._unions || this._havings ? [] : ['columns'])
+            .cloneWithoutBindings(this._unions || this._havings ? [] : ['select'])
             .setAggregate(functionName, columns)
             .get(columns);
 
@@ -1700,11 +1661,11 @@ export class Builder
 
     protected setAggregate(functionName: string, columns: string[]): this
     {
-        this.aggregate = { function: functionName, columns };
-        if (!this.groups.length)
+        this._aggregate = { function: functionName, columns };
+        if (!this._groups.length)
         {
-            this.orders = null;
-            this.bindings['order'] = [];
+            this._orders = null;
+            this._bindings['order'] = [];
         }
         return this;
     }
@@ -1712,9 +1673,9 @@ export class Builder
     protected onceWithColumns(columns: string[], callback: () => any): any
     {
         const original = this.columns;
-        this.columns = columns;
+        this._columns = columns;
         const result = callback();
-        this.columns = original;
+        this._columns = original;
         return result;
     }
 
@@ -1728,8 +1689,8 @@ export class Builder
         }
         values.forEach(value => Object.keys(value).sort());
         this.applyBeforeQueryCallbacks();
-        return this.connection.insert(
-            this.grammar.compileInsert(this, values),
+        return this._connection.insert(
+            this._grammar.compileInsert(this, values),
             this.flattenValues(values)
         );
     }
@@ -1744,8 +1705,8 @@ export class Builder
         }
         values.forEach(value => Object.keys(value).sort());
         this.applyBeforeQueryCallbacks();
-        return this.connection.affectingStatement(
-            this.grammar.compileInsertOrIgnore(this, values),
+        return this._connection.affectingStatement(
+            this._grammar.compileInsertOrIgnore(this, values),
             this.flattenValues(values)
         );
     }
@@ -1753,16 +1714,16 @@ export class Builder
     insertGetId(values: any[], sequence: string | null = null): number
     {
         this.applyBeforeQueryCallbacks();
-        const sql = this.grammar.compileInsertGetId(this, values, sequence);
-        return this.processor.processInsertGetId(this, sql, values, sequence);
+        const sql = this._grammar.compileInsertGetId(this, values, sequence);
+        return this._processor.processInsertGetId(this, sql, values, sequence);
     }
 
     insertUsing(columns: string[], query: any): number
     {
         this.applyBeforeQueryCallbacks();
         const [sql, bindings] = this.createSub(query);
-        return this.connection.affectingStatement(
-            this.grammar.compileInsertUsing(this, columns, sql),
+        return this._connection.affectingStatement(
+            this._grammar.compileInsertUsing(this, columns, sql),
             bindings
         );
     }
@@ -1771,8 +1732,8 @@ export class Builder
     {
         this.applyBeforeQueryCallbacks();
         const [sql, bindings] = this.createSub(query);
-        return this.connection.affectingStatement(
-            this.grammar.compileInsertOrIgnoreUsing(this, columns, sql),
+        return this._connection.affectingStatement(
+            this._grammar.compileInsertOrIgnoreUsing(this, columns, sql),
             bindings
         );
     }
@@ -1784,22 +1745,22 @@ export class Builder
             value: value instanceof this.constructor ? `(${ value.toSql() })` : value,
             bindings: value instanceof this.constructor ? value.getBindings() : value
         }));
-        const sql = this.grammar.compileUpdate(this, formattedValues);
-        return this.connection.update(sql, this.cleanBindings(
-            this.grammar.prepareBindingsForUpdate(this.bindings, formattedValues)
+        const sql = this._grammar.compileUpdate(this, formattedValues);
+        return this._connection.update(sql, this.cleanBindings(
+            this._grammar.prepareBindingsForUpdate(this.bindings, formattedValues)
         ));
     }
 
     updateFrom(values: any): number
     {
-        if (typeof this.grammar.compileUpdateFrom !== 'function')
+        if (typeof this._grammar.compileUpdateFrom !== 'function')
         {
             throw new Error('This database engine does not support the updateFrom method.');
         }
         this.applyBeforeQueryCallbacks();
-        const sql = this.grammar.compileUpdateFrom(this, values);
-        return this.connection.update(sql, this.cleanBindings(
-            this.grammar.prepareBindingsForUpdateFrom(this.bindings, values)
+        const sql = this._grammar.compileUpdateFrom(this, values);
+        return this._connection.update(sql, this.cleanBindings(
+            this._grammar.prepareBindingsForUpdateFrom(this.bindings, values)
         ));
     }
 
@@ -1855,8 +1816,8 @@ export class Builder
             [...values.flat(1), ...Object.values(update).filter(value => typeof value === 'number' || typeof value === 'string')]
         );
 
-        return this.connection.affectingStatement(
-            this.grammar.compileUpsert(this, values, Array.isArray(uniqueBy) ? uniqueBy : [uniqueBy], update),
+        return this._connection.affectingStatement(
+            this._grammar.compileUpsert(this, values, Array.isArray(uniqueBy) ? uniqueBy : [uniqueBy], update),
             bindings
         );
     }
@@ -1880,7 +1841,7 @@ export class Builder
                 throw new Error(`Non-numeric value passed as increment amount for column: '${ column }'.`);
             }
 
-            columns[column] = this.raw(`${ this.grammar.wrap(column) } + ${ amount }`);
+            columns[column] = this.raw(`${ this._grammar.wrap(column) } + ${ amount }`);
         });
 
         return this.update({ ...columns, ...extra });
@@ -1905,7 +1866,7 @@ export class Builder
                 throw new Error(`Non-numeric value passed as decrement amount for column: '${ column }'.`);
             }
 
-            columns[column] = this.raw(`${ this.grammar.wrap(column) } - ${ amount }`);
+            columns[column] = this.raw(`${ this._grammar.wrap(column) } - ${ amount }`);
         });
 
         return this.update({ ...columns, ...extra });
@@ -1915,14 +1876,14 @@ export class Builder
     {
         if (id !== null)
         {
-            this.where(`${ this.from }.id`, '=', id);
+            this.where(`${ this._from }.id`, '=', id);
         }
 
         this.applyBeforeQueryCallbacks();
 
-        return this.connection.delete(
-            this.grammar.compileDelete(this), this.cleanBindings(
-                this.grammar.prepareBindingsForDelete(this.bindings)
+        return this._connection.delete(
+            this._grammar.compileDelete(this), this.cleanBindings(
+                this._grammar.prepareBindingsForDelete(this.bindings)
             )
         );
     }
@@ -1931,9 +1892,9 @@ export class Builder
     {
         this.applyBeforeQueryCallbacks();
 
-        Object.entries(this.grammar.compileTruncate(this)).forEach(([sql, bindings]) =>
+        Object.entries(this._grammar.compileTruncate(this)).forEach(([sql, bindings]) =>
         {
-            this.connection.statement(sql, bindings);
+            this._connection.statement(sql, bindings);
         });
     }
 
@@ -1946,10 +1907,10 @@ export class Builder
 
         if (Array.isArray(value))
         {
-            this.bindings[type] = [...this.bindings[type], ...value.map(this.castBinding)];
+            this._bindings[type] = [...this._bindings[type], ...value.map(this.castBinding)];
         } else
         {
-            this.bindings[type].push(this.castBinding(value));
+            this._bindings[type].push(this.castBinding(value));
         }
 
         return this;
@@ -1969,8 +1930,8 @@ export class Builder
     {
         Object.keys(query.bindings).forEach(key =>
         {
-            this.bindings[key] = this.bindings[key] || [];
-            this.bindings[key].push(...query.bindings[key]);
+            this._bindings[key] = this._bindings[key] || [];
+            this._bindings[key].push(...query.bindings[key]);
         });
         return this;
     }

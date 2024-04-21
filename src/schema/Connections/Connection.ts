@@ -1,7 +1,8 @@
 import { Expression } from "src/Illuminate/Expression";
 import { Grammar as QueryGrammar } from "src/schema/Grammars/Grammar";
-import { Processor } from "src/schema/Processors/Processor";
+import { Processor } from "src/Query/Processors/Processor";
 import { Builder as SchemaBuilder } from "src/schema/Builder";
+import { Builder as QueryBuilder } from "src/Query/Builder";
 export abstract class Connection
 {
     protected pdo: PDO | (() => PDO);
