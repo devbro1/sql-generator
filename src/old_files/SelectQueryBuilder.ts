@@ -1,5 +1,5 @@
 import { RawSQL } from "../RawSQL";
-import { ConditionClause, operation } from "./ConditionClause";
+import { ConditionClause, operation } from "../Query/ConditionClause";
 import { Postgresql } from "../databases/postgresql";
 
 type node = {

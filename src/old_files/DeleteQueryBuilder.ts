@@ -1,10 +1,9 @@
-import { ConditionClause } from "./ConditionClause";
+import { ConditionClause } from "../Query/ConditionClause";
 
-export class UpdateQueryBuilder {
+export class DeleteQueryBuilder {
   client;
   nodes = {
     table: "",
-    values: {},
     where: (cc: ConditionClause) => {},
   };
 
@@ -18,12 +17,6 @@ export class UpdateQueryBuilder {
     return this;
   }
 
-  public values(values: object) {
-    this.nodes.values = values;
-
-    return this;
-  }
-
   public where(func:any) {
     this.nodes.where = func;
     return this;
@@ -32,17 +25,8 @@ export class UpdateQueryBuilder {
   public toFullSQL(): string {
     const rc = [];
 
-    rc.push("UPDATE");
+    rc.push("DELETE FROM");
     rc.push(this.nodes.table);
-    rc.push("SET");
-
-    const sets: any[] = [];
-    Object.entries(this.nodes.values).map(([key, value]) => {
-      sets.push(
-        this.client.escapeIdentifier(key) + " = " + this.client.escape(value),
-      );
-    });
-    rc.push(sets.join(", "));
 
     if (this.nodes.where) {
       const cc = new ConditionClause(this.client);

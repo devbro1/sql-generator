@@ -1,5 +1,6 @@
 import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammar";
+import { JoinLateralClause } from "../JoinLateralClause";
 
 export class SqlServerGrammar extends Grammar {
     operators: string[] = [

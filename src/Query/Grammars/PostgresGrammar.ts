@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { Grammar } from "./Grammar";
+import { JoinLateralClause } from "../JoinLateralClause";
 
 export class PostgresGrammar extends Grammar {
     protected operators: string[] = [

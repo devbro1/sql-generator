@@ -1,4 +1,5 @@
 import {Grammar as BaseGrammar } from 'src/Illuminate/Grammar'
+import { JoinClause } from '../JoinClause';
 export abstract class Grammar extends BaseGrammar {
     protected operators: string[] = [];
     protected bitwiseOperators: string[] = [];
@@ -39,23 +40,6 @@ export abstract class Grammar extends BaseGrammar {
 
         return `select ${aggregate.function}(${column}) as aggregate`;
     }
-
-    protected operators: string[] = [];
-    protected bitwiseOperators: string[] = [];
-    protected selectComponents: string[] = [
-        'aggregate',
-        'columns',
-        'from',
-        'indexHint',
-        'joins',
-        'wheres',
-        'groups',
-        'havings',
-        'orders',
-        'limit',
-        'offset',
-        'lock',
-    ];
 
     compileSelect(query: any): string {
         if ((query.unions || query.havings) && query.aggregate) {
