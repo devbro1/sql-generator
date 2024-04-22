@@ -3,15 +3,29 @@ import { Grammar } from "./Grammars/Grammar";
 import { Processor } from "./Processors/Processor";
 import { IndexHint } from "./IndexHint";
 import { Connection } from "src/schema/Connections/Connection";
+import { JoinLateralClause } from "./JoinLateralClause";
+import { JoinClause } from "./JoinClause";
+import {sprintf} from 'sprintf-js';
 
-type Closure = Function;
+type bindings = {
+    select: any[];
+    from: any[];
+    join: any[];
+    where: any[];
+    groupBy: any[];
+    having: any[];
+    order: any[];
+    union: any[];
+    unionOrder:any [];
+}
 
+type binding_options = 'select' | 'from' | 'join' | 'where' | 'groupBy' | 'having' | 'order' | 'union' | 'unionOrder';
 export class Builder
 {
     public _connection: Connection;
     public _grammar: Grammar;
     public _processor: Processor;
-    public _bindings = {
+    public _bindings: bindings = {
         select: [],
         from: [],
         join: [],
@@ -25,12 +39,12 @@ export class Builder
     public _aggregate: any;
     public _columns: any[] = [];
     public _distinct: boolean | any[] = false;
-    public _from: Expression | string = '';
+    public _from: Expression | string | Builder | Function = '';
     public _indexHint: IndexHint = new IndexHint('','');
     public _joins: any[] = [];
     public _wheres: any[] = [];
     public _groups: any[] = [];
-    public havings: any[] = [];
+    public _havings: any[] = [];
     public _orders: any[] = [];
     public _limit: number = 0;
     public _groupLimit: any;
@@ -87,7 +101,7 @@ export class Builder
         return this;
     }
 
-    selectSub(query: Closure | Builder | string, as: string): this
+    selectSub(query: Function | Builder | string, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
         return this.selectRaw(`(${ sql }) as ${ this._grammar.wrap(as) }`, bindings);
@@ -105,7 +119,7 @@ export class Builder
         return this;
     }
 
-    fromSub(query: Closure | Builder | string, as: string): this
+    fromSub(query: Function | Builder | string, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
         return this.fromRaw(`(${ sql }) as ${ this._grammar.wrapTable(as) }`, bindings);
@@ -118,9 +132,9 @@ export class Builder
         return this;
     }
 
-    protected createSub(query: Closure | Builder | string): [string, any[]]
+    protected createSub(query: Function | Builder | Expression | string): [string, any[]]
     {
-        if (query instanceof Closure)
+        if (typeof query === 'function')
         {
             const newQuery = this.forSubQuery();
             query(newQuery);
@@ -129,9 +143,19 @@ export class Builder
         return this.parseSub(query);
     }
 
+    protected forSubQuery()
+    {
+        return this.newQuery();
+    }
+
+    public newQuery()
+    {
+        return new Builder(this._connection, this._grammar, this._processor);
+    }
+
     protected parseSub(query: any): [string, any[]]
     {
-        if (query instanceof this.constructor || query instanceof EloquentBuilder || query instanceof Relation)
+        if (query instanceof this.constructor || query instanceof Relation)
         {
             query = this.prependDatabaseNameIfCrossDatabaseQuery(query);
             return [query.toSql(), query.getBindings()];
@@ -172,7 +196,7 @@ export class Builder
                 this.selectSub(column, as);
             } else
             {
-                if (Array.isArray(this.columns) && this._columns.includes(column))
+                if (Array.isArray(this._columns) && this._columns.includes(column))
                 {
                     return;
                 }
@@ -196,7 +220,7 @@ export class Builder
         return this;
     }
 
-    from(table: Closure | Builder | string, as?: string): this
+    from(table: Expression | Function | Builder | string, as: string=''): this
     {
         if (this.isQueryable(table))
         {
@@ -225,10 +249,10 @@ export class Builder
         return this;
     }
 
-    join(table: Expression | string, first: Closure | Expression | string, operator: string | null = null, second: Expression | string | null = null, type: string = 'inner', where: boolean = false): this
+    join(table: Expression | string, first: Function | Expression | string, operator: string = '', second: Expression | string = '', type: string = 'inner', where: boolean = false): this
     {
         const join = this.newJoinClause(this, type, table);
-        if (first instanceof Closure)
+        if (typeof first === 'function')
         {
             first(join);
             this._joins.push(join);
@@ -242,12 +266,16 @@ export class Builder
         return this;
     }
 
-    joinWhere(table: Expression | string, first: Closure | Expression | string, operator: string, second: Expression | string, type: string = 'inner'): this
+    public getBindings(): any[] {
+        return this._bindings.flat();
+    }
+
+    joinWhere(table: Expression | string, first: Function | Expression | string, operator: string, second: Expression | string, type: string = 'inner'): this
     {
         return this.join(table, first, operator, second, type, true);
     }
 
-    joinSub(query: Closure | Builder | EloquentBuilder | string, as: string, first: Closure | Expression | string, operator: string | null = null, second: Expression | string | null = null, type: string = 'inner', where: boolean = false): this
+    joinSub(query: Function | Builder | string, as: string, first: Function | Expression | string, operator: string = '', second: Expression | string = '', type: string = 'inner', where: boolean = false): this
     {
         const [sql, bindings] = this.createSub(query);
         const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
@@ -255,7 +283,7 @@ export class Builder
         return this.join(new Expression(expression), first, operator, second, type, where);
     }
 
-    joinLateral(query: Closure | Builder | EloquentBuilder | string, as: string, type: string = 'inner'): this
+    joinLateral(query: Function | Builder | string, as: string, type: string = 'inner'): this
     {
         const [sql, bindings] = this.createSub(query);
         const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
@@ -264,42 +292,42 @@ export class Builder
         return this;
     }
 
-    leftJoinLateral(query: Closure | Builder | EloquentBuilder | string, as: string): this
+    leftJoinLateral(query: Function | Builder | string, as: string): this
     {
         return this.joinLateral(query, as, 'left');
     }
 
-    leftJoin(table: Expression | string, first: Closure | Expression | string, operator: string | null = null, second: Expression | string | null = null): this
+    leftJoin(table: Expression | string, first: Function | Expression | string, operator: string = '', second: Expression | string = ''): this
     {
         return this.join(table, first, operator, second, 'left');
     }
 
-    leftJoinWhere(table: Expression | string, first: Closure | Expression | string, operator: string, second: Expression | string): this
+    leftJoinWhere(table: Expression | string, first: Function | Expression | string, operator: string, second: Expression | string): this
     {
         return this.joinWhere(table, first, operator, second, 'left');
     }
 
-    leftJoinSub(query: Closure | Builder | EloquentBuilder | string, as: string, first: Closure | Expression | string, operator: string | null = null, second: Expression | string | null = null): this
+    leftJoinSub(query: Function | Builder | string, as: string, first: Function | Expression | string, operator: string = '', second: Expression | string = ''): this
     {
         return this.joinSub(query, as, first, operator, second, 'left');
     }
 
-    rightJoin(table: Expression | string, first: Closure | string, operator: string | null = null, second: Expression | string | null = null): this
+    rightJoin(table: Expression | string, first: Function | string, operator: string = '', second: Expression | string = ''): this
     {
         return this.join(table, first, operator, second, 'right');
     }
 
-    rightJoinWhere(table: Expression | string, first: Closure | Expression | string, operator: string, second: Expression | string): this
+    rightJoinWhere(table: Expression | string, first: Function | Expression | string, operator: string, second: Expression | string): this
     {
         return this.joinWhere(table, first, operator, second, 'right');
     }
 
-    rightJoinSub(query: Closure | Builder | EloquentBuilder | string, as: string, first: Closure | Expression | string, operator: string | null = null, second: Expression | string | null = null): this
+    rightJoinSub(query: Function | Builder | string, as: string, first: Function | Expression | string, operator: string = '', second: Expression | string = ''): this
     {
         return this.joinSub(query, as, first, operator, second, 'right');
     }
 
-    crossJoin(table: Expression | string, first: Closure | Expression | string | null = null, operator: string | null = null, second: Expression | string | null = null): this
+    crossJoin(table: Expression | string, first: Function | Expression | string = '', operator: string  = '', second: Expression | string = ''): this
     {
         if (first)
         {
@@ -309,7 +337,7 @@ export class Builder
         return this;
     }
 
-    crossJoinSub(query: Closure | Builder | EloquentBuilder | string, as: string): this
+    crossJoinSub(query: Function | Builder | string, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
         const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
@@ -318,21 +346,27 @@ export class Builder
         return this;
     }
 
-    newJoinClause(parentQuery: Builder, type: string, table: string): JoinClause
+    newJoinClause(parentQuery: Builder, type: string, table: string | Expression): JoinClause
     {
         return new JoinClause(parentQuery, type, table);
     }
 
-    newJoinLateralClause(parentQuery: Builder, type: string, table: string): JoinLateralClause
+    newJoinLateralClause(parentQuery: Builder, type: string, table: string | Expression): JoinLateralClause
     {
         return new JoinLateralClause(parentQuery, type, table);
     }
 
     mergeWheres(wheres: any[], bindings: any[]): this
     {
-        this._wheres = [...this.wheres, ...wheres];
+        this._wheres = [...this._wheres, ...wheres];
         this._bindings['where'] = [...this._bindings['where'], ...bindings];
         return this;
+    }
+
+    public whereNested(callback: Function, boolean: 'and' | 'or' = 'and'): Builder {
+        const nestedQuery = this.forNestedWhere();
+        callback(nestedQuery);
+        return this.addNestedWhereQuery(nestedQuery, boolean);
     }
 
     where(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null, boolean: string = 'and'): this
@@ -351,7 +385,7 @@ export class Builder
 
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
 
-        if (column instanceof Closure && operator === null)
+        if (column instanceof Function && operator === null)
         {
             return this.whereNested(column, boolean);
         }
@@ -438,17 +472,17 @@ export class Builder
 
     invalidOperatorAndValue(operator: string, value: any): boolean
     {
-        return value === null && this.operators.includes(operator) && !['=', '<>', '!='].includes(operator);
+        return value === null && this._operators.includes(operator) && !['=', '<>', '!='].includes(operator);
     }
 
     invalidOperator(operator: string): boolean
     {
-        return typeof operator !== 'string' || (!this.operators.includes(operator.toLowerCase()) && !this._grammar.getOperators().includes(operator.toLowerCase()));
+        return typeof operator !== 'string' || (!this._operators.includes(operator.toLowerCase()) && !this._grammar.getOperators().includes(operator.toLowerCase()));
     }
 
     isBitwiseOperator(operator: string): boolean
     {
-        return this.bitwiseOperators.includes(operator.toLowerCase()) || this._grammar.getBitwiseOperators().includes(operator.toLowerCase());
+        return this._bitwiseOperators.includes(operator.toLowerCase()) || this._grammar.getBitwiseOperators().includes(operator.toLowerCase());
     }
 
     orWhere(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null): this
@@ -474,7 +508,7 @@ export class Builder
         return this.whereNot(column, operator, value, 'or');
     }
 
-    whereColumn(first: Expression | string | any[], operator: string = null, second: string = null, boolean: string = 'and'): this
+    whereColumn(first: Expression | string | any[], operator: string = '', second: string = '', boolean: string = 'and'): this
     {
         if (Array.isArray(first))
         {
@@ -491,7 +525,7 @@ export class Builder
         return this;
     }
 
-    orWhereColumn(first: Expression | string | any[], operator: string = null, second: string = null): this
+    orWhereColumn(first: Expression | string | any[], operator: string = '', second: string = ''): this
     {
         return this.whereColumn(first, operator, second, 'or');
     }
@@ -600,7 +634,7 @@ export class Builder
         return this.whereNull(column, 'or');
     }
 
-    whereNotNull(columns: string | any[], boolean: string = 'and'): this
+    whereNotNull(columns: Expression | string | any[], boolean: string = 'and'): this
     {
         return this.whereNull(columns, boolean, true);
     }
@@ -662,7 +696,7 @@ export class Builder
         return this.whereNotNull(column, 'or');
     }
 
-    whereDate(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string | null = null, boolean: string = 'and'): this
+    whereDate(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
@@ -673,13 +707,13 @@ export class Builder
         return this.addDateBasedWhere('Date', column, operator, value, boolean);
     }
 
-    orWhereDate(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string | null = null): this
+    orWhereDate(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereDate(column, operator, value, 'or');
     }
 
-    whereTime(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string | null = null, boolean: string = 'and'): this
+    whereTime(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
@@ -690,13 +724,13 @@ export class Builder
         return this.addDateBasedWhere('Time', column, operator, value, boolean);
     }
 
-    orWhereTime(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string | null = null): this
+    orWhereTime(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereTime(column, operator, value, 'or');
     }
 
-    whereDay(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number | null = null, boolean: string = 'and'): this
+    whereDay(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
@@ -711,13 +745,13 @@ export class Builder
         return this.addDateBasedWhere('Day', column, operator, value, boolean);
     }
 
-    orWhereDay(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number | null = null): this
+    orWhereDay(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereDay(column, operator, value, 'or');
     }
 
-    whereMonth(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number | null = null, boolean: string = 'and'): this
+    whereMonth(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
@@ -732,13 +766,13 @@ export class Builder
         return this.addDateBasedWhere('Month', column, operator, value, boolean);
     }
 
-    orWhereMonth(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number | null = null): this
+    orWhereMonth(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereMonth(column, operator, value, 'or');
     }
 
-    whereYear(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number | null = null, boolean: string = 'and'): this
+    whereYear(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
@@ -749,7 +783,7 @@ export class Builder
         return this.addDateBasedWhere('Year', column, operator, value, boolean);
     }
 
-    orWhereYear(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number | null = null): this
+    orWhereYear(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereYear(column, operator, value, 'or');
@@ -771,11 +805,11 @@ export class Builder
         return this;
     }
 
-    whereSub(column: Expression | string, operator: string, callback: Closure | Builder | EloquentBuilder, boolean: string): this
+    whereSub(column: Expression | string, operator: string, callback: Function | Builder | EloquentBuilder, boolean: string): this
     {
         const type = 'Sub';
         let query: Builder;
-        if (callback instanceof Closure)
+        if (typeof callback === 'function')
         {
             callback(query = this.forSubQuery());
         } else
@@ -787,10 +821,10 @@ export class Builder
         return this;
     }
 
-    whereExists(callback: Closure | Builder | EloquentBuilder, boolean: string = 'and', not: boolean = false): this
+    whereExists(callback: Function | Builder | EloquentBuilder, boolean: string = 'and', not: boolean = false): this
     {
         let query: Builder;
-        if (callback instanceof Closure)
+        if (typeof callback === 'function')
         {
             query = this.forSubQuery();
             callback(query);
@@ -801,17 +835,17 @@ export class Builder
         return this.addWhereExistsQuery(query, boolean, not);
     }
 
-    orWhereExists(callback: Closure | Builder | EloquentBuilder, not: boolean = false): this
+    orWhereExists(callback: Function | Builder | EloquentBuilder, not: boolean = false): this
     {
         return this.whereExists(callback, 'or', not);
     }
 
-    whereNotExists(callback: Closure | Builder | EloquentBuilder, boolean: string = 'and'): this
+    whereNotExists(callback: Function | Builder | EloquentBuilder, boolean: string = 'and'): this
     {
         return this.whereExists(callback, boolean, true);
     }
 
-    orWhereNotExists(callback: Closure | Builder | EloquentBuilder): this
+    orWhereNotExists(callback: Function | Builder | EloquentBuilder): this
     {
         return this.orWhereExists(callback, true);
     }
@@ -999,7 +1033,7 @@ export class Builder
         return this;
     }
 
-    having(column: Expression | Closure | string, operator: any = null, value: any = null, boolean: string = 'and'): this
+    having(column: Expression | Function | string, operator: any = null, value: any = null, boolean: string = 'and'): this
     {
         let type = 'Basic';
         if (column instanceof ConditionExpression)
@@ -1011,7 +1045,7 @@ export class Builder
 
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
 
-        if (column instanceof Closure && operator === null)
+        if (column instanceof Function && operator === null)
         {
             return this.havingNested(column, boolean);
         }
@@ -1036,13 +1070,13 @@ export class Builder
         return this;
     }
 
-    orHaving(column: Expression | Closure | string, operator: any = null, value: any = null): this
+    orHaving(column: Expression | Function | string, operator: any = null, value: any = null): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.having(column, operator, value, 'or');
     }
 
-    havingNested(callback: Closure, boolean: string = 'and'): this
+    havingNested(callback: Function, boolean: string = 'and'): this
     {
         callback(query = this.forNestedWhere());
         return this.addNestedHavingQuery(query, boolean);
@@ -1272,28 +1306,28 @@ export class Builder
 
     beforeQuery(callback: Function): this
     {
-        this.beforeQueryCallbacks.push(callback);
+        this._beforeQueryCallbacks.push(callback);
         return this;
     }
 
     applyBeforeQueryCallbacks(): void
     {
-        this.beforeQueryCallbacks.forEach(callback =>
+        this._beforeQueryCallbacks.forEach(callback =>
         {
             callback(this);
         });
-        this.beforeQueryCallbacks = [];
+        this._beforeQueryCallbacks = [];
     }
 
     afterQuery(callback: Function): this
     {
-        this.afterQueryCallbacks.push(callback);
+        this._afterQueryCallbacks.push(callback);
         return this;
     }
 
     applyAfterQueryCallbacks(result: any): any
     {
-        this.afterQueryCallbacks.forEach(afterQueryCallback =>
+        this._afterQueryCallbacks.forEach(afterQueryCallback =>
         {
             result = afterQueryCallback(result) || result;
         });
@@ -1318,7 +1352,7 @@ export class Builder
         return this.where('id', '=', id).first(columns);
     }
 
-    findOr(id: any, columns: any[] | Function = ['*'], callback: Function | null = null): any
+    findOr(id: any, columns: any[] | Function = ['*'], callback: Function = () => {}): any
     {
         if (columns instanceof Function)
         {
@@ -1372,7 +1406,7 @@ export class Builder
     protected withoutGroupLimitKeys(items: any): any
     {
         const keysToRemove = ['laravel_row'];
-        if (typeof this.groupLimit['column'] === 'string')
+        if (typeof this._groupLimit['column'] === 'string')
         {
             const column = last(this.groupLimit['column'].split('.'));
             keysToRemove.push(`@laravel_group := ${ this._grammar.wrap(column) }`);
@@ -1388,11 +1422,11 @@ export class Builder
         return items;
     }
 
-    paginate(perPage = 15, columns = ['*'], pageName = 'page', page: number | null = null, total: number | Closure | null = null): any
+    paginate(perPage: number | Function = 15, columns = ['*'], pageName = 'page', page: number = 0, total: number | Function = 0): any
     {
         page = page || Paginator.resolveCurrentPage(pageName);
         total = value(total) ?? this.getCountForPagination();
-        perPage = perPage instanceof Closure ? perPage(total) : perPage;
+        perPage = perPage instanceof Function ? perPage(total) : perPage;
         const results = total ? this.forPage(page, perPage).get(columns) : collect();
         return this.paginator(results, total, perPage, page, {
             'path': Paginator.resolveCurrentPath(),
@@ -1400,7 +1434,7 @@ export class Builder
         });
     }
 
-    simplePaginate(perPage = 15, columns = ['*'], pageName = 'page', page: number | null = null): any
+    simplePaginate(perPage = 15, columns = ['*'], pageName = 'page', page: number = 0): any
     {
         page = page || Paginator.resolveCurrentPage(pageName);
         this.offset((page - 1) * perPage).limit(perPage + 1);
@@ -1410,7 +1444,7 @@ export class Builder
         });
     }
 
-    cursorPaginate(perPage = 15, columns = ['*'], cursorName = 'cursor', cursor: string | null = null): any
+    cursorPaginate(perPage = 15, columns = ['*'], cursorName = 'cursor', cursor: string = ''): any
     {
         return this.paginateUsingCursor(perPage, columns, cursorName, cursor);
     }
@@ -1451,10 +1485,10 @@ export class Builder
 
     protected runPaginationCountQuery(columns = ['*']): any[]
     {
-        if (this._groups || this.havings)
+        if (this._groups || this._havings)
         {
             const clone = this.cloneForPaginationCount();
-            if (!clone.columns && this._joins.length)
+            if (!clone._columns && this._joins.length)
             {
                 clone.select(`${ this._from }.*`);
             }
@@ -1492,7 +1526,7 @@ export class Builder
 
     cursor(): any
     {
-        if (!this.columns)
+        if (!this._columns)
         {
             this._columns = ['*'];
         }
@@ -1512,13 +1546,13 @@ export class Builder
 
     enforceOrderBy(): void
     {
-        if (!this._orders.length && !this.unionOrders.length)
+        if (!this._orders.length && !this._unionOrders.length)
         {
-            throw new RuntimeException('You must specify an orderBy clause when using this function.');
+            throw new Error('You must specify an orderBy clause when using this function.');
         }
     }
 
-    pluck(column: string, key: string | null = null): any
+    pluck(column: string, key: string = ''): any
     {
         const queryResult = this.onceWithColumns(
             key === null ? [column] : [column, key],
@@ -1540,9 +1574,9 @@ export class Builder
         );
     }
 
-    protected stripTableForPluck(column: string | null): string | null
+    protected stripTableForPluck(column: string =''): string
     {
-        if (column === null) return column;
+        if (column === '') return column;
         const columnString = column instanceof ExpressionContract ? this._grammar.getValue(column) : column;
         const separator = columnString.toLowerCase().includes(' as ') ? ' as ' : '.';
         return last(columnString.split(new RegExp(`${ separator }`, 'i')));
@@ -1561,10 +1595,10 @@ export class Builder
         return collect(results);
     }
 
-    protected pluckFromArrayColumn(queryResult: any[], column: string, key: string | null): any
+    protected pluckFromArrayColumn(queryResult: any[], column: string, key: string = ''): any
     {
         const results = [];
-        if (key === null)
+        if (key === '')
         {
             queryResult.forEach(row => results.push(row[column]));
         } else
@@ -1598,12 +1632,12 @@ export class Builder
         return !this.exists();
     }
 
-    existsOr(callback: Closure): any
+    existsOr(callback: Function): any
     {
         return this.exists() ? true : callback();
     }
 
-    doesntExistOr(callback: Closure): any
+    doesntExistOr(callback: Function): any
     {
         return this.doesntExist() ? true : callback();
     }
@@ -1711,7 +1745,7 @@ export class Builder
         );
     }
 
-    insertGetId(values: any[], sequence: string | null = null): number
+    insertGetId(values: any[], sequence: string = ''): number
     {
         this.applyBeforeQueryCallbacks();
         const sql = this._grammar.compileInsertGetId(this, values, sequence);
@@ -1747,20 +1781,20 @@ export class Builder
         }));
         const sql = this._grammar.compileUpdate(this, formattedValues);
         return this._connection.update(sql, this.cleanBindings(
-            this._grammar.prepareBindingsForUpdate(this.bindings, formattedValues)
+            this._grammar.prepareBindingsForUpdate(this._bindings, formattedValues)
         ));
     }
 
     updateFrom(values: any): number
     {
-        if (typeof this._grammar.compileUpdateFrom !== 'function')
+        if (typeof this._grammar.compileUpdateFrom !== 'function' || typeof this._grammar.prepareBindingsForUpdateFrom !== 'function')
         {
             throw new Error('This database engine does not support the updateFrom method.');
         }
         this.applyBeforeQueryCallbacks();
         const sql = this._grammar.compileUpdateFrom(this, values);
         return this._connection.update(sql, this.cleanBindings(
-            this._grammar.prepareBindingsForUpdateFrom(this.bindings, values)
+            this._grammar.prepareBindingsForUpdateFrom(this._bindings, values)
         ));
     }
 
@@ -1786,7 +1820,7 @@ export class Builder
             return 0;
         }
 
-        if (update === [])
+        if (Array.isArray(update) && update.length === 0)
         {
             return this.insert(values) as number;
         }
@@ -1794,7 +1828,8 @@ export class Builder
         if (!Array.isArray(values[0]))
         {
             values = [values];
-        } else
+        }
+        else
         {
             values.forEach(value =>
             {
@@ -1847,6 +1882,11 @@ export class Builder
         return this.update({ ...columns, ...extra });
     }
 
+    public raw(value:any)
+    {
+        return this._connection.raw(value);
+    }
+
     decrement(column: string, amount: number = 1, extra: Record<string, any> = {}): number
     {
         if (typeof amount !== 'number')
@@ -1894,13 +1934,13 @@ export class Builder
 
         Object.entries(this._grammar.compileTruncate(this)).forEach(([sql, bindings]) =>
         {
-            this._connection.statement(sql, bindings);
+            this._connection.statement(sql, bindings as any[]);
         });
     }
 
-    addBinding(value: any, type: string = 'where'): this
+    addBinding(value: any, type: binding_options = 'where'): this
     {
-        if (!(type in this.bindings))
+        if (!(type in this._bindings))
         {
             throw new Error(`Invalid binding type: ${ type }.`);
         }
@@ -1926,12 +1966,12 @@ export class Builder
         return value;
     }
 
-    mergeBindings(query: QueryBuilder): this
+    mergeBindings(query: Builder): this
     {
-        Object.keys(query.bindings).forEach(key =>
+        Object.keys(query._bindings).forEach(key =>
         {
-            this._bindings[key] = this._bindings[key] || [];
-            this._bindings[key].push(...query.bindings[key]);
+            this._bindings[key as binding_options] = this._bindings[key as binding_options] || [];
+            this._bindings[key as binding_options].push(...query._bindings[key as binding_options]);
         });
         return this;
     }
@@ -1951,38 +1991,37 @@ export class Builder
         return 'id';
     }
 
-    getConnection(): DatabaseConnection
+    getConnection(): Connection
     {
-        return this.connection;
+        return this._connection;
     }
 
     getProcessor(): Processor
     {
-        return this.processor;
+        return this._processor;
     }
 
     getGrammar(): Grammar
     {
-        return this.grammar;
+        return this._grammar;
     }
 
     useWritePdo(): this
     {
-        this.useWritePdo = true;
+        this._useWritePdo = true;
         return this;
     }
 
     isQueryable(value: any): boolean
     {
-        return value instanceof QueryBuilder ||
-            value instanceof EloquentBuilder ||
+        return value instanceof Builder ||
             value instanceof Relation ||
             value instanceof Function;
     }
 
     clone(): this
     {
-        return new (this.constructor as any)(this.connection, this.grammar, this.processor);
+        return new (this.constructor as any)(this._connection, this._grammar, this._processor);
     }
 
     cloneWithout(properties: string[]): this
@@ -1995,12 +2034,12 @@ export class Builder
         return clone;
     }
 
-    cloneWithoutBindings(except: string[]): this
+    cloneWithoutBindings(except: binding_options[]): this
     {
         const clone = this.clone();
         except.forEach(type =>
         {
-            clone.bindings[type] = [];
+            clone._bindings[type] = [];
         });
         return clone;
     }

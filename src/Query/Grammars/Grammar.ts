@@ -18,6 +18,9 @@ export abstract class Grammar extends BaseGrammar {
         'lock',
     ];
 
+    compileUpdateFrom: Function | null = null;
+    prepareBindingsForUpdateFrom: Function | null = null;
+
     compileComponents(query: any): any {
         return this.selectComponents.reduce((sql, component) => {
             if (query[component] !== undefined) {

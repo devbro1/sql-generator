@@ -1,15 +1,16 @@
 import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammars/Grammar";
+import { Builder } from "./Builder";
 
 export class JoinClause extends Builder {
     public type: string;
-    public table: string;
+    public table: string | Expression;
     protected parentConnection: ConnectionInterface;
     protected parentGrammar: Grammar;
     protected parentProcessor: Processor;
     protected parentClass: string;
 
-    constructor(parentQuery: Builder, type: string, table: string) {
+    constructor(parentQuery: Builder, type: string, table: string | Expression) {
         super(parentQuery.getConnection(), parentQuery.getGrammar(), parentQuery.getProcessor());
         this.type = type;
         this.table = table;
