@@ -7,6 +7,9 @@ import { JoinLateralClause } from "./JoinLateralClause";
 import { JoinClause } from "./JoinClause";
 import {sprintf} from 'sprintf-js';
 
+
+type AndOr = "and" | "or" | "and not" | "or not";
+
 type bindings = {
     select: any[];
     from: any[];
@@ -267,7 +270,7 @@ export class Builder
     }
 
     public getBindings(): any[] {
-        return this._bindings.flat();
+        return this.flattenArray(this._bindings);
     }
 
     joinWhere(table: Expression | string, first: Function | Expression | string, operator: string, second: Expression | string, type: string = 'inner'): this
@@ -363,15 +366,15 @@ export class Builder
         return this;
     }
 
-    public whereNested(callback: Function, boolean: 'and' | 'or' = 'and'): Builder {
+    public whereNested(callback: Function, boolean: AndOr = 'and'): this {
         const nestedQuery = this.forNestedWhere();
         callback(nestedQuery);
         return this.addNestedWhereQuery(nestedQuery, boolean);
     }
 
-    where(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null, boolean: string = 'and'): this
+    where(column: Expression | Function | string | any[], operator: any = null, value: any = null, boolean: AndOr = 'and'): this
     {
-        if (column instanceof ConditionExpression)
+        if (column instanceof Expression)
         {
             const type = 'Expression';
             this._wheres.push({ type, column, boolean });
@@ -413,7 +416,7 @@ export class Builder
         }
 
         let type = 'Basic';
-        const columnString = column instanceof ExpressionContract ? this._grammar.getValue(column) : column;
+        const columnString = column instanceof Expression ? this._grammar.getValue(column) : column;
 
         if (columnString.includes('->') && typeof value === 'boolean')
         {
@@ -431,7 +434,7 @@ export class Builder
 
         this._wheres.push({ type, column, operator, value, boolean });
 
-        if (!(value instanceof ExpressionContract))
+        if (!(value instanceof Expression))
         {
             this.addBinding(this.flattenValue(value), 'where');
         }
@@ -439,9 +442,9 @@ export class Builder
         return this;
     }
 
-    addArrayOfWheres(column: any[], boolean: string, method: string = 'where'): this
+    addArrayOfWheres(column: any[], boolean: AndOr, method: string = 'where'): this
     {
-        return this.whereNested((query) =>
+        return this.whereNested((query:any) =>
         {
             for (const key in column)
             {
@@ -485,30 +488,37 @@ export class Builder
         return this._bitwiseOperators.includes(operator.toLowerCase()) || this._grammar.getBitwiseOperators().includes(operator.toLowerCase());
     }
 
-    orWhere(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null): this
+    orWhere(column: Expression | string | any[] | Expression, operator: any = null, value: any = null): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.where(column, operator, value, 'or');
     }
 
-    whereNot(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null, boolean: string = 'and'): this
+    whereNot(column: Expression | string | any[] | Expression, operator: any = null, value: any = null, boolean: AndOr = 'and'): this
     {
+        let boolean_not: AndOr = boolean;
+        if(boolean === 'and') {
+            boolean_not = 'and not';
+        }
+        else if(boolean === 'or') {
+            boolean_not = 'or not';
+        }
         if (Array.isArray(column))
         {
-            return this.whereNested((query) =>
+            return this.whereNested((query:any) =>
             {
                 query.where(column, operator, value, boolean);
-            }, boolean + ' not');
+            }, boolean_not);
         }
-        return this.where(column, operator, value, boolean + ' not');
+        return this.where(column, operator, value, boolean_not);
     }
 
-    orWhereNot(column: ConditionExpression | string | any[] | Expression, operator: any = null, value: any = null): this
+    orWhereNot(column: Expression | string | any[] | Expression, operator: any = null, value: any = null): this
     {
         return this.whereNot(column, operator, value, 'or');
     }
 
-    whereColumn(first: Expression | string | any[], operator: string = '', second: string = '', boolean: string = 'and'): this
+    whereColumn(first: Expression | string | any[], operator: string = '', second: string = '', boolean: AndOr = 'and'): this
     {
         if (Array.isArray(first))
         {
@@ -560,7 +570,7 @@ export class Builder
 
         this._wheres.push({ type, column, values, boolean });
 
-        if (values.length !== Arr.flatten(values, 1).length)
+        if (values.length !== this.flattenArray(values, 1).length)
         {
             throw new Error('Nested arrays are not allowed in whereIn method.');
         }
@@ -618,7 +628,7 @@ export class Builder
         return this.whereIntegerNotInRaw(column, values, 'or');
     }
 
-    whereNull(columns: Expression | string | any[], boolean: string = 'and', not: boolean = false): this
+    whereNull(columns: Expression | Function | string | any[], boolean: string = 'and', not: boolean = false): this
     {
         const type = not ? 'NotNull' : 'Null';
 
@@ -738,7 +748,7 @@ export class Builder
         {
             value = value.format('d');
         }
-        if (!(value instanceof ExpressionContract))
+        if (!(value instanceof Expression))
         {
             value = sprintf('%02d', value);
         }
@@ -759,7 +769,7 @@ export class Builder
         {
             value = value.format('m');
         }
-        if (!(value instanceof ExpressionContract))
+        if (!(value instanceof Expression))
         {
             value = sprintf('%02d', value);
         }
@@ -796,7 +806,7 @@ export class Builder
 
     addNestedWhereQuery(query: Builder, boolean: string = 'and'): this
     {
-        if (query.wheres.length)
+        if (query._wheres.length)
         {
             const type = 'Nested';
             this._wheres.push({ type, query, boolean });
@@ -805,7 +815,7 @@ export class Builder
         return this;
     }
 
-    whereSub(column: Expression | string, operator: string, callback: Function | Builder | EloquentBuilder, boolean: string): this
+    whereSub(column: Expression | Function | string, operator: string, callback: Function | Builder, boolean: string): this
     {
         const type = 'Sub';
         let query: Builder;
@@ -814,14 +824,14 @@ export class Builder
             callback(query = this.forSubQuery());
         } else
         {
-            query = callback instanceof EloquentBuilder ? callback.toBase() : callback;
+            query = callback;
         }
         this._wheres.push({ type, column, operator, query, boolean });
         this.addBinding(query.getBindings(), 'where');
         return this;
     }
 
-    whereExists(callback: Function | Builder | EloquentBuilder, boolean: string = 'and', not: boolean = false): this
+    whereExists(callback: Function | Builder , boolean: string = 'and', not: boolean = false): this
     {
         let query: Builder;
         if (typeof callback === 'function')
@@ -830,22 +840,22 @@ export class Builder
             callback(query);
         } else
         {
-            query = callback instanceof EloquentBuilder ? callback.toBase() : callback;
+            query = callback;
         }
         return this.addWhereExistsQuery(query, boolean, not);
     }
 
-    orWhereExists(callback: Function | Builder | EloquentBuilder, not: boolean = false): this
+    orWhereExists(callback: Function | Builder , not: boolean = false): this
     {
         return this.whereExists(callback, 'or', not);
     }
 
-    whereNotExists(callback: Function | Builder | EloquentBuilder, boolean: string = 'and'): this
+    whereNotExists(callback: Function | Builder , boolean: string = 'and'): this
     {
         return this.whereExists(callback, boolean, true);
     }
 
-    orWhereNotExists(callback: Function | Builder | EloquentBuilder): this
+    orWhereNotExists(callback: Function | Builder): this
     {
         return this.orWhereExists(callback, true);
     }
@@ -879,7 +889,7 @@ export class Builder
     {
         const type = 'JsonContains';
         this._wheres.push({ type, column, value, boolean, not });
-        if (!(value instanceof ExpressionContract))
+        if (!(value instanceof Expression))
         {
             this.addBinding(this._grammar.prepareBindingForJsonContains(value));
         }
@@ -928,7 +938,7 @@ export class Builder
         const type = 'JsonLength';
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         this._wheres.push({ type, column, operator, value, boolean });
-        if (!(value instanceof ExpressionContract))
+        if (!(value instanceof Expression))
         {
             this.addBinding(parseInt(this.flattenValue(value)));
         }
@@ -981,10 +991,10 @@ export class Builder
         return this.whereFullText(columns, value, options, 'or');
     }
 
-    whereAll(columns: string[], operator: any = null, value: any = null, boolean: string = 'and'): this
+    whereAll(columns: string[], operator: any = null, value: any = null, boolean: AndOr = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
-        this.whereNested(query =>
+        this.whereNested((query:any) =>
         {
             columns.forEach(column =>
             {
@@ -999,10 +1009,10 @@ export class Builder
         return this.whereAll(columns, operator, value, 'or');
     }
 
-    whereAny(columns: string[], operator: any = null, value: any = null, boolean: string = 'and'): this
+    whereAny(columns: string[], operator: any = null, value: any = null, boolean: AndOr = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
-        this.whereNested(query =>
+        this.whereNested((query:any) =>
         {
             columns.forEach(column =>
             {
@@ -1021,7 +1031,7 @@ export class Builder
     {
         groups.forEach(group =>
         {
-            this._groups = [...this.groups, ...Arr.wrap(group)];
+            this._groups = [...this._groups, ...Arr.wrap(group)];
         });
         return this;
     }
@@ -1036,7 +1046,7 @@ export class Builder
     having(column: Expression | Function | string, operator: any = null, value: any = null, boolean: string = 'and'): this
     {
         let type = 'Basic';
-        if (column instanceof ConditionExpression)
+        if (column instanceof Expression)
         {
             type = 'Expression';
             this._havings.push({ type, column, boolean });
@@ -1062,7 +1072,7 @@ export class Builder
 
         this._havings.push({ type, column, operator, value, boolean });
 
-        if (!(value instanceof ExpressionContract))
+        if (!(value instanceof Expression))
         {
             this.addBinding(this.flattenValue(value), 'having');
         }
@@ -1078,13 +1088,14 @@ export class Builder
 
     havingNested(callback: Function, boolean: string = 'and'): this
     {
-        callback(query = this.forNestedWhere());
+        let query = this.forNestedWhere();
+        callback(query);
         return this.addNestedHavingQuery(query, boolean);
     }
 
     addNestedHavingQuery(query: Builder, boolean: string = 'and'): this
     {
-        if (query.havings.length)
+        if (query._havings.length)
         {
             const type = 'Nested';
             this._havings.push({ type, query, boolean });
@@ -1159,7 +1170,7 @@ export class Builder
             throw new InvalidArgumentException('Order direction must be "asc" or "desc".');
         }
 
-        this[this._unions ? 'unionOrders' : 'orders'].push({ column, direction });
+        this[this._unions ? '_unionOrders' : '_orders'].push({ column, direction });
         return this;
     }
 
@@ -1213,10 +1224,10 @@ export class Builder
         const property = this._unions ? 'unionLimit' : 'limit';
         if (this._unions && value >= 0)
         {
-            this._unionLimit = value !== null ? value : null;
+            this._unionLimit = value !== 0 ? value : 0;
         }
         else {
-            this._limit = value !== null ? value : null;
+            this._limit = value !== 0 ? value : 0;
         }
         return this;
     }
@@ -1257,8 +1268,8 @@ export class Builder
 
     reorder(column: any = null, direction: string = 'asc'): this
     {
-        this._orders = null;
-        this.unionOrders = null;
+        this._orders = [];
+        this._unionOrders = [];
         this._bindings['order'] = [];
         this._bindings['unionOrder'] = [];
         if (column)
@@ -1286,7 +1297,7 @@ export class Builder
 
     lock(value: boolean | string = true): this
     {
-        this.lock = value;
+        this._lock = value;
         if (this.lock !== null)
         {
             this.useWritePdo();
@@ -1408,7 +1419,7 @@ export class Builder
         const keysToRemove = ['laravel_row'];
         if (typeof this._groupLimit['column'] === 'string')
         {
-            const column = last(this.groupLimit['column'].split('.'));
+            const column = last(this._groupLimit['column'].split('.'));
             keysToRemove.push(`@laravel_group := ${ this._grammar.wrap(column) }`);
             keysToRemove.push(`@laravel_group := ${ this._grammar.wrap('pivot_' + column) }`);
         }
@@ -1451,7 +1462,7 @@ export class Builder
 
     protected ensureOrderForCursorPagination(shouldReverse = false): any
     {
-        if (!this._orders.length && !this.unionOrders.length)
+        if (!this._orders.length && !this._unionOrders.length)
         {
             this.enforceOrderBy();
         }
@@ -1532,12 +1543,15 @@ export class Builder
         }
         return new LazyCollection(() =>
         {
+            let rc = [];
             for (const item of this._connection.cursor(
                 this.toSql(), this.getBindings(), !this.useWritePdo
             ))
             {
-                yield item;
+                rc.push(item);
             }
+
+            return rc;
         }).map((item: any) =>
         {
             return this.applyAfterQueryCallbacks(collect([item])).first();
@@ -1577,7 +1591,7 @@ export class Builder
     protected stripTableForPluck(column: string =''): string
     {
         if (column === '') return column;
-        const columnString = column instanceof ExpressionContract ? this._grammar.getValue(column) : column;
+        const columnString = column instanceof Expression ? this._grammar.getValue(column) : column;
         const separator = columnString.toLowerCase().includes(' as ') ? ' as ' : '.';
         return last(columnString.split(new RegExp(`${ separator }`, 'i')));
     }
@@ -1698,7 +1712,7 @@ export class Builder
         this._aggregate = { function: functionName, columns };
         if (!this._groups.length)
         {
-            this._orders = null;
+            this._orders = [];
             this._bindings['order'] = [];
         }
         return this;
@@ -1706,14 +1720,14 @@ export class Builder
 
     protected onceWithColumns(columns: string[], callback: () => any): any
     {
-        const original = this.columns;
+        const original = this._columns;
         this._columns = columns;
         const result = callback();
         this._columns = original;
         return result;
     }
 
-    insert(values: any[]): boolean
+    insert(values: any): boolean
     {
         if (!values.length) return true;
         const isArrayOfObjects = values.every(val => typeof val === 'object' && !Array.isArray(val));
@@ -1721,12 +1735,31 @@ export class Builder
         {
             values = [values];
         }
-        values.forEach(value => Object.keys(value).sort());
+        values.forEach((value: {}) => Object.keys(value).sort());
         this.applyBeforeQueryCallbacks();
         return this._connection.insert(
             this._grammar.compileInsert(this, values),
             this.flattenValues(values)
         );
+    }
+
+    flattenValues<T>(array: T[], depth: number = Infinity): T[] {
+        let result: T[] = [];
+    
+        for (const item of array) {
+            if (Array.isArray(item)) {
+                if (depth === 1) {
+                    result.push(...item);
+                } else {
+                    const values = this.flattenValues(item, depth - 1);
+                    result.push(...values);
+                }
+            } else {
+                result.push(item);
+            }
+        }
+    
+        return result;
     }
 
     insertOrIgnore(values: any[]): number
@@ -1978,7 +2011,7 @@ export class Builder
 
     cleanBindings(bindings: any[]): any[]
     {
-        return bindings.filter(binding => !(binding instanceof ExpressionContract)).map(this.castBinding);
+        return bindings.filter(binding => !(binding instanceof Expression)).map(this.castBinding);
     }
 
     flattenValue(value: any): any
