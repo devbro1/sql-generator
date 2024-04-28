@@ -1,6 +1,8 @@
 import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammar";
 import { JoinLateralClause } from "../JoinLateralClause";
+import Str from "src/Illuminate/Str";
+import Arr from "src/Illuminate/Arr";
 
 export class SqlServerGrammar extends Grammar {
     operators: string[] = [
@@ -233,11 +235,6 @@ export class SqlServerGrammar extends Grammar {
     // Helper to determine if an object is an Expression
     isExpression(obj: any): obj is Expression {
         return obj instanceof Expression;
-    }
-
-    // Helper to retrieve the value from an Expression
-    getValue(expression: Expression): string {
-        return expression.value;
     }
 
     // Decompose a JSON path into the field and path components

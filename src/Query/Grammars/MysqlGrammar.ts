@@ -1,4 +1,5 @@
 import { Grammar } from "./Grammar";
+import { compareVersions } from 'compare-versions';
 import _ from 'lodash';
 
 export class MySqlGrammar extends Grammar {
@@ -54,7 +55,7 @@ export class MySqlGrammar extends Grammar {
 
     useLegacyGroupLimit(query: any): boolean {
         const version = query.getConnection().getServerVersion();
-        return !query.getConnection().isMaria() && version_compare(version, '8.0.11') < 0;
+        return !query.getConnection().isMaria() && compareVersions(version, '8.0.11') < 0;
     }
 
     compileLegacyGroupLimit(query: any): string {
@@ -152,7 +153,7 @@ export class MySqlGrammar extends Grammar {
         }
         sql += ' on duplicate key update ';
         const columns = Array.from(update).map(([key, value]) => {
-            if (!_.isNumeric(key)) {
+            if (!isNaN(key)) { 
                 return `${this.wrap(key)} = ${this.parameter(value)}`;
             }
             return useUpsertAlias

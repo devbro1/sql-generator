@@ -181,7 +181,7 @@ export class PostgresGrammar extends Grammar {
         sql += ` on conflict (${this.columnize(uniqueBy)}) do update set `;
 
         const columns = Array.from(update).map(([key, value]) => {
-            return _.isNumeric(key)
+            return !isNaN(key)
                 ? `${this.wrap(value)} = excluded.${this.wrap(value)}`
                 : `${this.wrap(key)} = ${this.parameter(value)}`;
         }).join(', ');
@@ -201,7 +201,7 @@ export class PostgresGrammar extends Grammar {
         return `${field} = jsonb_set(${field}::jsonb, '${path}', ${this.parameter(value)})`;
     }
 
-    compileUpdateFrom(query: any, values: any[]): string {
+    compileUpdateFrom = (query: any, values: any[]): string => {
         const table = this.wrapTable(query.from);
         const columns = this.compileUpdateColumns(query, values);
         let from = '';
@@ -238,6 +238,7 @@ export class PostgresGrammar extends Grammar {
         for (const join of query.joins) {
             for (const where of join.wheres) {
                 const method = `where${where.type}`;
+                // @ts-ignore
                 joinWheres.push(`${where.boolean} ${this[method](query, where)}`);
             }
         }
@@ -245,13 +246,13 @@ export class PostgresGrammar extends Grammar {
         return joinWheres.join(' ');
     }
 
-    prepareBindingsForUpdateFrom(bindings: any, values: any[]): any[] {
+    prepareBindingsForUpdateFrom= (bindings: any, values: any[]): any[] => {
         const processedValues = values.map((value, column) => 
-            Array.isArray(value) || (this.isJsonSelector(column) && !this.isExpression(value))
+            Array.isArray(value) || (this.isJsonSelector(''+column) && !this.isExpression(value))
             ? JSON.stringify(value) : value
         );
 
-        const bindingsWithoutWhere = Object.keys(bindings).filter(key => key !== 'select' && key !== 'where').reduce((acc, key) => {
+        const bindingsWithoutWhere = Object.keys(bindings).filter(key => key !== 'select' && key !== 'where').reduce((acc: any[], key) => {
             acc.push(...bindings[key]);
             return acc;
         }, []);
@@ -271,11 +272,11 @@ export class PostgresGrammar extends Grammar {
 
     prepareBindingsForUpdate(bindings: any, values: any[]): any[] {
         const processedValues = values.map((value, column) => 
-            Array.isArray(value) || (this.isJsonSelector(column) && !this.isExpression(value))
+            Array.isArray(value) || (this.isJsonSelector(''+column) && !this.isExpression(value))
             ? JSON.stringify(value) : value
         );
 
-        const cleanBindings = Object.keys(bindings).filter(key => key !== 'select').reduce((acc, key) => {
+        const cleanBindings = Object.keys(bindings).filter(key => key !== 'select').reduce((acc:any[], key) => {
             acc.push(...bindings[key]);
             return acc;
         }, []);
@@ -305,6 +306,7 @@ export class PostgresGrammar extends Grammar {
 
     wrapJsonSelector(value: string): string {
         const path = value.split('->');
+        // @ts-ignore
         const fieldParts = path.shift().split('.');
         const field = this.wrapSegments(fieldParts);
         const wrappedPath = this.wrapJsonPathAttributes(path);

@@ -1,4 +1,7 @@
+import Str from "src/Illuminate/Str";
 import { Grammar } from "./Grammar";
+import str from 'src/Illuminate/Str';
+import { Builder } from "../Builder";
 
 export class SQLiteGrammar extends Grammar {
     operators: string[] = [
@@ -83,12 +86,12 @@ export class SQLiteGrammar extends Grammar {
         return super.compileUpdate(query, values);
     }
 
-    compileInsertOrIgnore(query: any, values: object): string {
-        return `insert or ignore into ${this.wrapTable(query.from)} ${this.compileValues(values)}`;
+    public compileInsertOrIgnore(query: Builder, values: any[]): string {
+        return Str.replaceFirst('insert', 'insert or ignore', this.compileInsert(query, values));
     }
-
-    compileInsertOrIgnoreUsing(query: any, columns: string[], sql: string): string {
-        return `insert or ignore into ${this.wrapTable(query.from)} (${this.columnize(columns)}) ${sql}`;
+    
+    public compileInsertOrIgnoreUsing(query: Builder, columns: any[], sql: string): string {
+        return Str.replaceFirst('insert', 'insert or ignore', this.compileInsertUsing(query, columns, sql));
     }
 
     compileUpdateColumns(query: any, values: object): string {
@@ -97,20 +100,22 @@ export class SQLiteGrammar extends Grammar {
             .concat(Object.entries(jsonGroups))
             .map(([key, value]) => {
                 const column = key.split('.').pop();
+                // @ts-ignore
                 value = jsonGroups[key] ? this.compileJsonPatch(column, value) : this.parameter(value);
+                // @ts-ignore
                 return `${this.wrap(column)} = ${value}`;
             }).join(', ');
     }
 
     wrapJsonFieldAndPath(column: string): [string, string] {
         const segments = column.split('->');
-        const field = this.wrap(segments.shift());
+        const field = this.wrap(segments.shift() ?? '');
         const path = segments.length ? `'$.${segments.join('.')}'` : '';
         return [field, path];
     }
 
     compileUpsert(query: any, values: object, uniqueBy: string[], update: object): string {
-        let sql = this.compileInsert(query, values);
+        let sql = this.compileInsert(query, [values]);
         sql += ` on conflict (${this.columnize(uniqueBy)}) do update set `;
 
         const columns = Object.entries(update).map(([key, value]) => {

@@ -25,8 +25,9 @@ export abstract class Grammar extends BaseGrammar {
         return this.selectComponents.reduce((sql, component) => {
             if (query[component] !== undefined) {
                 const method = `compile${component.charAt(0).toUpperCase() + component.slice(1)}`;
-                if (typeof this[method] === 'function') {
-                    sql[component] = this[method](query, query[component]);
+                if (typeof this[method as keyof typeof this] === 'function') {
+                    // @ts-ignore
+                    sql[component] = this[method as keyof typeof this](query, query[component]);
                 }
             }
             return sql;

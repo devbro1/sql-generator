@@ -1,4 +1,4 @@
-class Arr {
+export default class Arr {
 
     static wrap(value:any) {
         if(typeof value === 'undefined') {
@@ -22,5 +22,9 @@ class Arr {
 
     static last(array:any[]): any {
         return array[array.length - 1];
+    }
+
+    static except(array:any[],key) {
+
     }
 }
