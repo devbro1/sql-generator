@@ -1,18 +1,18 @@
 import { Processor } from "./Processor";
 
 export class SqlServerProcessor extends Processor {
-    async processInsertGetId(query: any, sql: string, values: any[], sequence: string | null = null): Promise<number> {
+    processInsertGetId(query: any, sql: string, values: any[], sequence: string | null = null): number {
         const connection = query.getConnection();
-        await connection.insert(sql, values);
+        connection.insert(sql, values);
 
         let id: any;
         if (connection.getConfig('odbc') === true) {
-            id = await this.processInsertGetIdForOdbc(connection);
+            id = this.processInsertGetIdForOdbc(connection);
         } else {
-            id = await connection.getPdo().lastInsertId(sequence);
+            id = connection.getPdo().lastInsertId(sequence);
         }
 
-        return isNumeric(id) ? parseInt(id) : id;
+        return !isNaN(id) ? parseInt(id) : id;
     }
 
     private async processInsertGetIdForOdbc(connection: any): Promise<number> {
@@ -22,7 +22,7 @@ export class SqlServerProcessor extends Processor {
         }
 
         const row = result[0];
-        return isNumeric(row.insertid) ? parseInt(row.insertid) : row.insertid;
+        return !isNaN(row.insertid) ? parseInt(row.insertid) : row.insertid;
     }
 
     processColumns(results: any[]): any[] {

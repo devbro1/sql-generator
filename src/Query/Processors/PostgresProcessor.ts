@@ -1,15 +1,15 @@
 import { Processor } from "./Processor";
 
 export class PostgresProcessor extends Processor {
-    async processInsertGetId(query: any, sql: string, values: any[], sequence: string | null = null): Promise<number> {
+    processInsertGetId(query: any, sql: string, values: any[], sequence: string | null = null): number {
         const connection = query.getConnection();
         connection.recordsHaveBeenModified();
 
-        const result = (await connection.selectFromWriteConnection(sql, values))[0];
+        const result = (connection.selectFromWriteConnection(sql, values))[0];
         sequence = sequence || 'id';
         const id = typeof result === 'object' ? result[sequence] : result;
 
-        return isNumeric(id) ? parseInt(id) : id;
+        return !isNaN(id) ? parseInt(id) : id;
     }
 
     processTypes(results: any[]): any[] {
@@ -74,7 +74,8 @@ export class PostgresProcessor extends Processor {
             'r': 'range',
             'm': 'multirange'
         };
-        return types[type.toLowerCase()] || null;
+        // @ts-ignore
+        return types[type.toLowerCase()] ?? null;
     }
 
     private mapCategory(category: string): string {
@@ -96,6 +97,7 @@ export class PostgresProcessor extends Processor {
             'x': 'unknown',
             'z': 'internal_use'
         };
+        // @ts-ignore
         return categories[category.toLowerCase()] || '';
     }
 
@@ -107,6 +109,8 @@ export class PostgresProcessor extends Processor {
             'n': 'set null',
             'd': 'set default'
         };
+
+        // @ts-ignore
         return actions[action.toLowerCase()] || '';
     }
 }
