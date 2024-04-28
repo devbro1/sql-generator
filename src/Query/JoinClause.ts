@@ -1,11 +1,13 @@
 import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammars/Grammar";
-import { Builder } from "./Builder";
+import { AndOr, Builder } from "./Builder";
+import { Processor } from "./Processors/Processor";
+import { Connection } from "src/schema/Connections/Connection";
 
 export class JoinClause extends Builder {
     public type: string;
     public table: string | Expression;
-    protected parentConnection: ConnectionInterface;
+    protected parentConnection: Connection;
     protected parentGrammar: Grammar;
     protected parentProcessor: Processor;
     protected parentClass: string;
@@ -20,7 +22,7 @@ export class JoinClause extends Builder {
         this.parentConnection = parentQuery.getConnection();
     }
 
-    on(first: Function | Expression | string, operator?: string, second?: Expression | string, boolean: string = 'and'): this {
+    on(first: Function | Expression | string, operator?: string, second: Expression | string | null = null, boolean: AndOr = 'and'): this {
         if (first instanceof Function) {
             return this.whereNested(first, boolean);
         }
@@ -40,7 +42,6 @@ export class JoinClause extends Builder {
     }
 
     protected newParentQuery(): Builder {
-        const classRef = this.parentClass;
-        return new classRef(this.parentConnection, this.parentGrammar, this.parentProcessor);
+        return new Builder(this.parentConnection, this.parentGrammar, this.parentProcessor);
     }
 }

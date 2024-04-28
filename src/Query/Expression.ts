@@ -1,4 +1,6 @@
-class Expression {
+import { Grammar } from "./Grammars/Grammar";
+
+export default class Expression {
     protected value: string | number;
 
     constructor(value: string | number) {

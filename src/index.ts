@@ -1,4 +1,4 @@
-import { Query } from "./Query/Query";
+import { Query } from "./old_files/Query";
 import { RawSQL } from "./RawSQL";
 import { ConditionClause } from "./Query/ConditionClause";
 import { SelectQueryBuilder } from "./old_files/SelectQueryBuilder";

@@ -6,9 +6,11 @@ import { Connection } from "src/schema/Connections/Connection";
 import { JoinLateralClause } from "./JoinLateralClause";
 import { JoinClause } from "./JoinClause";
 import {sprintf} from 'sprintf-js';
+import Arr from "src/Illuminate/Arr";
+import Str from "src/Illuminate/Str";
 const { DateTime } = require("luxon");
 
-type AndOr = "and" | "or" | "and not" | "or not";
+export type AndOr = "and" | "or" | "and not" | "or not";
 type DatePeriod = [Date,Date];
 type bindings = {
     select: any[];
@@ -535,7 +537,7 @@ export class Builder
         return this.whereNot(column, operator, value, 'or');
     }
 
-    whereColumn(first: Expression | string | any[], operator: string = '', second: string = '', boolean: AndOr = 'and'): this
+    whereColumn(first: Expression | string | any[], operator: string = '', second: string | Expression | null = '', boolean: AndOr = 'and'): this
     {
         if (Array.isArray(first))
         {
