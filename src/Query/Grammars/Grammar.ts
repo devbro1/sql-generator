@@ -514,7 +514,7 @@ export abstract class Grammar extends BaseGrammar {
         return `update ${table} set ${columns} ${where}`;
     }
 
-    compileUpsert(query: any, values: any[], uniqueBy: string[], update: any[]): string {
+    compileUpsert(query: any, values: any[], uniqueBy: string[], update: any[] | Record<string, any>): string {
         throw new Error('This database engine does not support upserts.');
     }
 

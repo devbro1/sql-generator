@@ -382,7 +382,7 @@ export class Builder
         return this.addNestedWhereQuery(nestedQuery, boolean);
     }
 
-    where(column: Expression | Function | string | any[], operator: any = null, value: any = null, boolean: AndOr = 'and'): this
+    where(column: Expression | Function | string | any[] | Record<string,any>, operator: any = null, value: any = null, boolean: AndOr = 'and'): this
     {
         if (column instanceof Expression)
         {
@@ -401,6 +401,13 @@ export class Builder
         if (column instanceof Function && operator === null)
         {
             return this.whereNested(column, boolean);
+        }
+
+        if(typeof column === 'object') {
+            Object.entries(column).map(([key, value]) => {
+                this.where(key,value);
+            });
+            return this;
         }
 
         if (this.isQueryable(column) && operator !== null)
@@ -961,7 +968,7 @@ export class Builder
     {
         const finder = method.substring(5);
         const segments = finder.split(/(And|Or)(?=[A-Z])/);
-        let connector = 'and';
+        let connector: AndOr = 'and';
         let index = 0;
         for (const segment of segments)
         {
@@ -971,7 +978,7 @@ export class Builder
                 index++;
             } else
             {
-                connector = segment.toLowerCase();
+                connector = segment as AndOr;//.toLowerCase();
             }
         }
         return this;
@@ -1369,25 +1376,25 @@ export class Builder
         );
     }
 
-    find(id: number | string, columns: any[] | string = ['*']): any
-    {
-        return this.where('id', '=', id).first(columns);
-    }
+    // find(id: number | string, columns: any[] | string = ['*']): any
+    // {
+    //     return this.where('id', '=', id).first(columns);
+    // }
 
-    findOr(id: any, columns: any[] | Function = ['*'], callback: Function = () => {}): any
-    {
-        if (columns instanceof Function)
-        {
-            callback = columns;
-            columns = ['*'];
-        }
-        const data = this.find(id, columns);
-        if (data !== null)
-        {
-            return data;
-        }
-        return callback();
-    }
+    // findOr(id: any, columns: any[] | Function = ['*'], callback: Function = () => {}): any
+    // {
+    //     if (columns instanceof Function)
+    //     {
+    //         callback = columns;
+    //         columns = ['*'];
+    //     }
+    //     const data = this.find(id, columns);
+    //     if (data !== null)
+    //     {
+    //         return data;
+    //     }
+    //     return callback();
+    // }
 
     // value(column: string): any
     // {
@@ -1828,13 +1835,24 @@ export class Builder
         );
     }
 
-    update(values: (any | this)[]): number
+    update(values: (any | this)[] | Record<string, any>): number
     {
         this.applyBeforeQueryCallbacks();
-        const formattedValues = Object.entries(values).map(([key, value]) => ({
-            value: value instanceof this.constructor ? `(${ value.toSql() })` : value,
-            bindings: value instanceof this.constructor ? value.getBindings() : value
-        }));
+        const formattedValues = Object.entries(values).map(([key, value]) => {
+            if(value instanceof Builder) {
+                return {
+                    value: value instanceof this.constructor ? `(${ (value as Builder).toSql() })` : value,
+                    bindings: value instanceof this.constructor ? (value as Builder).getBindings() : value
+                };
+            }
+
+            let [query,bindings] = this.parseSub(value);
+
+            return {
+                value: new Expression(`(${query})`),
+                bindings: () => bindings
+            }
+        });
 
         const sql = this._grammar.compileUpdate(this, formattedValues);
         return this._connection.update(sql, this.cleanBindings(
@@ -1850,12 +1868,13 @@ export class Builder
         }
         this.applyBeforeQueryCallbacks();
         const sql = this._grammar.compileUpdateFrom(this, values);
+
         return this._connection.update(sql, this.cleanBindings(
             this._grammar.prepareBindingsForUpdateFrom(this._bindings, values)
         ));
     }
 
-    updateOrInsert(attributes: Record<string, any>, values: Record<string, any> = {}): boolean
+    updateOrInsert(attributes: Record<string, any>, values: Record<string, any> = {}): boolean | number
     {
         if (!this.where(attributes).exists())
         {
@@ -1914,60 +1933,60 @@ export class Builder
         );
     }
 
-    increment(column: string, amount: number = 1, extra: Record<string, any> = {}): number
-    {
-        if (typeof amount !== 'number')
-        {
-            throw new Error('Non-numeric value passed to increment method.');
-        }
+    // increment(column: string, amount: number = 1, extra: Record<string, any> = {}): number
+    // {
+    //     if (typeof amount !== 'number')
+    //     {
+    //         throw new Error('Non-numeric value passed to increment method.');
+    //     }
 
-        return this.incrementEach({ [column]: amount }, extra);
-    }
+    //     return this.incrementEach({ [column]: amount }, extra);
+    // }
 
-    incrementEach(columns: Record<string, number>, extra: Record<string, any> = {}): number
-    {
-        Object.entries(columns).forEach(([column, amount]) =>
-        {
-            if (typeof amount !== 'number')
-            {
-                throw new Error(`Non-numeric value passed as increment amount for column: '${ column }'.`);
-            }
+    // incrementEach(columns: Record<string, number>, extra: Record<string, any> = {}): number
+    // {
+    //     Object.entries(columns).forEach(([column, amount]) =>
+    //     {
+    //         if (typeof amount !== 'number')
+    //         {
+    //             throw new Error(`Non-numeric value passed as increment amount for column: '${ column }'.`);
+    //         }
 
-            columns[column] = this.raw(`${ this._grammar.wrap(column) } + ${ amount }`);
-        });
+    //         columns[column] = this.raw(`${ this._grammar.wrap(column) } + ${ amount }`);
+    //     });
 
-        return this.update({ ...columns, ...extra });
-    }
+    //     return this.update({ ...columns, ...extra });
+    // }
 
     public raw(value:any)
     {
         return this._connection.raw(value);
     }
 
-    decrement(column: string, amount: number = 1, extra: Record<string, any> = {}): number
-    {
-        if (typeof amount !== 'number')
-        {
-            throw new Error('Non-numeric value passed to decrement method.');
-        }
+    // decrement(column: string, amount: number = 1, extra: Record<string, any> = {}): number
+    // {
+    //     if (typeof amount !== 'number')
+    //     {
+    //         throw new Error('Non-numeric value passed to decrement method.');
+    //     }
 
-        return this.decrementEach({ [column]: amount }, extra);
-    }
+    //     return this.decrementEach({ [column]: amount }, extra);
+    // }
 
-    decrementEach(columns: Record<string, number>, extra: Record<string, any> = {}): number
-    {
-        Object.entries(columns).forEach(([column, amount]) =>
-        {
-            if (typeof amount !== 'number')
-            {
-                throw new Error(`Non-numeric value passed as decrement amount for column: '${ column }'.`);
-            }
+    // decrementEach(columns: Record<string, number>, extra: Record<string, any> = {}): number
+    // {
+    //     Object.entries(columns).forEach(([column, amount]) =>
+    //     {
+    //         if (typeof amount !== 'number')
+    //         {
+    //             throw new Error(`Non-numeric value passed as decrement amount for column: '${ column }'.`);
+    //         }
 
-            columns[column] = this.raw(`${ this._grammar.wrap(column) } - ${ amount }`);
-        });
+    //         columns[column] = this.raw(`${ this._grammar.wrap(column) } - ${ amount }`);
+    //     });
 
-        return this.update({ ...columns, ...extra });
-    }
+    //     return this.update({ ...columns, ...extra });
+    // }
 
     delete(id: any = null): number
     {
@@ -2015,10 +2034,10 @@ export class Builder
 
     castBinding(value: any): any
     {
-        if (value instanceof UnitEnum)
-        {
-            return 'value' in value ? value.value : value.name;
-        }
+        // if (value instanceof UnitEnum)
+        // {
+        //     return 'value' in value ? value.value : value.name;
+        // }
 
         return value;
     }
@@ -2083,9 +2102,24 @@ export class Builder
     cloneWithout(properties: string[]): this
     {
         const clone = this.clone();
-        properties.forEach(property =>
+        properties.forEach((property: string) =>
         {
-            clone[('_' + property) as keyof Builder] = null;
+            //order limit columns offset
+            if(property == 'orders') {
+                clone._orders = [];
+            }
+            else if(property === 'limit') {
+                clone._limit = 0;
+            }
+            else if(property === 'columns') {
+                clone._columns = [];
+            }
+            else if(property === 'offset') {
+                clone._offset = 0;
+            }
+            else {
+                throw new Error('cloneWithout is implemented partially');
+            }
         });
         return clone;
     }

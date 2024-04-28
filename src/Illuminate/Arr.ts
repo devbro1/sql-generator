@@ -16,7 +16,7 @@ class Arr {
 
     }
 
-    statis slice(value) {
+    static slice(value,a,b) {
 
     }
 

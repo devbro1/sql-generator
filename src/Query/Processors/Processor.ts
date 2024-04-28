@@ -3,9 +3,9 @@ export class Processor {
         return results;
     }
 
-    async processInsertGetId(query: any, sql: string, values: any[], sequence: string = ''): Promise<number> {
-        await query.getConnection().insert(sql, values);
-        const id = await query.getConnection().getPdo().lastInsertId(sequence);
+    processInsertGetId(query: any, sql: string, values: any[], sequence: string = ''): number {
+        query.getConnection().insertSync(sql, values);
+        const id = query.getConnection().getPdo().lastInsertIdSync(sequence);
         return isNumeric(id) ? parseInt(id) : id;
     }
 
