@@ -350,7 +350,7 @@ export abstract class Grammar extends BaseGrammar {
         });
     }
 
-    compileRandom(seed?: number): string {
+    compileRandom(seed?: string | number): string {
         return 'RANDOM()';  // Adjust based on actual SQL function for randomness if needed.
     }
 

@@ -17,6 +17,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.5.12",
+    "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.25",
     "@types/pg": "^8.11.2",
     "@types/sprintf-js": "^1.1.4",

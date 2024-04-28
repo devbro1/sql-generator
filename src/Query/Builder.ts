@@ -6,10 +6,10 @@ import { Connection } from "src/schema/Connections/Connection";
 import { JoinLateralClause } from "./JoinLateralClause";
 import { JoinClause } from "./JoinClause";
 import {sprintf} from 'sprintf-js';
-
+const { DateTime } = require("luxon");
 
 type AndOr = "and" | "or" | "and not" | "or not";
-
+type DatePeriod = [Date,Date];
 type bindings = {
     select: any[];
     from: any[];
@@ -23,6 +23,16 @@ type bindings = {
 }
 
 type binding_options = 'select' | 'from' | 'join' | 'where' | 'groupBy' | 'having' | 'order' | 'union' | 'unionOrder';
+
+type ColumnType = string | Builder | Expression | Function;
+type ColumnValue = string | number | null | Expression | Function | Date;
+type ColumnValueBetween = DatePeriod | Iterable<any> | [any,any];
+type CompareOperation = '=' | '<' | '>' | '<=' | '>=' | '<>' | '!=' | '<=>' |
+    'like' | 'like binary' | 'not like' | 'ilike' |
+    '&' | '|' | '^' | '<<' | '>>' | '&~' | 'is' | 'is not' |
+    'rlike' | 'not rlike' | 'regexp' | 'not regexp' |
+    '~' | '~*' | '!~' | '!~*' | 'similar to' |
+    'not similar to' | 'not ilike' | '~~*' | '!~~*';
 export class Builder
 {
     public _connection: Connection;
@@ -90,11 +100,11 @@ export class Builder
             columns = Array.from(arguments);
         }
 
-        columns.forEach((column, as) =>
+        columns.forEach((column: ColumnType, as: string) =>
         {
             if (typeof as === 'string' && this.isQueryable(column))
             {
-                this.selectSub(column, as);
+                this.selectSub(column as Builder | Function, as);
             } else
             {
                 this._columns.push(column);
@@ -122,7 +132,7 @@ export class Builder
         return this;
     }
 
-    fromSub(query: Function | Builder | string, as: string): this
+    fromSub(query: Function | Builder | string | Expression, as: string): this
     {
         const [sql, bindings] = this.createSub(query);
         return this.fromRaw(`(${ sql }) as ${ this._grammar.wrapTable(as) }`, bindings);
@@ -158,7 +168,7 @@ export class Builder
 
     protected parseSub(query: any): [string, any[]]
     {
-        if (query instanceof this.constructor || query instanceof Relation)
+        if (query instanceof this.constructor)
         {
             query = this.prependDatabaseNameIfCrossDatabaseQuery(query);
             return [query.toSql(), query.getBindings()];
@@ -270,7 +280,7 @@ export class Builder
     }
 
     public getBindings(): any[] {
-        return this.flattenArray(this._bindings);
+        return Arr.flatten(this._bindings);
     }
 
     joinWhere(table: Expression | string, first: Function | Expression | string, operator: string, second: Expression | string, type: string = 'inner'): this
@@ -460,17 +470,17 @@ export class Builder
         }, boolean);
     }
 
-    prepareValueAndOperator(value: any, operator: string, useDefault: boolean = false): [any, string]
+    prepareValueAndOperator(value: ColumnValue, operator: string | ColumnValue, useDefault: boolean = false): [any, CompareOperation]
     {
         if (useDefault)
         {
             return [operator, '='];
-        } else if (this.invalidOperatorAndValue(operator, value))
+        } else if (this.invalidOperatorAndValue(operator as string, value))
         {
             throw new Error('Illegal operator and value combination.');
         }
 
-        return [value, operator];
+        return [value, operator as CompareOperation];
     }
 
     invalidOperatorAndValue(operator: string, value: any): boolean
@@ -563,14 +573,9 @@ export class Builder
             this.addBinding(subBindings, 'where');
         }
 
-        if (values instanceof Arrayable)
-        {
-            values = values.toArray();
-        }
-
         this._wheres.push({ type, column, values, boolean });
 
-        if (values.length !== this.flattenArray(values, 1).length)
+        if (values.length !== Arr.flatten(values, 1).length)
         {
             throw new Error('Nested arrays are not allowed in whereIn method.');
         }
@@ -598,32 +603,28 @@ export class Builder
         return this.whereNotIn(column, values, 'or');
     }
 
-    whereIntegerInRaw(column: string, values: Arrayable | any[], boolean: string = 'and', not: boolean = false): this
+    whereIntegerInRaw(column: string, values: any[], boolean: string = 'and', not: boolean = false): this
     {
         const type = not ? 'NotInRaw' : 'InRaw';
 
-        if (values instanceof Arrayable)
-        {
-            values = values.toArray();
-        }
 
-        values = Arr.flatten(values).map(value => parseInt(value instanceof BackedEnum ? value.value : value));
+        values = Arr.flatten(values).map(value => parseInt(value));
 
         this._wheres.push({ type, column, values, boolean });
         return this;
     }
 
-    orWhereIntegerInRaw(column: string, values: Arrayable | any[]): this
+    orWhereIntegerInRaw(column: string, values: any[]): this
     {
         return this.whereIntegerInRaw(column, values, 'or');
     }
 
-    whereIntegerNotInRaw(column: string, values: Arrayable | any[], boolean: string = 'and'): this
+    whereIntegerNotInRaw(column: string, values: any[], boolean: string = 'and'): this
     {
         return this.whereIntegerInRaw(column, values, boolean, true);
     }
 
-    orWhereIntegerNotInRaw(column: string, values: Arrayable | any[]): this
+    orWhereIntegerNotInRaw(column: string, values: any[]): this
     {
         return this.whereIntegerNotInRaw(column, values, 'or');
     }
@@ -649,14 +650,9 @@ export class Builder
         return this.whereNull(columns, boolean, true);
     }
 
-    whereBetween(column: Expression | string, values: Iterable<any>, boolean: string = 'and', not: boolean = false): this
+    whereBetween(column: Expression | string, values: ColumnValueBetween, boolean: string = 'and', not: boolean = false): this
     {
         const type = 'between';
-
-        if (values instanceof CarbonPeriod)
-        {
-            values = [values.getStartDate(), values.getEndDate()];
-        }
 
         this._wheres.push({ type, column, values, boolean, not });
         this.addBinding(Array.from(values).slice(0, 2), 'where');
@@ -706,47 +702,47 @@ export class Builder
         return this.whereNotNull(column, 'or');
     }
 
-    whereDate(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = '', boolean: string = 'and'): this
+    whereDate(column: Expression | string, operator: Date | string | null, value: Date | string = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
-        if (value instanceof DateTimeInterface)
+        if (value instanceof Date)
         {
-            value = value.format('Y-m-d');
+            value = DateTime.fromJsDate(value).toFormat('yyyy-LL-dd');
         }
         return this.addDateBasedWhere('Date', column, operator, value, boolean);
     }
 
-    orWhereDate(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = ''): this
+    orWhereDate(column: Expression | string, operator: Date | string | null, value: Date | string = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereDate(column, operator, value, 'or');
     }
 
-    whereTime(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = '', boolean: string = 'and'): this
+    whereTime(column: Expression | string, operator: Date | string | null, value: Date | string = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
-        if (value instanceof DateTimeInterface)
+        if (value instanceof Date)
         {
-            value = value.format('H:i:s');
+            value = DateTime.fromJsDate(value).toFormat('HH:mm:ss');
         }
         return this.addDateBasedWhere('Time', column, operator, value, boolean);
     }
 
-    orWhereTime(column: Expression | string, operator: DateTimeInterface | string | null, value: DateTimeInterface | string = ''): this
+    orWhereTime(column: Expression | string, operator: Date | string | null, value: Date | string = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereTime(column, operator, value, 'or');
     }
 
-    whereDay(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = '', boolean: string = 'and'): this
+    whereDay(column: Expression | string, operator: Date | string | number | null, value: Date | string | number = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
-        if (value instanceof DateTimeInterface)
+        if (value instanceof Date)
         {
-            value = value.format('d');
+            value = DateTime.fromJsDate(value).toFormat('dd');
         }
         if (!(value instanceof Expression))
         {
@@ -755,19 +751,19 @@ export class Builder
         return this.addDateBasedWhere('Day', column, operator, value, boolean);
     }
 
-    orWhereDay(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = ''): this
+    orWhereDay(column: Expression | string, operator: string | ColumnValue, value: Date | string | number = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereDay(column, operator, value, 'or');
     }
 
-    whereMonth(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = '', boolean: string = 'and'): this
+    whereMonth(column: Expression | string, operator: Date | string | number | null, value: Date | string | number = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
-        if (value instanceof DateTimeInterface)
+        if (value instanceof Date)
         {
-            value = value.format('m');
+            value = DateTime.fromJsDate(value).toFormat('LL');
         }
         if (!(value instanceof Expression))
         {
@@ -776,30 +772,40 @@ export class Builder
         return this.addDateBasedWhere('Month', column, operator, value, boolean);
     }
 
-    orWhereMonth(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = ''): this
+    orWhereMonth(column: Expression | string, operator: Date | string | number | null, value: Date | string | number = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereMonth(column, operator, value, 'or');
     }
 
-    whereYear(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = '', boolean: string = 'and'): this
+    whereYear(column: Expression | string, operator: Date | string | number | null, value: Date | string | number = '', boolean: string = 'and'): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         value = this.flattenValue(value);
-        if (value instanceof DateTimeInterface)
+        if (value instanceof Date)
         {
-            value = value.format('Y');
+            value = DateTime.fromJsDate(value).toFormat('yyyy');
         }
         return this.addDateBasedWhere('Year', column, operator, value, boolean);
     }
 
-    orWhereYear(column: Expression | string, operator: DateTimeInterface | string | number | null, value: DateTimeInterface | string | number = ''): this
+    protected addDateBasedWhere(type: string, column: Expression | string, operator: string, value: any, boolean: string = 'and') {
+        this._wheres.push({ column, type, boolean, operator, value });
+    
+        if (!(value instanceof Expression)) {
+            this.addBinding(value, 'where');
+        }
+    
+        return this;
+    }
+
+    orWhereYear(column: Expression | string, operator: Date | string | number | null, value: Date | string | number = ''): this
     {
         [value, operator] = this.prepareValueAndOperator(value, operator, arguments.length === 2);
         return this.whereYear(column, operator, value, 'or');
     }
 
-    forNestedWhere(): this
+    forNestedWhere(): Builder
     {
         return this.newQuery().from(this.from);
     }
@@ -918,9 +924,9 @@ export class Builder
         return this;
     }
 
-    orWhereJsonContainsKey(column: string): this
+    orWhereJsonContainsKey(column: string, boolean: AndOr = 'or'): this
     {
-        return this.whereJsonContainsKey(column, 'or');
+        return this.whereJsonContainsKey(column, boolean);
     }
 
     whereJsonDoesntContainKey(column: string, boolean: string = 'and'): this
@@ -971,10 +977,9 @@ export class Builder
         return this;
     }
 
-    addDynamic(segment: string, connector: string, parameters: any[], index: number): void
+    addDynamic(segment: string, connector: AndOr, parameters: any[], index: number): void
     {
-        const bool = connector.toLowerCase();
-        this.where(Str.snake(segment), '=', parameters[index], bool);
+        this.where(Str.snake(segment), '=', parameters[index], connector);
     }
 
     whereFullText(columns: string | string[], value: string, options: any[] = [], boolean: string = 'and'): this
@@ -1027,7 +1032,7 @@ export class Builder
         return this.whereAny(columns, operator, value, 'or');
     }
 
-    groupBy(...groups: (Array | Expression | string)[]): this
+    groupBy(...groups: (Expression | string)[]): this
     {
         groups.forEach(group =>
         {
@@ -1104,6 +1109,10 @@ export class Builder
         return this;
     }
 
+    getRawBindings() {
+        return this._bindings;
+    }
+
     havingNull(columns: string | string[], boolean: string = 'and', not: boolean = false): this
     {
         const type = not ? 'NotNull' : 'Null';
@@ -1129,15 +1138,11 @@ export class Builder
         return this.havingNotNull(column, 'or');
     }
 
-    havingBetween(column: string, values: iterable, boolean: string = 'and', not: boolean = false): this
+    havingBetween(column: string, values: DatePeriod | Expression | Function | String, boolean: string = 'and', not: boolean = false): this
     {
         const type = 'between';
-        if (values instanceof CarbonPeriod)
-        {
-            values = [values.getStartDate(), values.getEndDate()];
-        }
         this._havings.push({ type, column, values, boolean, not });
-        this.addBinding(Array.slice(this.cleanBindings(Arr.flatten(values)), 0, 2), 'having');
+        this.addBinding(Arr.slice(this.cleanBindings(Arr.flatten(values)), 0, 2), 'having');
         return this;
     }
 
@@ -1167,7 +1172,7 @@ export class Builder
 
         if (!['asc', 'desc'].includes(direction))
         {
-            throw new InvalidArgumentException('Order direction must be "asc" or "desc".');
+            throw new Error('Order direction must be "asc" or "desc".');
         }
 
         this[this._unions ? '_unionOrders' : '_orders'].push({ column, direction });
@@ -1244,6 +1249,12 @@ export class Builder
     forPage(page: number, perPage: number = 15): this
     {
         return this.offset((page - 1) * perPage).limit(perPage);
+    }
+
+    protected removeExistingOrdersFor(column: string) {
+        return this._orders.filter((order) => {
+            return order['column'] === column;
+        });
     }
 
     forPageBeforeId(perPage: number = 15, lastId: number = 0, column: string = 'id'): this
@@ -1378,23 +1389,23 @@ export class Builder
         return callback();
     }
 
-    value(column: string): any
-    {
-        const result = this.first([column]);
-        return result ? result[column] : null;
-    }
+    // value(column: string): any
+    // {
+    //     const result = this.first([column]);
+    //     return result ? result[column] : null;
+    // }
 
-    rawValue(expression: string, bindings: any[] = []): any
-    {
-        const result = this.selectRaw(expression, bindings).first();
-        return result ? result[0] : null;
-    }
+    // rawValue(expression: string, bindings: any[] = []): any
+    // {
+    //     const result = this.selectRaw(expression, bindings).first();
+    //     return result ? result[0] : null;
+    // }
 
-    soleValue(column: string): any
-    {
-        const result = this.sole([column]);
-        return result[column];
-    }
+    // soleValue(column: string): any
+    // {
+    //     const result = this.sole([column]);
+    //     return result[column];
+    // }
 
     get(columns: any[] = ['*']): any
     {
@@ -1419,7 +1430,7 @@ export class Builder
         const keysToRemove = ['laravel_row'];
         if (typeof this._groupLimit['column'] === 'string')
         {
-            const column = last(this._groupLimit['column'].split('.'));
+            const column = Arr.last(this._groupLimit['column'].split('.'));
             keysToRemove.push(`@laravel_group := ${ this._grammar.wrap(column) }`);
             keysToRemove.push(`@laravel_group := ${ this._grammar.wrap('pivot_' + column) }`);
         }
@@ -1433,53 +1444,51 @@ export class Builder
         return items;
     }
 
-    paginate(perPage: number | Function = 15, columns = ['*'], pageName = 'page', page: number = 0, total: number | Function = 0): any
+    paginate(perPage: number | Function = 15, columns = ['*'], pageName = 'page', page: number = 0, total: number | Function |null = 0): any
     {
-        page = page || Paginator.resolveCurrentPage(pageName);
-        total = value(total) ?? this.getCountForPagination();
-        perPage = perPage instanceof Function ? perPage(total) : perPage;
-        const results = total ? this.forPage(page, perPage).get(columns) : collect();
-        return this.paginator(results, total, perPage, page, {
-            'path': Paginator.resolveCurrentPath(),
+        page = page;
+        total = total ?? this.getCountForPagination();
+        const _perPage = perPage instanceof Function ? perPage(total) : perPage;
+        const results = total ? this.forPage(page, _perPage).get(columns) : [];
+        return {results, total, perPage, page,
             'pageName': pageName,
-        });
+        };
     }
 
     simplePaginate(perPage = 15, columns = ['*'], pageName = 'page', page: number = 0): any
     {
-        page = page || Paginator.resolveCurrentPage(pageName);
+        page = page;
         this.offset((page - 1) * perPage).limit(perPage + 1);
-        return this.simplePaginator(this.get(columns), perPage, page, {
-            'path': Paginator.resolveCurrentPath(),
+        return {columns: this.get(columns), perPage, page,
             'pageName': pageName,
-        });
-    }
-
-    cursorPaginate(perPage = 15, columns = ['*'], cursorName = 'cursor', cursor: string = ''): any
-    {
-        return this.paginateUsingCursor(perPage, columns, cursorName, cursor);
-    }
-
-    protected ensureOrderForCursorPagination(shouldReverse = false): any
-    {
-        if (!this._orders.length && !this._unionOrders.length)
-        {
-            this.enforceOrderBy();
-        }
-        const reverseDirection = (order: any) =>
-        {
-            if (!order.hasOwnProperty('direction')) return order;
-            order.direction = order.direction === 'asc' ? 'desc' : 'asc';
-            return order;
         };
-        if (shouldReverse)
-        {
-            this._orders = this._orders.map(reverseDirection);
-            this._unionOrders = this._unionOrders.map(reverseDirection);
-        }
-        const orders = this._unionOrders.length ? this._unionOrders : this._orders;
-        return collect(orders).filter((order: any) => Arr.has(order, 'direction')).values();
     }
+
+    // cursorPaginate(perPage = 15, columns = ['*'], cursorName = 'cursor', cursor: string = ''): any
+    // {
+    //     return this.paginateUsingCursor(perPage, columns, cursorName, cursor);
+    // }
+
+    // protected ensureOrderForCursorPagination(shouldReverse = false): any
+    // {
+    //     if (!this._orders.length && !this._unionOrders.length)
+    //     {
+    //         this.enforceOrderBy();
+    //     }
+    //     const reverseDirection = (order: any) =>
+    //     {
+    //         if (!order.hasOwnProperty('direction')) return order;
+    //         order.direction = order.direction === 'asc' ? 'desc' : 'asc';
+    //         return order;
+    //     };
+    //     if (shouldReverse)
+    //     {
+    //         this._orders = this._orders.map(reverseDirection);
+    //         this._unionOrders = this._unionOrders.map(reverseDirection);
+    //     }
+    //     const orders = this._unionOrders.length ? this._unionOrders : this._orders;
+    //     return collect(orders).filter((order: any) => Arr.has(order, 'direction')).values();
+    // }
 
     getCountForPagination(columns = ['*']): number
     {
@@ -1491,7 +1500,21 @@ export class Builder
         {
             return parseInt(results[0].aggregate);
         }
-        return parseInt(array_change_key_case(results[0])['aggregate']);
+        return parseInt(this.changeKeyCase(results[0],'lower')['aggregate']);
+    }
+
+    changeKeyCase(obj: Record<string, any>, caseType: 'upper' | 'lower'): Record<string, any> {
+        const result: Record<string, any> = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                if (caseType === 'upper') {
+                    result[key.toUpperCase()] = obj[key];
+                } else {
+                    result[key.toLowerCase()] = obj[key];
+                }
+            }
+        }
+        return result;
     }
 
     protected runPaginationCountQuery(columns = ['*']): any[]
@@ -1535,28 +1558,28 @@ export class Builder
         });
     }
 
-    cursor(): any
-    {
-        if (!this._columns)
-        {
-            this._columns = ['*'];
-        }
-        return new LazyCollection(() =>
-        {
-            let rc = [];
-            for (const item of this._connection.cursor(
-                this.toSql(), this.getBindings(), !this.useWritePdo
-            ))
-            {
-                rc.push(item);
-            }
+    // cursor(): any
+    // {
+    //     if (!this._columns)
+    //     {
+    //         this._columns = ['*'];
+    //     }
+    //     return new LazyCollection(() =>
+    //     {
+    //         let rc = [];
+    //         for (const item of this._connection.cursor(
+    //             this.toSql(), this.getBindings(), !this.useWritePdo
+    //         ))
+    //         {
+    //             rc.push(item);
+    //         }
 
-            return rc;
-        }).map((item: any) =>
-        {
-            return this.applyAfterQueryCallbacks(collect([item])).first();
-        }).reject((item: any) => item === null);
-    }
+    //         return rc;
+    //     }).map((item: any) =>
+    //     {
+    //         return this.applyAfterQueryCallbacks(collect([item])).first();
+    //     }).reject((item: any) => item === null);
+    // }
 
     enforceOrderBy(): void
     {
@@ -1575,7 +1598,7 @@ export class Builder
 
         if (!queryResult.length)
         {
-            return collect();
+            return [];
         }
 
         const columnStripped = this.stripTableForPluck(column);
@@ -1588,17 +1611,17 @@ export class Builder
         );
     }
 
-    protected stripTableForPluck(column: string =''): string
+    protected stripTableForPluck(column: string | Expression =''): string
     {
         if (column === '') return column;
         const columnString = column instanceof Expression ? this._grammar.getValue(column) : column;
         const separator = columnString.toLowerCase().includes(' as ') ? ' as ' : '.';
-        return last(columnString.split(new RegExp(`${ separator }`, 'i')));
+        return Arr.last(columnString.split(new RegExp(`${ separator }`, 'i')));
     }
 
     protected pluckFromObjectColumn(queryResult: any[], column: string, key: string | null): any
     {
-        const results = [];
+        const results: any[] = [];
         if (key === null)
         {
             queryResult.forEach(row => results.push(row[column]));
@@ -1606,12 +1629,12 @@ export class Builder
         {
             queryResult.forEach(row => results[row[key]] = row[column]);
         }
-        return collect(results);
+        return results;
     }
 
     protected pluckFromArrayColumn(queryResult: any[], column: string, key: string = ''): any
     {
-        const results = [];
+        const results: any[] = [];
         if (key === '')
         {
             queryResult.forEach(row => results.push(row[column]));
@@ -1619,7 +1642,7 @@ export class Builder
         {
             queryResult.forEach(row => results[row[key]] = row[column]);
         }
-        return collect(results);
+        return results;
     }
 
     implode(column: string, glue: string = ''): string
@@ -1727,10 +1750,10 @@ export class Builder
         return result;
     }
 
-    insert(values: any): boolean
+    insert(values: any): boolean | number
     {
         if (!values.length) return true;
-        const isArrayOfObjects = values.every(val => typeof val === 'object' && !Array.isArray(val));
+        const isArrayOfObjects = values.every((val: any) => typeof val === 'object' && !Array.isArray(val));
         if (!isArrayOfObjects)
         {
             values = [values];
@@ -1805,13 +1828,14 @@ export class Builder
         );
     }
 
-    update(values: any): number
+    update(values: (any | this)[]): number
     {
         this.applyBeforeQueryCallbacks();
         const formattedValues = Object.entries(values).map(([key, value]) => ({
             value: value instanceof this.constructor ? `(${ value.toSql() })` : value,
             bindings: value instanceof this.constructor ? value.getBindings() : value
         }));
+
         const sql = this._grammar.compileUpdate(this, formattedValues);
         return this._connection.update(sql, this.cleanBindings(
             this._grammar.prepareBindingsForUpdate(this._bindings, formattedValues)
@@ -1956,7 +1980,7 @@ export class Builder
 
         return this._connection.delete(
             this._grammar.compileDelete(this), this.cleanBindings(
-                this._grammar.prepareBindingsForDelete(this.bindings)
+                this._grammar.prepareBindingsForDelete(this._bindings)
             )
         );
     }
@@ -2048,7 +2072,6 @@ export class Builder
     isQueryable(value: any): boolean
     {
         return value instanceof Builder ||
-            value instanceof Relation ||
             value instanceof Function;
     }
 
@@ -2062,7 +2085,7 @@ export class Builder
         const clone = this.clone();
         properties.forEach(property =>
         {
-            clone[property] = null;
+            clone[('_' + property) as keyof Builder] = null;
         });
         return clone;
     }
@@ -2115,5 +2138,4 @@ export class Builder
 
         throw new Error(`No such method: ${ method }`);
     }
-
 }
