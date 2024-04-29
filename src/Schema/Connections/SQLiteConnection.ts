@@ -1,4 +1,9 @@
+import { SQLiteGrammar as SQLiteQueryGrammar } from "src/Query/Grammars/SQLiteGrammar";
+import { SQLiteGrammar as SQLiteSchemaGrammar } from "../Grammars/SQLiteGrammar";
 import { Connection } from "./Connection";
+import { SQLiteBuilder } from "../SQLiteBuilder";
+import { SQLiteProcessor } from "src/Query/Processors/SqliteProcessor";
+import { SqliteSchemaState } from "../SqliteSchemaState";
 
 
 class SQLiteConnection extends Connection {
@@ -34,7 +39,7 @@ class SQLiteConnection extends Connection {
     }
     
     getDefaultQueryGrammar(): any {
-        const grammar = new QueryGrammar();
+        const grammar = new SQLiteQueryGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
@@ -47,7 +52,7 @@ class SQLiteConnection extends Connection {
     }
     
     getDefaultSchemaGrammar(): any {
-        const grammar = new SchemaGrammar();
+        const grammar = new SQLiteSchemaGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }

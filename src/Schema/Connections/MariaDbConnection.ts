@@ -1,8 +1,9 @@
-import { MariaDbBuilder } from "src/schema/MariaDbBuilder";
+import { MariaDbBuilder } from "src/Schema/MariaDbBuilder";
 import { MySqlConnection } from "./MysqlConnection";
-import { MariaDbGrammar as SchemaGrammar } from "src/schema/Grammars/MariaDbGrammar";
-import { MariaDbGrammar as QueryGrammar } from "src/Query/Grammars/MariaDbGrammar";
+import { MariaDbGrammar as MariaDbSchemaGrammar } from "src/Schema/Grammars/MariaDbGrammar";
+import { MariaDbGrammar as MariaDbQueryGrammar } from "src/Query/Grammars/MariaDbGrammar";
 import { MariaDbProcessor } from "src/Query/Processors/MariaDbProcessor";
+import MariaDbSchemaState from "../MariaDbSchemaState";
 
 export class MariaDbConnection extends MySqlConnection {
     isMaria(): boolean {
@@ -15,7 +16,7 @@ export class MariaDbConnection extends MySqlConnection {
     }
     
     getDefaultQueryGrammar(): any {
-        const grammar = new QueryGrammar();
+        const grammar = new MariaDbQueryGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
@@ -28,13 +29,13 @@ export class MariaDbConnection extends MySqlConnection {
     }
     
     getDefaultSchemaGrammar(): any {
-        const grammar = new SchemaGrammar();
+        const grammar = new MariaDbSchemaGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
     
     getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
-        return new MariaDbSchemaState(this, files, processFactory);
+        return new MariaDbSchemaState(this, files);
     }
     
     getDefaultPostProcessor(): any {

@@ -1,4 +1,4 @@
-import { Connection } from "../schema/Connections/Connection";
+import { Connection } from "../Schema/Connections/Connection";
 import { Expression } from "./Expression";
 
 export class Grammar

@@ -8,9 +8,9 @@ export abstract class Connection
     protected pdo: PDO | (() => PDO);
     protected readPdo: PDO | (() => PDO);
     protected database: string;
-    protected readWriteType: string | null;
+    protected readWriteType: string | null = null;
     protected tablePrefix: string = '';
-    protected config: object = {};
+    protected config: Record<string,any> = {};
     protected reconnector!: (connection: Connection) => void;
     protected queryGrammar: any; // Assuming a similar interface exists in TypeScript
     protected schemaGrammar: any; // Assuming a similar interface exists in TypeScript
@@ -27,7 +27,7 @@ export abstract class Connection
     protected queryDurationHandlers: any[] = [];
     protected pretending: boolean = false;
     protected _beforeStartingTransaction: (() => void)[] = [];
-    protected beforeExecutingCallbacks: (() => void)[] = [];
+    protected beforeExecutingCallbacks: ((query:any, bindings:any, connection:Connection) => void)[] = [];
     protected static resolvers: (() => any)[] = [];
 
 
@@ -272,11 +272,11 @@ export abstract class Connection
         const start = performance.now();
     
         let result;
-        try {
+        // try {
             result = callback(query, bindings);
-        } catch (e) {
-            result = this.handleQueryException(e, query, bindings, callback);
-        }
+        // } catch (e) {
+        //     result = this.handleQueryException(e, query, bindings, callback);
+        // }
     
         this.logQuery(query, bindings, this.getElapsedTime(start));
     
@@ -294,7 +294,7 @@ export abstract class Connection
         }
     }
     
-    isUniqueConstraintError(exception: Error): boolean {
+    isUniqueConstraintError(exception: Error | any): boolean {
         return false; // Implement specific logic to detect unique constraint errors
     }
     
@@ -315,22 +315,22 @@ export abstract class Connection
         return Math.round((performance.now() - start) * 1000) / 1000;
     }
     
-    whenQueryingForLongerThan(threshold: number | Date | any, handler: (conn: this, event: any) => void): void {
-        let thresholdMs = threshold instanceof Date ? this.secondsUntil(threshold) * 1000 : threshold;
-        if (typeof threshold === 'object' && 'totalMilliseconds' in threshold) {
-            thresholdMs = threshold.totalMilliseconds;
-        }
+    // whenQueryingForLongerThan(threshold: number | Date | any, handler: (conn: this, event: any) => void): void {
+    //     let thresholdMs = threshold instanceof Date ? this.secondsUntil(threshold) * 1000 : threshold;
+    //     if (typeof threshold === 'object' && 'totalMilliseconds' in threshold) {
+    //         thresholdMs = threshold.totalMilliseconds;
+    //     }
     
-        const key = this.queryDurationHandlers.length;
-        this.queryDurationHandlers.push({ has_run: false, handler });
+    //     const key = this.queryDurationHandlers.length;
+    //     this.queryDurationHandlers.push({ has_run: false, handler });
     
-        this.listen((event) => {
-            if (!this.queryDurationHandlers[key].has_run && this.totalQueryDuration > thresholdMs) {
-                handler(this, event);
-                this.queryDurationHandlers[key].has_run = true;
-            }
-        });
-    }
+    //     this.listen((event) => {
+    //         if (!this.queryDurationHandlers[key].has_run && this.totalQueryDuration > thresholdMs) {
+    //             handler(this, event);
+    //             this.queryDurationHandlers[key].has_run = true;
+    //         }
+    //     });
+    // }
     
     allowQueryDurationHandlersToRunAgain(): void {
         this.queryDurationHandlers.forEach(handler => handler.has_run = false);
@@ -344,20 +344,20 @@ export abstract class Connection
         this.totalQueryDuration = 0.0;
     }
     
-    handleQueryException(e: Error, query: string, bindings: any[], callback: (query: string, bindings: any[]) => any): any {
-        if (this.transactions >= 1) {
-            throw e;
-        }
-        return this.tryAgainIfCausedByLostConnection(e, query, bindings, callback);
-    }
+    // handleQueryException(e: Error, query: string, bindings: any[], callback: (query: string, bindings: any[]) => any): any {
+    //     if (this.transactions >= 1) {
+    //         throw e;
+    //     }
+    //     return this.tryAgainIfCausedByLostConnection(e, query, bindings, callback);
+    // }
     
-    tryAgainIfCausedByLostConnection(e: Error, query: string, bindings: any[], callback: (query: string, bindings: any[]) => any): any {
-        if (this.causedByLostConnection(e)) {
-            this.reconnect();
-            return this.runQueryCallback(query, bindings, callback);
-        }
-        throw e;
-    }
+    // tryAgainIfCausedByLostConnection(e: Error, query: string, bindings: any[], callback: (query: string, bindings: any[]) => any): any {
+    //     if (this.causedByLostConnection(e)) {
+    //         this.reconnect();
+    //         return this.runQueryCallback(query, bindings, callback);
+    //     }
+    //     throw e;
+    // }
     
     reconnect(): any {
         if (typeof this.reconnector === 'function') {

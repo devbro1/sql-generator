@@ -1,4 +1,9 @@
+import { PostgresGrammar as PostgresQueryGrammar } from "src/Query/Grammars/PostgresGrammar";
+import { PostgresGrammar as PostgresSchemaGrammar } from "src/Schema/Grammars/PostgresGrammar";
 import { Connection } from "./Connection";
+import { PostgresBuilder } from "../PostgresBuilder";
+import { PostgresProcessor } from "src/Query/Processors/PostgresProcessor";
+import { PostgresSchemaState } from "../PostgresSchemaState";
 
 export class PostgresConnection extends Connection {
     escapeBinary(value: string): string {
@@ -15,7 +20,7 @@ export class PostgresConnection extends Connection {
     }
     
     getDefaultQueryGrammar(): any {
-        const grammar = new QueryGrammar();
+        const grammar = new PostgresQueryGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
@@ -28,13 +33,13 @@ export class PostgresConnection extends Connection {
     }
     
     getDefaultSchemaGrammar(): any {
-        const grammar = new SchemaGrammar();
+        const grammar = new PostgresSchemaGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
     
     getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
-        return new PostgresSchemaState(this, files, processFactory);
+        return new PostgresSchemaState(this, files);
     }
     
     getDefaultPostProcessor(): any {

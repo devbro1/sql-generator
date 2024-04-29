@@ -1,10 +1,10 @@
-import { Connection } from "../../src/schema/Connections/Connection";
-import { Blueprint } from "../../src/schema/Blueprint";
-import { Builder } from "../../src/schema/Builder";
-import { MySqlGrammar } from "../../src/schema/Grammars/MySqlGrammar";
-import { PostgresGrammar } from "../../src/schema/Grammars/PostgresGrammar";
-import { SQLiteGrammar } from "../../src/schema/Grammars/SQLiteGrammar";
-import { SqlServerGrammar } from "../../src/schema/Grammars/SqlServerGrammar";
+import { Connection } from "../../src/Schema/Connections/Connection";
+import { Blueprint } from "../../src/Schema/Blueprint";
+import { Builder } from "../../src/Schema/Builder";
+import { MySqlGrammar } from "../../src/Schema/Grammars/MySqlGrammar";
+import { PostgresGrammar } from "../../src/Schema/Grammars/PostgresGrammar";
+import { SQLiteGrammar } from "../../src/Schema/Grammars/SQLiteGrammar";
+import { SqlServerGrammar } from "../../src/Schema/Grammars/SqlServerGrammar";
 import { mock, MockProxy } from "jest-mock-extended";
 
 describe("DatabaseSchemaBlueprintTest", () => {

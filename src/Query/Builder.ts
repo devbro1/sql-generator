@@ -235,11 +235,11 @@ export class Builder
         return this;
     }
 
-    from(table: Expression | Function | Builder | string, as: string=''): this
+    from(table: Expression | Function | Builder | string, as: string | null =''): this
     {
         if (this.isQueryable(table))
         {
-            return this.fromSub(table, as);
+            return this.fromSub(table, as ?? '');
         }
 
         this._from = as ? `${ table } as ${ as }` : table;

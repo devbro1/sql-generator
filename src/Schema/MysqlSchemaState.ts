@@ -58,11 +58,14 @@ export class MySqlSchemaState extends SchemaState {
         return value;
     }
 
-    protected async executeDumpProcess(command: string): Promise<string> {
+    protected async executeDumpProcess(command: string, path:string=''): Promise<string> {
         try {
             const { stdout } = await promisify(exec)(command);
             return stdout;
-        } catch (error) {
+        } catch (error: any | Error) {
+            if(!(error instanceof Error)) {
+                throw error
+            }
             if (/column-statistics|column_statistics/.test(error.message)) {
                 return this.executeDumpProcess(command.replace(' --column-statistics=0', ''));
             }

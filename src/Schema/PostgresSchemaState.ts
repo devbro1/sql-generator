@@ -25,7 +25,7 @@ class PostgresSchemaState extends SchemaState {
         }
 
         await execAsync(command, {
-            env: { ...process.env, ...this.baseVariables(connection.getConfig()), LARAVEL_LOAD_PATH: path }
+            env: { ...process.env, ...this.baseVariables(this.connection.getConfig()), LARAVEL_LOAD_PATH: path }
         });
     }
 
