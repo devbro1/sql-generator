@@ -1,4 +1,14 @@
+import { SqlServerGrammar as QueryGrammar } from "src/Query/Grammars/SqlServerGrammar";
+import { SqlServerGrammar as SchemaGrammar } from "../Grammars/SqlServerGrammar";
+import { SqlServerBuilder } from "../SqlServerBuilder";
+import { Connection } from "./Connection";
+import { SqlServerProcessor } from "src/Query/Processors/SqlServerProcessor";
+
 class SqlServerConnection extends Connection {
+    getServerVersion(): string
+    {
+        throw new Error("Method not implemented.");
+    }
     async transaction(callback: (conn: this) => any, attempts: number = 1): Promise<any> {
         for (let a = 1; a <= attempts; a++) {
             if (this.getDriverName() === 'sqlsrv') {

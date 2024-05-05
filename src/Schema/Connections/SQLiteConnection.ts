@@ -7,6 +7,10 @@ import { SqliteSchemaState } from "../SqliteSchemaState";
 
 
 class SQLiteConnection extends Connection {
+    getServerVersion(): string
+    {
+        throw new Error("Method not implemented.");
+    }
     constructor(pdo: any, database: string = '', tablePrefix: string = '', config: any[] = []) {
         super(pdo, database, tablePrefix, config);
     
@@ -23,9 +27,7 @@ class SQLiteConnection extends Connection {
                 ? schemaBuilder.enableForeignKeyConstraints()
                 : schemaBuilder.disableForeignKeyConstraints();
         } catch (e) {
-            if (!(e instanceof SQLiteDatabaseDoesNotExistException)) {
-                throw e;
-            }
+            throw e;
         }
     }
     
@@ -58,7 +60,8 @@ class SQLiteConnection extends Connection {
     }
     
     getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
-        return new SqliteSchemaState(this, files, processFactory);
+        throw new Error('Not Implemented');
+        //return new SqliteSchemaState(this, files, processFactory);
     }
     
     getDefaultPostProcessor(): any {
@@ -66,7 +69,16 @@ class SQLiteConnection extends Connection {
     }
     
     getForeignKeyConstraintsConfigurationValue(): boolean | null {
-        return this.getConfig('foreign_key_constraints');
+        let val = this.getConfig('foreign_key_constraints');
+
+        if(val === 'true'){
+            return true;
+        }
+        else if(val === 'false') {
+            return false;
+        }
+
+        return null
     }
     
 }

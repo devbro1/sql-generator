@@ -8,9 +8,9 @@ export abstract class SchemaState {
     protected processFactory: (...args: any[]) => { stdout: string; stderr: string };
     database: string = '';
 
-    constructor(connection: Connection) {
+    constructor(connection: Connection, processFactory = SchemaState.execSync) {
         this.connection = connection;
-        this.processFactory = SchemaState.execSync;
+        this.processFactory = processFactory;
     }
 
     public static execSync(args: any[]): {stdout: string; stderr: string} {

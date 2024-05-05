@@ -6,9 +6,15 @@ import { PostgresProcessor } from "src/Query/Processors/PostgresProcessor";
 import { PostgresSchemaState } from "../PostgresSchemaState";
 
 export class PostgresConnection extends Connection {
+    getServerVersion(): string
+    {
+        throw new Error("Method not implemented.");
+    }
+
     escapeBinary(value: string): string {
         const hex = Buffer.from(value).toString('hex');
-        return `'\x${hex}'::bytea`;
+        // @ts-ignore
+        return "'\\" + "x" + `${hex}'::bytea`;
     }
     
     escapeBool(value: boolean): string {
@@ -39,7 +45,8 @@ export class PostgresConnection extends Connection {
     }
     
     getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
-        return new PostgresSchemaState(this, files);
+        throw new Error("Method not implemented.");
+        //return new PostgresSchemaState(this, files);
     }
     
     getDefaultPostProcessor(): any {

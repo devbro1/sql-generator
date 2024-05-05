@@ -1,8 +1,9 @@
 import { Expression } from "src/Illuminate/Expression";
-import { Grammar as QueryGrammar } from "src/schema/Grammars/Grammar";
+import { Grammar as QueryGrammar } from "src/Query/Grammars/Grammar";
 import { Processor } from "src/Query/Processors/Processor";
-import { Builder as SchemaBuilder } from "src/schema/Builder";
+import { Builder as SchemaBuilder } from "src/Schema/Builder";
 import { Builder as QueryBuilder } from "src/Query/Builder";
+import { isBuffer, isInteger } from "lodash";
 export abstract class Connection
 {
     protected pdo: PDO | (() => PDO);
@@ -246,10 +247,17 @@ export abstract class Connection
     
     bindValues(statement: PDOStatement, bindings: any[]): void {
         bindings.forEach((value, key) => {
+            let bind_type = 'string';
+            if(isInteger(value)) {
+                bind_type = 'integer';
+            }
+            else if(isBuffer(value)) {
+                bind_type = 'resource';
+            }
             statement.bindValue(
                 typeof key === 'string' ? key : key + 1,
                 value,
-                this.determineParamType(value)
+                bind_type
             );
         });
     }
@@ -642,9 +650,7 @@ export abstract class Connection
         return grammar;
     }
     
-    getServerVersion(): string {
-        return this.getPdo().getAttribute(PDO.ATTR_SERVER_VERSION);
-    }
+    abstract getServerVersion(): string;
     
     // static resolverFor(driver: string, callback: () => any): void {
     //     YourClassName.resolvers[driver] = callback;
