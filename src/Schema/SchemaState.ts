@@ -1,25 +1,32 @@
 import * as fs from 'fs';
-import { exec, ExecException } from 'child_process';
-import { promisify } from 'util';
+import { execSync, ExecException } from 'child_process';
 import { Connection } from './Connections/Connection';
 
 export abstract class SchemaState {
     protected connection: Connection;
     protected migrationTable: string = 'migrations';
-    protected processFactory: (...args: any[]) => Promise<{ stdout: string; stderr: string }>;
+    protected processFactory: (...args: any[]) => { stdout: string; stderr: string };
+    database: string = '';
 
-    constructor(connection: Connection, processFactory?: (...args: any[]) => Promise<{ stdout: string; stderr: string }>) {
+    constructor(connection: Connection) {
         this.connection = connection;
-        this.processFactory = processFactory ?? promisify(exec);
+        this.processFactory = SchemaState.execSync;
+    }
+
+    public static execSync(args: any[]): {stdout: string; stderr: string} {
+        let stdout = '';
+        let stderr = '';
+
+        return { stdout, stderr };
     }
 
     public abstract dump(connection: Connection, path: string): Promise<void>;
 
     public abstract load(path: string): Promise<void>;
 
-    protected async makeProcess(command: string): Promise<string> {
+    protected makeProcess(command: string): string {
         try {
-            const { stdout } = await this.processFactory(command);
+            const { stdout } = this.processFactory(command);
             return stdout;
         } catch (error) {
             const execException = error as ExecException;

@@ -40,7 +40,7 @@ export class Blueprint {
 
     public build(connection: Connection, grammar: Grammar): void {
         for (const statement of this.toSql(connection, grammar)) {
-            connection.query(statement);
+            connection.statement(statement);
         }
     }
 

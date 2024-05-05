@@ -45,7 +45,7 @@ export class MySqlSchemaState extends SchemaState {
         return `${command} "${this.database}"`;
     }
 
-    protected connectionString(): string {
+    connectionString(): string {
         const config = this.connection.config;
         let value = ` --user="${config.user}" --password="${config.password}"`;
         value += config.socketPath

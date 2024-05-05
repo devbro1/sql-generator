@@ -10,7 +10,7 @@ export abstract class Connection
     protected database: string;
     protected readWriteType: string | null = null;
     protected tablePrefix: string = '';
-    protected config: Record<string,any> = {};
+    public config: Record<string,any> = {};
     protected reconnector!: (connection: Connection) => void;
     protected queryGrammar: any; // Assuming a similar interface exists in TypeScript
     protected schemaGrammar: any; // Assuming a similar interface exists in TypeScript

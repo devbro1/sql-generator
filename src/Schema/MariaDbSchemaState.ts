@@ -1,4 +1,4 @@
-import MySqlSchemaState from './MySqlSchemaState';
+import {MySqlSchemaState} from './MysqlSchemaState';
 
 class MariaDbSchemaState extends MySqlSchemaState {
     protected baseDumpCommand(): string {
