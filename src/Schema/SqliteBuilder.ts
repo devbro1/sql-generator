@@ -3,7 +3,7 @@ import { Builder } from "./Builder";
 import { SQLiteGrammar } from "./Grammars/SQLiteGrammar";
 import fs from 'fs';
 
-export class SQLiteBuilder  extends Builder {
+export class SqliteBuilder  extends Builder {
     protected connection: Connection;
     protected grammar: SQLiteGrammar;
 
