@@ -5,7 +5,7 @@ import { Connection } from "../Connections/Connection";
 import { Expression } from "../../Illuminate/Expression";
 import { ColumnDefinition } from "../ColumnDefinition";
 
-export class SQLiteGrammar extends Grammar
+export class SqliteGrammar extends Grammar
 {
     protected modifiers = ['Increment', 'Nullable', 'Default', 'Collate', 'VirtualAs', 'StoredAs'];
 

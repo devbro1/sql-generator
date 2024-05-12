@@ -1,6 +1,6 @@
 import { Processor } from "./Processor";
 
-export class SQLiteProcessor extends Processor {
+export class SqliteProcessor extends Processor {
     processColumns(results: any[], sql: string = ''): any[] {
         const hasPrimaryKey = results.reduce((acc, cur) => acc + (cur.primary ? 1 : 0), 0) === 1;
 

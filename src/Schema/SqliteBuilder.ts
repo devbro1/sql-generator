@@ -1,11 +1,11 @@
 import { Connection } from "./Connections/Connection";
 import { Builder } from "./Builder";
-import { SQLiteGrammar } from "./Grammars/SQLiteGrammar";
+import { SqliteGrammar } from "./Grammars/SqliteGrammar";
 import fs from 'fs';
 
 export class SqliteBuilder  extends Builder {
     protected connection: Connection;
-    protected grammar: SQLiteGrammar;
+    protected grammar: SqliteGrammar;
 
     constructor(connection: Connection) {
         super(connection);

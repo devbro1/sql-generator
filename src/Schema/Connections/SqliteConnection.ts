@@ -1,12 +1,12 @@
-import { SQLiteGrammar as SQLiteQueryGrammar } from "src/Query/Grammars/SQLiteGrammar";
-import { SQLiteGrammar as SQLiteSchemaGrammar } from "../Grammars/SQLiteGrammar";
+import { SqliteGrammar as SqliteQueryGrammar } from "src/Query/Grammars/SqliteGrammar";
+import { SqliteGrammar as SqliteSchemaGrammar } from "../Grammars/SqliteGrammar";
 import { Connection } from "./Connection";
-import { SQLiteBuilder } from "../SQLiteBuilder";
-import { SQLiteProcessor } from "src/Query/Processors/SqliteProcessor";
+import { SqliteBuilder } from "../SqliteBuilder";
+import { SqliteProcessor } from "src/Query/Processors/SqliteProcessor";
 import { SqliteSchemaState } from "../SqliteSchemaState";
 
 
-class SQLiteConnection extends Connection {
+export class SqliteConnection extends Connection {
     getServerVersion(): string
     {
         throw new Error("Method not implemented.");
@@ -41,7 +41,7 @@ class SQLiteConnection extends Connection {
     }
     
     getDefaultQueryGrammar(): any {
-        const grammar = new SQLiteQueryGrammar();
+        const grammar = new SqliteQueryGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
@@ -50,11 +50,11 @@ class SQLiteConnection extends Connection {
         if (this.schemaGrammar === null) {
             this.useDefaultSchemaGrammar();
         }
-        return new SQLiteBuilder(this);
+        return new SqliteBuilder(this);
     }
     
     getDefaultSchemaGrammar(): any {
-        const grammar = new SQLiteSchemaGrammar();
+        const grammar = new SqliteSchemaGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
     }
@@ -65,7 +65,7 @@ class SQLiteConnection extends Connection {
     }
     
     getDefaultPostProcessor(): any {
-        return new SQLiteProcessor();
+        return new SqliteProcessor();
     }
     
     getForeignKeyConstraintsConfigurationValue(): boolean | null {

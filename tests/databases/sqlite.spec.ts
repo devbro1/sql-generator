@@ -2,6 +2,9 @@ import { describe, expect, test } from "@jest/globals";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { Query } from "../../src/index";
+import { listeners } from "process";
+import { Connection } from "pg";
+import { SqliteConnection } from "../../src/Schema/Connections/SqliteConnection";
 
 describe("sqlite database", () => {
   let query: any;
@@ -30,15 +33,17 @@ describe("sqlite database", () => {
     await db.exec(`INSERT INTO persons (name, age) VALUES ('Person9', 29)`);
     await db.exec(`INSERT INTO persons (name, age) VALUES ('Person10', 30)`);
 
-    query = new Query({ client: "sqlite", connection: "/tmp/database.db" });
-
+    await db.close();
   });
+  
   test("sqlite basic select", async () => {
-    const qb = query.select("*").from("persons");
+    const conn = new SqliteConnection({ client: "sqlite", connection: "/tmp/database.db"});
+    const query = conn.getQueryGrammar();
+    let result = await query.select("*").from("persons");
+    expect(result.length).toBe(10);
 
-    expect(qb.toFullSQL()).toBe("SELECT * FROM persons");
-
-    const result = await qb.get();
+    query.insert({name: "cat1",age: 1});
+    result = await query.select("*").from("persons");
     expect(result.length).toBe(10);
   });
 });

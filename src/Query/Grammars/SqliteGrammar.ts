@@ -3,7 +3,7 @@ import { Grammar } from "./Grammar";
 import str from 'src/Illuminate/Str';
 import { Builder } from "../Builder";
 
-export class SQLiteGrammar extends Grammar {
+export class SqliteGrammar extends Grammar {
     operators: string[] = [
         '=', '<', '>', '<=', '>=', '<>', '!=',
         'like', 'not like', 'ilike',

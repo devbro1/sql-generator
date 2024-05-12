@@ -3,7 +3,7 @@ import { Blueprint } from "../../src/Schema/Blueprint";
 import { Builder } from "../../src/Schema/Builder";
 import { MySqlGrammar } from "../../src/Schema/Grammars/MySqlGrammar";
 import { PostgresGrammar } from "../../src/Schema/Grammars/PostgresGrammar";
-import { SQLiteGrammar } from "../../src/Schema/Grammars/SQLiteGrammar";
+import { SqliteGrammar } from "../../src/Schema/Grammars/SqliteGrammar";
 import { SqlServerGrammar } from "../../src/Schema/Grammars/SqlServerGrammar";
 import { mock, MockProxy } from "jest-mock-extended";
 
@@ -104,7 +104,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     blueprint = base.clone();
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" add column \"created\" timestamp(0) without time zone not null default CURRENT_TIMESTAMP"]);
     blueprint = base.clone();
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
     blueprint = base.clone();
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["alter table \"users\" add \"created\" datetime not null default CURRENT_TIMESTAMP"]);
   });
@@ -119,7 +119,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     blueprint = base.clone();
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" add column \"created\" timestamp(0) without time zone not null default CURRENT_TIMESTAMP"]);
     blueprint = base.clone();
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual(["alter table \"users\" add column \"created\" datetime not null default CURRENT_TIMESTAMP"]);
     blueprint = base.clone();
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["alter table \"users\" add \"created\" datetime not null default CURRENT_TIMESTAMP"]);
   });
@@ -154,7 +154,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     blueprint.renameColumn("foo", "bar");
     expect(blueprint.toSql(connection, new MySqlGrammar())).toEqual(["alter table `users` rename column `foo` to `bar`"]);
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" rename column \"foo\" to \"bar\""]);
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" rename column \"foo\" to \"bar\""]);
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual(["alter table \"users\" rename column \"foo\" to \"bar\""]);
     expect(blueprint.toSql(connection, new SqlServerGrammar())).toEqual(["sp_rename N'\"users\".\"foo\"', \"bar\", N'COLUMN'"]);
   });
 
@@ -166,7 +166,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     blueprint.dropColumn("foo");
     expect(blueprint.toSql(connection, new MySqlGrammar())).toEqual(["alter table `users` drop `foo`"]);
     expect(blueprint.toSql(connection, new PostgresGrammar())).toEqual(["alter table \"users\" drop column \"foo\""]);
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual(["alter table \"users\" drop column \"foo\""]);
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual(["alter table \"users\" drop column \"foo\""]);
     expect(blueprint.toSql(connection, new SqlServerGrammar())[0]).toContain("alter table \"users\" drop column \"foo\"");
   });
 
@@ -383,7 +383,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     ]);
 
     blueprint = base.clone();
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual([
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual([
       "alter table \"posts\" add column \"note\" text not null"
     ]);
 
@@ -409,7 +409,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     ]);
 
     blueprint = base.clone();
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual([
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual([
       "alter table \"posts\" add column \"note\" text"
     ]);
 
@@ -555,7 +555,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     ]);
 
     blueprint = base.clone();
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual([
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual([
       'alter table "posts" add column "note" text not null',
     ]);
 
@@ -582,7 +582,7 @@ describe("DatabaseSchemaBlueprintTest", () => {
     ]);
 
     blueprint = base.clone();
-    expect(blueprint.toSql(connection, new SQLiteGrammar())).toEqual([
+    expect(blueprint.toSql(connection, new SqliteGrammar())).toEqual([
       'alter table "posts" add column "note" text',
     ]);
 
