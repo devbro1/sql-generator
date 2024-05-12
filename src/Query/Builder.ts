@@ -2,8 +2,8 @@ import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammars/Grammar";
 import { Processor } from "./Processors/Processor";
 import { IndexHint } from "./IndexHint";
-import { Connection } from "src/schema/Connections/Connection";
-import { JoinLateralClause } from "./JoinLateralClause";
+import { Connection } from "src/Schema/Connections/Connection";
+// import { JoinLateralClause } from "./JoinLateralClause";
 import { JoinClause } from "./JoinClause";
 import {sprintf} from 'sprintf-js';
 import Arr from "src/Illuminate/Arr";
@@ -303,7 +303,8 @@ export class Builder
         const [sql, bindings] = this.createSub(query);
         const expression = `(${ sql }) as ${ this._grammar.wrapTable(as) }`;
         this.addBinding(bindings, 'join');
-        this._joins.push(this.newJoinLateralClause(this, type, new Expression(expression)));
+     //   this._joins.push(this.newJoinLateralClause(this, type, new Expression(expression)));
+        throw new Error("lateral join is not fully implemetned due to circular import");
         return this;
     }
 
@@ -366,10 +367,10 @@ export class Builder
         return new JoinClause(parentQuery, type, table);
     }
 
-    newJoinLateralClause(parentQuery: Builder, type: string, table: string | Expression): JoinLateralClause
-    {
-        return new JoinLateralClause(parentQuery, type, table);
-    }
+    // newJoinLateralClause(parentQuery: Builder, type: string, table: string | Expression): JoinLateralClause
+    // {
+    //     return new JoinLateralClause(parentQuery, type, table);
+    // }
 
     mergeWheres(wheres: any[], bindings: any[]): this
     {

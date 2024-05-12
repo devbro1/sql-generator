@@ -175,7 +175,7 @@ export class Grammar
         return value.includes('->');
     }
 
-    protected whereBasic(query: Builder, where: { column: string; operator: string; value: any }): string {
+    protected whereBasic(query: any, where: { column: string; operator: string; value: any }): string {
         let value = this.parameter(where.value);
         let operator = where.operator.replace('?', '??');
         return this.wrap(where.column) + ' ' + operator + ' ' + value;

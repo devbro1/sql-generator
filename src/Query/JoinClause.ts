@@ -2,7 +2,7 @@ import { Expression } from "src/Illuminate/Expression";
 import { Grammar } from "./Grammars/Grammar";
 import { AndOr, Builder } from "./Builder";
 import { Processor } from "./Processors/Processor";
-import { Connection } from "src/schema/Connections/Connection";
+import { Connection } from "src/Schema/Connections/Connection";
 
 export class JoinClause extends Builder {
     public type: string;
