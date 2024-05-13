@@ -1222,6 +1222,17 @@ export class Builder
         return this.offset(value);
     }
 
+    setBindings(bindings: [], type: binding_options = 'where')
+    {
+        // if (! array_key_exists($type, $this->bindings)) {
+        //     throw new InvalidArgumentException("Invalid binding type: {$type}.");
+        // }
+
+        this._bindings[type] = bindings;
+
+        return this;
+    }
+
     offset(value: number): this
     {
         const property = this._unions ? '_unionOffset' : '_offset';

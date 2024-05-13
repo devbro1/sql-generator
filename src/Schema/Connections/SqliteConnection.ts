@@ -4,16 +4,34 @@ import { Connection } from "./Connection";
 import { SqliteBuilder } from "../SqliteBuilder";
 import { SqliteProcessor } from "src/Query/Processors/SqliteProcessor";
 import { SqliteSchemaState } from "../SqliteSchemaState";
+import sqlite3 from 'sqlite3';
+import driver from 'better-sqlite3';
 
 
 export class SqliteConnection extends Connection {
-    getServerVersion(): string
-    {
+    protected db: any;
+    prepare(query: any) {
         throw new Error("Method not implemented.");
     }
-    constructor(pdo: any, database: string = '', tablePrefix: string = '', config: any[] = []) {
-        super(pdo, database, tablePrefix, config);
-    
+    exec(query: any) {
+        throw new Error("Method not implemented.");
+    }
+    disconnect(): void {
+        throw new Error("Method not implemented.");
+    }
+    quote(value: string): string {
+        throw new Error("Method not implemented.");
+    }
+    getServerVersion(): string
+    {
+        let rc = this.db.prepare('select SQLITE_VERSION() as version').get();
+        return rc.version;
+    }
+    constructor(database: string = '', tablePrefix: string = '', config: any = {}) {
+        super(database, tablePrefix, config);
+
+        this.db = driver(database,config);
+
         const enableForeignKeyConstraints = this.getForeignKeyConstraintsConfigurationValue();
     
         if (enableForeignKeyConstraints === null) {

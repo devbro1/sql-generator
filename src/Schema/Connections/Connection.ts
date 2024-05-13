@@ -6,8 +6,6 @@ import { Builder as QueryBuilder } from "src/Query/Builder";
 import { isBuffer, isInteger } from "lodash";
 export abstract class Connection
 {
-    protected pdo: PDO | (() => PDO);
-    protected readPdo: PDO | (() => PDO);
     protected database: string;
     protected readWriteType: string | null = null;
     protected tablePrefix: string = '';
@@ -17,7 +15,6 @@ export abstract class Connection
     protected schemaGrammar: any; // Assuming a similar interface exists in TypeScript
     protected postProcessor: any; // Assuming a similar interface exists in TypeScript
     protected events: any; // Assuming an equivalent event dispatcher exists
-    protected fetchMode: number = PDO.FETCH_OBJ;
     protected transactions: number = 0;
     protected transactionsManager: any; // Type according to implementation
     protected recordsModified: boolean = false;
@@ -32,8 +29,7 @@ export abstract class Connection
     protected static resolvers: (() => any)[] = [];
 
 
-    constructor(pdo: any, database: string = '', tablePrefix: string = '', config: any[] = []) {
-        this.pdo = pdo;
+    constructor(database: string = '', tablePrefix: string = '', config: any[] = []) {
         this.database = database;
         this.tablePrefix = tablePrefix;
         this.config = config;
@@ -108,7 +104,7 @@ export abstract class Connection
             if (this.isPretending()) {
                 return [];
             }
-            const statement = this.prepared(this.getPdoForSelect(useReadPdo).prepare(query));
+            const statement = this.prepared(this.prepare(query));
             this.bindValues(statement, this.prepareBindings(bindings));
             statement.execute();
             return statement.fetchAll();
@@ -120,7 +116,7 @@ export abstract class Connection
             if (this.isPretending()) {
                 return [];
             }
-            const statement = this.prepared(this.getPdoForSelect(useReadPdo).prepare(query));
+            const statement = this.prepared(this.prepare(query));
             this.bindValues(statement, this.prepareBindings(bindings));
             statement.execute();
             const sets = [];
@@ -136,7 +132,7 @@ export abstract class Connection
             if (this.isPretending()) {
                 return [];
             }
-            const statement = this.prepared(this.getPdoForSelect(useReadPdo).prepare(query));
+            const statement = this.prepared(this.prepare(query));
             this.bindValues(statement, this.prepareBindings(bindings));
             statement.execute();
             return statement;
@@ -152,14 +148,14 @@ export abstract class Connection
 
 
     protected prepared(statement: any): any {
-        statement.setFetchMode(this.fetchMode);
+        // statement.setFetchMode(this.fetchMode);
         // this.event(new StatementPrepared(this, statement));
         return statement;
     }
     
-    protected getPdoForSelect(useReadPdo: boolean = true): any {
-        return useReadPdo ? this.getReadPdo() : this.getPdo();
-    }
+    // protected getPdoForSelect(useReadPdo: boolean = true): any {
+    //     return useReadPdo ? this.getReadPdo() : this.getPdo();
+    // }
     
     insert(query: string, bindings: any[] = []): boolean {
         return this.statement(query, bindings);
@@ -179,7 +175,7 @@ export abstract class Connection
                 return true;
             }
     
-            const statement = this.getPdo().prepare(query);
+            const statement = this.prepare(query);
             this.bindValues(statement, this.prepareBindings(bindings));
             this.recordsHaveBeenModified();
             return statement.execute();
@@ -193,7 +189,7 @@ export abstract class Connection
                 return 0;
             }
     
-            const statement = this.getPdo().prepare(query);
+            const statement = this.prepare(query);
             this.bindValues(statement, this.prepareBindings(bindings));
             statement.execute();
     
@@ -204,13 +200,16 @@ export abstract class Connection
         });
     }
     
+    abstract prepare(query:any): any;
+    abstract exec(query:any): any;
+
     unprepared(query: string): boolean {
         return this.run(query, [], (query: string) => {
             if (this.isPretending()) {
                 return true;
             }
     
-            const change = this.getPdo().exec(query) !== false;
+            const change = this.exec(query) !== false;
             this.recordsHaveBeenModified(change);
     
             return change;
@@ -245,7 +244,7 @@ export abstract class Connection
         return result;
     }
     
-    bindValues(statement: PDOStatement, bindings: any[]): void {
+    bindValues(statement: any, bindings: any[]): void {
         bindings.forEach((value, key) => {
             let bind_type = 'string';
             if(isInteger(value)) {
@@ -375,15 +374,10 @@ export abstract class Connection
     }
     
     reconnectIfMissingConnection(): void {
-        if (this.pdo === null) {
-            this.reconnect();
-        }
+        this.reconnect();
     }
     
-    disconnect(): void {
-        this.setPdo(null);
-        this.setReadPdo(null);
-    }
+    abstract disconnect(): void;
     
     beforeStartingTransaction(callback: () => void): this {
         this._beforeStartingTransaction.push(callback);
@@ -442,8 +436,10 @@ export abstract class Connection
     }
 
     escapeString(value: string): string {
-        return this.getReadPdo().quote(value);
+        return this.quote(value);
     }
+
+    abstract quote(value: string): string;
     
     escapeBool(value: boolean): string {
         return value ? '1' : '0';
@@ -477,47 +473,47 @@ export abstract class Connection
         return this;
     }
     
-    getPdo(): any {
-        if (typeof this.pdo === 'function') {
-            return this.pdo = this.pdo();
-        }
-        return this.pdo;
-    }
+    // getPdo(): any {
+    //     if (typeof this.pdo === 'function') {
+    //         return this.pdo = this.pdo();
+    //     }
+    //     return this.pdo;
+    // }
     
-    getRawPdo(): any {
-        return this.pdo;
-    }
+    // getRawPdo(): any {
+    //     return this.pdo;
+    // }
     
-    getReadPdo(): any {
-        if (this.transactions > 0) {
-            return this.getPdo();
-        }
+    // getReadPdo(): any {
+    //     if (this.transactions > 0) {
+    //         return this.getPdo();
+    //     }
     
-        if (this.readOnWriteConnection || (this.recordsModified && this.getConfig('sticky'))) {
-            return this.getPdo();
-        }
+    //     if (this.readOnWriteConnection || (this.recordsModified && this.getConfig('sticky'))) {
+    //         return this.getPdo();
+    //     }
     
-        if (typeof this.readPdo === 'function') {
-            return this.readPdo = this.readPdo();
-        }
+    //     if (typeof this.readPdo === 'function') {
+    //         return this.readPdo = this.readPdo();
+    //     }
     
-        return this.readPdo ?? this.getPdo();
-    }
+    //     return this.readPdo ?? this.getPdo();
+    // }
     
-    getRawReadPdo(): any {
-        return this.readPdo;
-    }
+    // getRawReadPdo(): any {
+    //     return this.readPdo;
+    // }
     
-    setPdo(pdo: any): this {
-        this.transactions = 0;
-        this.pdo = pdo;
-        return this;
-    }
+    // setPdo(pdo: any): this {
+    //     this.transactions = 0;
+    //     this.pdo = pdo;
+    //     return this;
+    // }
     
-    setReadPdo(pdo: any): this {
-        this.readPdo = pdo;
-        return this;
-    }
+    // setReadPdo(pdo: any): this {
+    //     this.readPdo = pdo;
+    //     return this;
+    // }
     
     setReconnector(reconnector: (connection: Connection) => void): this {
         this.reconnector = reconnector;

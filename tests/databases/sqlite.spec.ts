@@ -37,13 +37,12 @@ describe("sqlite database", () => {
   });
   
   test("sqlite basic select", async () => {
-    const conn = new SqliteConnection({ client: "sqlite", connection: "/tmp/database.db"});
-    const query = conn.getQueryGrammar();
-    let result = await query.select("*").from("persons");
+    const conn = new SqliteConnection('','', { client: "sqlite", connection: "/tmp/database.db"});
+    let result = await conn.table("persons").select('*').get();
     expect(result.length).toBe(10);
 
-    query.insert({name: "cat1",age: 1});
-    result = await query.select("*").from("persons");
-    expect(result.length).toBe(10);
+    conn.table('persons').insert({name: "cat1",age: 1});
+    result = await conn.table("persons").select('*').get();
+    expect(result.length).toBe(11);
   });
 });
