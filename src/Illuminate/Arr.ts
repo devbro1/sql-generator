@@ -1,6 +1,5 @@
 export default class Arr {
-
-    static wrap(value:any) {
+    public static wrap(value:any) {
         if(typeof value === 'undefined') {
             return [];
         }
@@ -8,26 +7,54 @@ export default class Arr {
         return Array.isArray(value)? value : [value];
     }
 
-    public static flatten(array: any, depth: number = Infinity): any[] {
-        let result: any[] = [];
+    public static flatten(array: any, depth: number = Infinity): any[] | any {
+        if(Array.isArray(array)) {
+            let result: any[] = [];
+            for (const item of array) {
+                let value = item;
 
-        for (const item of array) {
-            let value = item; // Assuming 'Collection' equivalence is handled elsewhere if needed
+                if (!Array.isArray(value)) {
+                    result.push(value);
+                } else {
+                    const values = depth === 1
+                        ? [...value]
+                        : Arr.flatten(value, depth - 1);
 
-            if (!Array.isArray(value)) {
-                result.push(value);
-            } else {
-                const values = depth === 1
-                    ? [...value]
-                    : Arr.flatten(value, depth - 1);
-
-                for (const val of values) {
-                    result.push(val);
+                    for (const val of values) {
+                        result.push(val);
+                    }
                 }
             }
-        }
 
-        return result;
+            return result;
+        }
+        else {
+            let result: any = {};
+            for (const key of Object.keys(array)) {
+                let value = array[key];
+
+                if (!Array.isArray(value)) {
+                    result.push(value);
+                } else {
+                    let values = {};
+                    if(depth === 1) {
+                        // @ts-ignore
+                        values[key] = value;
+                    }
+                    else {
+                        values = Arr.flatten(value, depth - 1);
+                    }
+
+                    for (const key2 of Object.keys(values)) {
+                        // @ts-ignore
+                        let value2 = values[key2];
+                        result[key2] = value2;
+                    }
+                }
+            }
+
+            return result;
+        }
     }
 
     public static exists(array: any, key: string | number) {
@@ -69,7 +96,7 @@ export default class Arr {
         return Array.isArray(value) || (typeof value === 'object' && value !== null && 'offsetExists' in value);
     }
 
-    static slice(value:Array<any>, a:number,b:number) {
+    public static slice(value:Array<any>, a:number,b:number) {
         return value.slice(a,b);
     }
 

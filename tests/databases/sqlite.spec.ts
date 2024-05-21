@@ -45,4 +45,18 @@ describe("sqlite database", () => {
     result = await conn.table("persons").select('*').get();
     expect(result.length).toBe(11);
   });
+
+  test("testing", async () => {
+    const db = await open({
+      filename: '/tmp/database.db',
+      driver: sqlite3.Database
+    });
+
+    let stmt = await db.prepare(`select * from persons`);
+    let r = await stmt.all();
+    // console.log(r);
+    stmt.finalize();
+
+    await db.close();
+  });
 });

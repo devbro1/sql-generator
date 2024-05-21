@@ -10,8 +10,8 @@ import driver from 'better-sqlite3';
 
 export class SqliteConnection extends Connection {
     protected db: any;
-    prepare(query: any) {
-        throw new Error("Method not implemented.");
+    prepare(query: string) {
+        return this.db.prepare(query);
     }
     exec(query: any) {
         throw new Error("Method not implemented.");
@@ -22,6 +22,12 @@ export class SqliteConnection extends Connection {
     quote(value: string): string {
         throw new Error("Method not implemented.");
     }
+
+    isConnected(): boolean
+    {
+        return true; //this.db.isConnected();
+    }
+
     getServerVersion(): string
     {
         let rc = this.db.prepare('select SQLITE_VERSION() as version').get();

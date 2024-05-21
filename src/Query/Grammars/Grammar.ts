@@ -1,5 +1,7 @@
 import {Grammar as BaseGrammar } from 'src/Illuminate/Grammar'
 import { JoinClause } from '../JoinClause';
+import { IndexHint } from '../IndexHint';
+import { Builder } from '../Builder';
 export abstract class Grammar extends BaseGrammar {
     protected operators: string[] = [];
     protected bitwiseOperators: string[] = [];
@@ -22,16 +24,24 @@ export abstract class Grammar extends BaseGrammar {
     prepareBindingsForUpdateFrom: Function | null = null;
 
     compileComponents(query: any): any {
-        return this.selectComponents.reduce((sql, component) => {
-            if (query[component] !== undefined) {
+        let rc = {};
+        this.selectComponents.map((component) => {
+            const componentName = '_' + component
+            if(Array.isArray(query[componentName]) && query[componentName].length === 0) {
+            } else if (typeof query[componentName] === 'object' && query[componentName] === null) {
+            } else if (typeof query[componentName] === 'boolean' && query[componentName] === false) {
+            } else if (typeof query[componentName] === 'number' && query[componentName] === 0) {
+            } else if (query[componentName] instanceof IndexHint && query[componentName].type === '') {
+            } else {
                 const method = `compile${component.charAt(0).toUpperCase() + component.slice(1)}`;
                 if (typeof this[method as keyof typeof this] === 'function') {
                     // @ts-ignore
-                    sql[component] = this[method as keyof typeof this](query, query[component]);
+                    rc[component] = this[method as keyof typeof this](query, query[componentName]);
                 }
             }
-            return sql;
         }, {});
+
+        return rc;
     }
 
     compileAggregate(query: any, aggregate: any): string {
@@ -45,38 +55,38 @@ export abstract class Grammar extends BaseGrammar {
         return `select ${aggregate.function}(${column}) as aggregate`;
     }
 
-    compileSelect(query: any): string {
-        if ((query.unions || query.havings) && query.aggregate) {
+    compileSelect(query: Builder): string {
+        if ((query._unions || query._havings) && query._aggregate) {
             return this.compileUnionAggregate(query);
         }
 
-        if (query.groupLimit) {
-            query.columns = query.columns || ['*'];
+        if (query._groupLimit) {
+            query._columns = query._columns || ['*'];
             return this.compileGroupLimit(query);
         }
 
-        const original = query.columns;
-        query.columns = query.columns || ['*'];
+        const original = query._columns;
+        query._columns = query._columns || ['*'];
         
         const sql = this.concatenate(this.compileComponents(query));
 
-        if (query.unions) {
+        if (query._unions) {
             const unionSql = this.compileUnions(query);
             return `${this.wrapUnion(sql)} ${unionSql}`;
         }
 
-        query.columns = original;
+        query._columns = original;
         return sql;
     }
 
-    compileColumns(query: any, columns: string[]): string {
-        if (query.aggregate) return '';
+    compileColumns(query: Builder, columns: string[]): string {
+        if (query._aggregate) return '';
 
-        const prefix = query.distinct ? 'select distinct ' : 'select ';
+        const prefix = query._distinct ? 'select distinct ' : 'select ';
         return prefix + this.columnize(columns);
     }
 
-    compileFrom(query: any, table: string): string {
+    compileFrom(query: Builder, table: string): string {
         return `from ${this.wrapTable(table)}`;
     }
 
@@ -413,23 +423,23 @@ export abstract class Grammar extends BaseGrammar {
         return `offset ${parseInt(offset.toString(), 10)}`;
     }
 
-    compileUnions(query: any): string {
+    compileUnions(query: Builder): string {
         let sql = '';
 
-        for (const union of query.unions) {
+        for (const union of query._unions) {
             sql += this.compileUnion(union);
         }
 
-        if (query.unionOrders) {
-            sql += ` ${this.compileOrders(query, query.unionOrders)}`;
+        if (query._unionOrders) {
+            sql += ` ${this.compileOrders(query, query._unionOrders)}`;
         }
 
-        if (query.unionLimit) {
-            sql += ` ${this.compileLimit(query, query.unionLimit)}`;
+        if (query._unionLimit) {
+            sql += ` ${this.compileLimit(query, query._unionLimit)}`;
         }
 
-        if (query.unionOffset) {
-            sql += ` ${this.compileOffset(query, query.unionOffset)}`;
+        if (query._unionOffset) {
+            sql += ` ${this.compileOffset(query, query._unionOffset)}`;
         }
 
         return sql.trim();
@@ -586,8 +596,15 @@ export abstract class Grammar extends BaseGrammar {
         return value; // Needs specific implementation based on the DB's JSON handling
     }
 
-    concatenate(segments: string[]): string {
-        return segments.filter(value => value !== '').join(' ');
+    concatenate(segments: any): string {
+        let parts: string[] = [];
+        this.selectComponents.map((segmentName: string) => {
+            if(segments[segmentName]) {
+                parts.push(segments[segmentName]);
+            }
+        });
+
+        return parts.join(' ');
     }
 
     // Additional helper methods to support the primary methods above

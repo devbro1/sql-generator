@@ -51,7 +51,7 @@ export class Builder
         union: [],
         unionOrder: []
     };
-    public _aggregate: any;
+    public _aggregate: any = null;
     public _columns: any[] = [];
     public _distinct: boolean | any[] = false;
     public _from: Expression | string | Builder | Function = '';
@@ -618,7 +618,7 @@ export class Builder
         const type = not ? 'NotInRaw' : 'InRaw';
 
 
-        values = Arr.flatten(values).map(value => parseInt(value));
+        values = Arr.flatten(values).map((value :any) => parseInt(`${value}`));
 
         this._wheres.push({ type, column, values, boolean });
         return this;

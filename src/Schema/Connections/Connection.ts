@@ -374,8 +374,12 @@ export abstract class Connection
     }
     
     reconnectIfMissingConnection(): void {
-        this.reconnect();
+        if(!this.isConnected()) {
+            this.reconnect();
+        }
     }
+
+    abstract isConnected(): boolean;
     
     abstract disconnect(): void;
     
