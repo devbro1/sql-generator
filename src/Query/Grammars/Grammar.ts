@@ -466,7 +466,7 @@ export abstract class Grammar extends BaseGrammar {
     }
 
     compileInsert(query: any, values: any[]): string {
-        const table = this.wrapTable(query.from);
+        const table = this.wrapTable(query._from);
 
         if (!values.length) {
             return `insert into ${table} default values`;
@@ -479,6 +479,9 @@ export abstract class Grammar extends BaseGrammar {
         const columns = this.columnize(Object.keys(values[0]));
         const parameters = values.map(record => `(${this.parameterize(record)})`).join(', ');
 
+        console.log(values);
+        console.log(columns);
+        console.log(parameters);
         return `insert into ${table} (${columns}) values ${parameters}`;
     }
 

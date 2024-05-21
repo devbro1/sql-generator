@@ -106,10 +106,11 @@ export abstract class Connection
             }
             const statement = this.prepared(this.prepare(query));
             this.bindValues(statement, this.prepareBindings(bindings));
-            statement.execute();
-            return statement.fetchAll();
+            return this.getAllFromStatement(statement);
         });
     }
+
+    abstract getAllFromStatement(statement: any): any;
 
     selectResultSets(query: string, bindings: any[] = [], useReadPdo: boolean = true): any[] {
         return this.run(query, bindings, (query: string, bindings: any[]) => {
@@ -171,10 +172,11 @@ export abstract class Connection
     
     statement(query: string, bindings: any[] = []): boolean {
         return this.run(query, bindings, (query: string, bindings: any[]) => {
+            console.log(query);
             if (this.isPretending()) {
                 return true;
             }
-    
+
             const statement = this.prepare(query);
             this.bindValues(statement, this.prepareBindings(bindings));
             this.recordsHaveBeenModified();
@@ -245,7 +247,7 @@ export abstract class Connection
     }
     
     bindValues(statement: any, bindings: any[]): void {
-        bindings.forEach((value, key) => {
+        for (const [key, value] of Object.entries(bindings)) {
             let bind_type = 'string';
             if(isInteger(value)) {
                 bind_type = 'integer';
@@ -258,18 +260,23 @@ export abstract class Connection
                 value,
                 bind_type
             );
-        });
+        };
     }
     
     prepareBindings(bindings: any[]): any[] {
-        return bindings.map((value, key) => {
+        let rc: any = {};
+        for (const [key, value] of Object.entries(bindings)) {
             if (value instanceof Date) {
-                return value.toISOString();
+                rc[key] = value.toISOString();
             } else if (typeof value === 'boolean') {
-                return value ? 1 : 0;
+                rc[key] = value ? 1 : 0;
             }
-            return value;
-        });
+            else {
+                rc[key] = value;
+            }
+          }
+          
+        return rc;
     }
     
     run(query: string, bindings: any[], callback: (query: string, bindings: any[]) => any): any {

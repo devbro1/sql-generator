@@ -1,3 +1,5 @@
+import { rcompare } from "semver";
+
 export default class Arr {
     public static wrap(value:any) {
         if(typeof value === 'undefined') {
@@ -116,5 +118,26 @@ export default class Arr {
         }
 
         return result;
+    }
+
+    static toObject(arr: any | object) {
+        let rc = {};
+
+        if (Array.isArray(arr)) {
+            rc = {...arr};
+        }
+        else {
+            rc = {...arr};
+        }
+
+        for(const key in Object.keys(rc)) {
+            // @ts-ignore
+            if(Array.isArray(rc[key])) {
+                // @ts-ignore
+                rc[key] = Arr.toObject(rc[key]);
+            }
+        }
+
+        return rc;
     }
 }

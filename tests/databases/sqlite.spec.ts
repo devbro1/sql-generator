@@ -37,7 +37,7 @@ describe("sqlite database", () => {
   });
   
   test("sqlite basic select", async () => {
-    const conn = new SqliteConnection('','', { client: "sqlite", connection: "/tmp/database.db"});
+    const conn = new SqliteConnection("/tmp/database.db",'', { client: "sqlite", connection: "/tmp/database.db"});
     let result = await conn.table("persons").select('*').get();
     expect(result.length).toBe(10);
 

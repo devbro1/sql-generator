@@ -5,7 +5,7 @@ import { SqliteBuilder } from "../SqliteBuilder";
 import { SqliteProcessor } from "src/Query/Processors/SqliteProcessor";
 import { SqliteSchemaState } from "../SqliteSchemaState";
 import sqlite3 from 'sqlite3';
-import driver from 'better-sqlite3';
+import Database from 'better-sqlite3';
 
 
 export class SqliteConnection extends Connection {
@@ -36,7 +36,7 @@ export class SqliteConnection extends Connection {
     constructor(database: string = '', tablePrefix: string = '', config: any = {}) {
         super(database, tablePrefix, config);
 
-        this.db = driver(database,config);
+        this.db = new Database(database,config);
 
         const enableForeignKeyConstraints = this.getForeignKeyConstraintsConfigurationValue();
     
@@ -81,6 +81,10 @@ export class SqliteConnection extends Connection {
         const grammar = new SqliteSchemaGrammar();
         grammar.setConnection(this);
         return this.withTablePrefix(grammar);
+    }
+
+    getAllFromStatement(statement: any): any {
+        return statement.all();
     }
     
     getSchemaState(files: any = null, processFactory: (() => void) | null = null): any {
