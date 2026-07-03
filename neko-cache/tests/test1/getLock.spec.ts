@@ -10,6 +10,7 @@ import {
 } from '@/index';
 
 const PROVIDERS = ['redis', 'memory', 'file', 'memcache'] as const;
+const DEFAULT_LOCK_DURATION = 2; // seconds
 
 describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
   function makeProvider(): CacheProviderInterface {
@@ -26,7 +27,7 @@ describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
 
   test('returns a LockHandle on first acquisition', async () => {
     const provider = makeProvider();
-    const lock = await provider.getLock('lock_test_1_' + provider_name, 30);
+    const lock = await provider.getLock('lock_test_1_' + provider_name, DEFAULT_LOCK_DURATION);
     expect(lock).toBeDefined();
     expect(typeof lock!.release).toBe('function');
     expect(typeof lock!.isExpired).toBe('function');
@@ -36,10 +37,10 @@ describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
   test('returns undefined when lock is already held', async () => {
     const provider = makeProvider();
     const key = 'lock_test_2_' + provider_name;
-    const lock1 = await provider.getLock(key, 30);
+    const lock1 = await provider.getLock(key, DEFAULT_LOCK_DURATION);
     expect(lock1).toBeDefined();
 
-    const lock2 = await provider.getLock(key, 30);
+    const lock2 = await provider.getLock(key, DEFAULT_LOCK_DURATION);
     expect(lock2).toBeUndefined();
 
     await lock1!.release();
@@ -47,7 +48,7 @@ describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
 
   test('isExpired returns false while lock is held', async () => {
     const provider = makeProvider();
-    const lock = await provider.getLock('lock_test_3_' + provider_name, 30);
+    const lock = await provider.getLock('lock_test_3_' + provider_name, DEFAULT_LOCK_DURATION);
     expect(lock).toBeDefined();
 
     const expired = await lock!.isExpired();
@@ -58,7 +59,7 @@ describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
 
   test('isExpired returns true after release', async () => {
     const provider = makeProvider();
-    const lock = await provider.getLock('lock_test_4_' + provider_name, 30);
+    const lock = await provider.getLock('lock_test_4_' + provider_name, DEFAULT_LOCK_DURATION);
     expect(lock).toBeDefined();
 
     await lock!.release();
@@ -70,11 +71,11 @@ describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
     const provider = makeProvider();
     const key = 'lock_test_5_' + provider_name;
 
-    const lock1 = await provider.getLock(key, 30);
+    const lock1 = await provider.getLock(key, DEFAULT_LOCK_DURATION);
     expect(lock1).toBeDefined();
     await lock1!.release();
 
-    const lock2 = await provider.getLock(key, 30);
+    const lock2 = await provider.getLock(key, DEFAULT_LOCK_DURATION);
     expect(lock2).toBeDefined();
     await lock2!.release();
   });
@@ -83,7 +84,7 @@ describe.each(PROVIDERS)('getLock - provider %s', (provider_name) => {
 describe('getLock - DisabledCacheProvider', () => {
   test('always returns undefined', async () => {
     const provider = new DisabledCacheProvider();
-    const lock = await provider.getLock('any_key', 30);
+    const lock = await provider.getLock('any_key', DEFAULT_LOCK_DURATION);
     expect(lock).toBeUndefined();
   });
 });

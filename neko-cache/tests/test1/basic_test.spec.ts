@@ -27,11 +27,11 @@ describe.each(PROVIDERS)('cache provider %s', (provider_name) => {
 
     const cache = new Cache(provider!);
 
-    await cache.put('test_key_obj', { value: 123 }, 10);
+    await cache.put('test_key_obj', { value: 123 }, 3);
     let v = await cache.get('test_key_obj');
     expect(v).toEqual({ value: 123 });
 
-    await cache.put('test_key_obj', 123.45, 10);
+    await cache.put('test_key_obj', 123.45, 3);
     v = await cache.get('test_key_obj');
     expect(v).toEqual(123.45);
 

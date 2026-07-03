@@ -8,8 +8,8 @@ export default defineConfig({
     include: ['**/?(*.)+(spec|test).ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/src/config/**'],
     root: './',
-    testTimeout: 60000,
-    hookTimeout: 60000,
+    testTimeout: 20000,
+    hookTimeout: 20000,
   },
   resolve: {
     alias: {

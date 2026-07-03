@@ -273,9 +273,9 @@ export class FileCacheProvider implements CacheProviderInterface {
     }
   }
 
-  async getLock(key: string, ttl: number): Promise<LockHandle|undefined> {
-    let c = await this.get(key);
-    if(c) {
+  async getLock(key: string, ttl: number): Promise<LockHandle | undefined> {
+    let c = await this.get('lock_' + key);
+    if (c) {
       return undefined;
     }
 
@@ -284,14 +284,14 @@ export class FileCacheProvider implements CacheProviderInterface {
     return {
       isExpired: async () => {
         let c = await this.get('lock_' + key);
-        if(c) {
+        if (c) {
           return false;
         }
         return true;
       },
       release: async () => {
         await this.delete('lock_' + key);
-      }
+      },
     };
   }
 }

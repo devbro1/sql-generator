@@ -224,7 +224,26 @@ export class MemoryCacheProvider implements CacheProviderInterface {
     return newValue;
   }
 
-  async getLock(key: string, ttl: number): Promise<LockHandle|undefined> {
-    return undefined;
+  async getLock(key: string, ttl: number): Promise<LockHandle | undefined> {
+    let c = await this.get('lock_' + key);
+
+    if (c) {
+      return undefined;
+    }
+
+    await this.put('lock_' + key, true, ttl);
+
+    return {
+      isExpired: async () => {
+        let c = await this.get('lock_' + key);
+        if (c) {
+          return false;
+        }
+        return true;
+      },
+      release: async () => {
+        await this.delete('lock_' + key);
+      },
+    };
   }
 }
