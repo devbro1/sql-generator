@@ -2,6 +2,7 @@ import type { JSONObject, JSONValue } from '@devbro/neko-helper';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { CacheProviderInterface } from '../CacheProviderInterface.mjs';
+import { LockHandle } from '../../../neko-helper/dist/cjs';
 
 /**
  * Configuration options for the file-based cache provider.
@@ -270,5 +271,27 @@ export class FileCacheProvider implements CacheProviderInterface {
         // Ignore errors when removing lock file
       }
     }
+  }
+
+  async getLock(key: string, ttl: number): Promise<LockHandle | undefined> {
+    let c = await this.get('lock_' + key);
+    if (c) {
+      return undefined;
+    }
+
+    await this.put('lock_' + key, true, ttl);
+
+    return {
+      isExpired: async () => {
+        let c = await this.get('lock_' + key);
+        if (c) {
+          return false;
+        }
+        return true;
+      },
+      release: async () => {
+        await this.delete('lock_' + key);
+      },
+    };
   }
 }

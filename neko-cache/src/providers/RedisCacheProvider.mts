@@ -1,4 +1,4 @@
-import type { JSONObject, JSONValue } from '@devbro/neko-helper';
+import type { JSONObject, JSONValue, LockHandle } from '@devbro/neko-helper';
 import type * as RedisModule from 'redis';
 import type { CacheProviderInterface } from '../CacheProviderInterface.mjs';
 import { loadPackage } from '../helper.mjs';
@@ -106,5 +106,32 @@ export class RedisCacheProvider implements CacheProviderInterface {
     await this.ensureConnection();
     // Redis INCRBY is atomic
     return await this.client.incrBy(key, amount);
+  }
+
+  async getLock(key: string, ttl: number): Promise<LockHandle|undefined> {
+    await this.ensureConnection();
+    const lockKey = `lock:${key}`;
+    const lockValue = 'locked';
+
+    // Try to set the lock key with NX (only if it doesn't exist) and EX (expiration)
+    const result = await this.client.set(lockKey, lockValue, {
+      NX: true,
+      EX: ttl,
+    });
+
+    if (result === null) {
+      // Lock was not obtained
+      return undefined;
+    }
+
+    return {
+      isExpired: async () => {
+        const exists = await this.client.exists(lockKey);
+        return exists === 0;
+      },
+      release: async () => {
+        await this.client.del(lockKey);
+      },
+    };
   }
 }

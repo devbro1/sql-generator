@@ -1,5 +1,5 @@
 import type { CacheProviderInterface } from "@devbro/neko-cache";
-import type { JSONObject, JSONValue } from "@devbro/neko-helper";
+import type { JSONObject, JSONValue, LockHandle } from "@devbro/neko-helper";
 
 export class MultiCache implements CacheProviderInterface {
   constructor(private caches: CacheProviderInterface[]) {}
@@ -42,5 +42,15 @@ export class MultiCache implements CacheProviderInterface {
     }
 
     return rc!;
+  }
+
+  async getLock(key: string, ttl: number): Promise<LockHandle | undefined> {
+    for (const cache of this.caches) {
+      const lock = await cache.getLock(key, ttl);
+      if (lock) {
+        return lock;
+      }
+    }
+    return undefined;
   }
 }

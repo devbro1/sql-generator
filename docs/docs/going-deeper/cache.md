@@ -100,6 +100,32 @@ let val = await cache().remember(
 );
 ```
 
+### getLock
+
+`getLock` provides a distributed lock mechanism. It attempts to acquire a lock for a given key and returns a `LockHandle` on success, or `undefined` if the lock is already held.
+
+```ts
+const lock = await cache().getLock("my_lock_key", 30); // ttl in seconds
+
+if (!lock) {
+  // lock is already held by another process
+  return;
+}
+
+// do exclusive work here...
+
+await lock.release();
+```
+
+The returned `LockHandle` has two methods:
+
+- `release()` — releases the lock immediately
+- `isExpired()` — returns `true` if the lock has expired or been released
+
+:::note
+`MemoryCacheProvider` does not support distributed locking — the lock is only local to the current process. Use `RedisCacheProvider` or `MemcacheCacheProvider` for cross-process locking.
+:::
+
 ## Available cache providers
 
 Different providers are available off the shelf that you can use. depending on which provider you use different configs/options can be passed to it.

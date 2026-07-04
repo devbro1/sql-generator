@@ -1,6 +1,6 @@
 {
   "name": "@devbro/neko-scheduler",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Cron-based task scheduler with full context support - because some things just need to run on time",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",

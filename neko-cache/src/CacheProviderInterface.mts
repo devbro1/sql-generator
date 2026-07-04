@@ -1,4 +1,5 @@
 import type { JSONObject, JSONValue } from '@devbro/neko-helper';
+import { LockHandle } from '../../neko-helper/dist/cjs';
 
 /**
  * Interface that all cache providers must implement.
@@ -40,4 +41,12 @@ export interface CacheProviderInterface {
    * @returns The new value after incrementing
    */
   increment(key: string, amount?: number): Promise<number>;
+
+  /**
+   * 
+   * @param key lock name
+   * @param ttl duration to keep
+   * @returns undefined if lock was not obtained.
+   */
+  getLock(key: string, ttl: number): Promise<LockHandle|undefined>;
 }

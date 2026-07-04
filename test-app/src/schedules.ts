@@ -1,5 +1,5 @@
 import { context_provider } from "@devbro/pashmak/context";
-import { logger, scheduler } from "@devbro/pashmak/facades";
+import { cache, logger, scheduler } from "@devbro/pashmak/facades";
 
 scheduler().setContextWrapper(
   (fn: () => Promise<void>): (() => Promise<void>) => {
@@ -10,6 +10,8 @@ scheduler().setContextWrapper(
     };
   },
 );
+
+scheduler().setAtomicLockHandler(async (name,ttl) => { return await cache().getLock(name,ttl); });
 
 scheduler()
   .call(async () => {

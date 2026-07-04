@@ -5,3 +5,8 @@ export interface JSONObject {
 }
 
 export type JSONArray = JSONValue[];
+
+export type LockHandle = {
+  isExpired: () => Promise<boolean>;
+  release: () => Promise<void>;
+}

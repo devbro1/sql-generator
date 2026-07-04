@@ -1,5 +1,6 @@
 import type { JSONObject, JSONValue } from '@devbro/neko-helper';
 import type { CacheProviderInterface } from '../CacheProviderInterface.mjs';
+import { LockHandle } from '../../../neko-helper/dist/cjs';
 
 /**
  * A cache provider that disables caching entirely.
@@ -53,5 +54,10 @@ export class DisabledCacheProvider implements CacheProviderInterface {
   async increment(key: string, amount: number = 1): Promise<number> {
     // Disabled cache always returns the increment amount as if starting from 0
     return amount;
+  }
+
+  async getLock(key: string, ttl: number): Promise<LockHandle|undefined> {
+    // Disabled cache does not support locks, return undefined
+    return undefined;
   }
 }

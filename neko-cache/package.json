@@ -1,6 +1,6 @@
 {
   "name": "@devbro/neko-cache",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Driver-agnostic caching library that keeps your data close and your latency lower",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
