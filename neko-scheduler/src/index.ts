@@ -9,7 +9,8 @@ export class Schedule {
   private runOnStart = false;
   private atomicKey = '';
   private atomicTtl = 30;
-  private atomicLockHandler: ((key: string, ttl: number) => Promise<LockHandle | undefined>) | undefined;
+  private atomicLockHandler:
+    ((key: string, ttl: number) => Promise<LockHandle | undefined>) | undefined;
 
   constructor(private func: () => void) {}
 
@@ -22,8 +23,9 @@ export class Schedule {
     console.error(err);
   }
 
-  setErrorHandler(func: typeof this.errorHandler) {
+  setErrorHandler(func: typeof this.errorHandler): this {
     this.errorHandler = func;
+    return this;
   }
 
   start(): void {
@@ -106,11 +108,13 @@ export class Schedule {
   atomic(key: string = '', ttl: number = 30): this {
     this.atomicKey = key || this.name;
     this.atomicTtl = ttl;
-  
+
     return this;
   }
 
-  setAtomicLockHandler(handler: ((key: string, ttl: number) => Promise<LockHandle | undefined>) | undefined): this {
+  setAtomicLockHandler(
+    handler: ((key: string, ttl: number) => Promise<LockHandle | undefined>) | undefined
+  ): this {
     this.atomicLockHandler = handler;
     return this;
   }
@@ -120,7 +124,8 @@ export class Scheduler {
   private jobs: Schedule[] = [];
   private errorHandler: ((err: any, job: Schedule) => void) | undefined;
   private contextWrapper: ((func: () => void) => () => void) | undefined;
-  private atomicLockHandler: ((key: string, ttl: number) => Promise<LockHandle | undefined>) | undefined;
+  private atomicLockHandler:
+    ((key: string, ttl: number) => Promise<LockHandle | undefined>) | undefined;
 
   call(func: () => void): Schedule {
     if (this.contextWrapper) {
