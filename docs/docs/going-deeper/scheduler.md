@@ -127,14 +127,17 @@ scheduler().setErrorHandler(async (error, scheduleName) => {
 ```
 
 ### atomic() and setAtomicLockHandler()
+
 In production you will be running the same code in several places. To make sure only one copy of job is running at any given time, you can use `.atomic()`
 
 ```ts
-scheduler().setAtomicLockHandler(async (name,ttl) => { return await cache().getLock(name,ttl); });
+scheduler().setAtomicLockHandler(async (name, ttl) => {
+  return await cache().getLock(name, ttl);
+});
 
-scheduler().call(handler).setCronTime("* * * * *").setName('job1').atomic();
-scheduler().call(handler).setCronTime("* * * * *").atomic('lock_for_jobs');
-scheduler().call(handler).setCronTime("* * * * *").atomic('lock_for_jobs',5);
+scheduler().call(handler).setCronTime("* * * * *").setName("job1").atomic();
+scheduler().call(handler).setCronTime("* * * * *").atomic("lock_for_jobs");
+scheduler().call(handler).setCronTime("* * * * *").atomic("lock_for_jobs", 5);
 ```
 
 atomic locking requires that you either set a name for the job or use a lock name. It is possible that multiple jobs
@@ -142,7 +145,7 @@ use the same lock name. It will result only one job to run among jobs sharing th
 
 Atomic locks must expire eventually, otherwise crons may get stuck. Default value is set to 30 seconds. If you need to modify this value you must pass a second parameter for this.
 
-If a second job wants to run but atomic lock is not obtained, current execution of the job will be cancelled. The job will execute again the next time it is scheduled. 
+If a second job wants to run but atomic lock is not obtained, current execution of the job will be cancelled. The job will execute again the next time it is scheduled.
 
 ### setContextWrapper(func)
 
@@ -229,4 +232,4 @@ pnpm pdev start --cron
 pnpm pdev start --cron --cron-names session_cleanup --cron-names daily_digest
 ```
 
-See [Start Your Server](../tutorial-basics/start-your-server.md) for more details on the `--cron-names` filter.
+See [Start Your Server](../tutorial-basics/start-your-server) for more details on the `--cron-names` filter.

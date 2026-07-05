@@ -22,9 +22,9 @@ To start the HTTP server, scheduler, and queues all together:
     yarn pdev start
     ```
   </TabItem>
-  <TabItem value="yarn" label="yarn">
+  <TabItem value="pnpm" label="pnpm">
     ```bash
-    yarn run pdev start
+    pnpm pdev start
     ```
   </TabItem>
 </Tabs>
