@@ -1,4 +1,4 @@
-name: test
+name: test-bun
 
 on:
   workflow_call:
@@ -15,6 +15,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -27,8 +30,10 @@ jobs:
           path: |
             **/dist
           key: devbro-packages-${{ github.sha }}
-      - run: yarn
-      - run: yarn build:all
+      - name: Install dependencies
+        run: bun install
+      - name: Build packages
+        run: bun run build:all
 
   test-neko-config:
     needs: test-repo
@@ -41,6 +46,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -54,7 +62,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-config test
+        working-directory: neko-config
+        run: bun run test
 
   test-neko-context:
     needs: test-repo
@@ -67,6 +76,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -80,7 +92,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-context test
+        working-directory: neko-context
+        run: bun run test
 
   test-neko-helper:
     needs: test-repo
@@ -93,6 +106,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -106,7 +122,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-helper test
+        working-directory: neko-helper
+        run: bun run test
 
   test-neko-http:
     needs: test-repo
@@ -119,6 +136,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -132,7 +152,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-http test
+        working-directory: neko-http
+        run: bun run test
 
   test-neko-logger:
     needs: test-repo
@@ -145,6 +166,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -158,7 +182,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-logger test
+        working-directory: neko-logger
+        run: bun run test
 
   test-neko-mailer:
     needs: test-repo
@@ -171,6 +196,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -184,7 +212,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-mailer test
+        working-directory: neko-mailer
+        run: bun run test
 
   test-neko-router:
     needs: test-repo
@@ -197,6 +226,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -210,7 +242,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-router test
+        working-directory: neko-router
+        run: bun run test
 
   test-neko-scheduler:
     needs: test-repo
@@ -223,6 +256,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -236,7 +272,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-scheduler test
+        working-directory: neko-scheduler
+        run: bun run test
 
   test-neko-storage:
     needs: test-repo
@@ -249,6 +286,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -262,7 +302,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-storage test
+        working-directory: neko-storage
+        run: bun run test
 
   test-pashmak:
     needs: test-repo
@@ -275,6 +316,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -288,7 +332,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/pashmak test
+        working-directory: pashmak
+        run: bun run test
 
   test-neko-cache:
     needs: test-repo
@@ -319,6 +364,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -332,7 +380,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-cache test
+        working-directory: neko-cache
+        run: bun run test
 
   test-neko-orm:
     needs: test-repo
@@ -360,6 +409,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -373,7 +425,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-orm test
+        working-directory: neko-orm
+        run: bun run test
 
   test-neko-queue:
     needs: test-repo
@@ -435,6 +488,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -448,7 +504,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace @devbro/neko-queue test
+        working-directory: neko-queue
+        run: bun run test
 
   test-neko-sql:
     needs: test-repo
@@ -490,6 +547,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -503,9 +563,8 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: |
-          env
-          yarn workspace @devbro/neko-sql test
+        working-directory: neko-sql
+        run: bun run test
 
   test-test-app:
     needs: test-repo
@@ -545,6 +604,9 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Cache node_modules
         uses: actions/cache@v5
         with:
@@ -558,4 +620,5 @@ jobs:
             **/dist
           key: devbro-packages-${{ github.sha }}
       - name: run tests
-        run: yarn workspace test_app test
+        working-directory: test-app
+        run: bun run test

@@ -1,0 +1,561 @@
+name: test-node
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  test-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - run: yarn
+      - run: yarn build:all
+
+  test-neko-config:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-config test
+
+  test-neko-context:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-context test
+
+  test-neko-helper:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-helper test
+
+  test-neko-http:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-http test
+
+  test-neko-logger:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-logger test
+
+  test-neko-mailer:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-mailer test
+
+  test-neko-router:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-router test
+
+  test-neko-scheduler:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-scheduler test
+
+  test-neko-storage:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-storage test
+
+  test-pashmak:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/pashmak test
+
+  test-neko-cache:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:8.2.1
+        ports:
+          - 6379:6379
+        env:
+          PORT: 6379
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      memcache:
+        image: memcached:latest
+        ports:
+          - 11211:11211
+    env:
+      NODE_ENV: test
+      REDIS_HOST: localhost
+      MEMCACHE_HOST: localhost
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-cache test
+
+  test-neko-orm:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.2
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: testuser
+      DB_PASSWORD: testpassword
+      DB_NAME: testdb
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-orm test
+
+  test-neko-queue:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:8.2.1
+        ports:
+          - 6379:6379
+        env:
+          PORT: 6379
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      rabbitmq:
+        image: rabbitmq:4-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping || exit 0"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: sqs
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+          DEBUG: 1
+          AWS_DEFAULT_REGION: us-east-1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      REDIS_HOST: localhost
+      RABBITMQ_HOST: localhost
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_URI: amqp://guest:guest@localhost:5672
+      AWS_SQS_ENDPOINT: http://localhost:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace @devbro/neko-queue test
+
+  test-neko-sql:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.2
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: dbadmin
+          POSTGRES_PASSWORD: dbpassword
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: dbpassword
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: dbadmin
+          MYSQL_PASSWORD: dbpassword
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://dbadmin:dbpassword@localhost:5432/testdb
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: dbadmin
+      DB_PASSWORD: dbpassword
+      DB_NAME: testdb
+      MYSQL_HOST: localhost
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: dbpassword
+      MYSQL_DATABASE: testdb
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: |
+          env
+          yarn workspace @devbro/neko-sql test
+
+  test-test-app:
+    needs: test-repo
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.2
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+      redis:
+        image: redis:8.2.1
+        ports:
+          - 6379:6379
+        env:
+          PORT: 6379
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: testuser
+      DB_PASSWORD: testpassword
+      DB_NAME: testdb
+      REDIS_HOST: localhost
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache @devbro packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/dist
+          key: devbro-packages-${{ github.sha }}
+      - name: run tests
+        run: yarn workspace test_app test
