@@ -23,7 +23,10 @@
     "format": "biome check --write .",
     "prepare": "husky",
     "prettier": "biome format --write .",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:bun": "bun run --bunx vitest run tests",
+    "test:bun:watch": "bun run --bunx vitest watch tests",
+    "test:bun:coverage": "bun run --bunx vitest run tests --coverage"
   },
   "author": "Farzad Meow Khalafi",
   "license": "MIT",

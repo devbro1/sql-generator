@@ -14,6 +14,9 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
+    "test:bun": "bun run --bunx vitest run tests",
+    "test:bun:watch": "bun run --bunx vitest watch tests",
+    "test:bun:coverage": "bun run --bunx vitest run tests --coverage",
     "lint": "biome check . --ext .ts,.tsx",
     "format": "biome format . --ext .ts,.tsx --write"
   },

@@ -10,6 +10,7 @@
     "build:basic": "yarn workspace neko-context build && yarn workspace neko-router build && yarn workspace neko-helper build && yarn workspace neko-storage build && yarn workspace neko-logger build && yarn workspace neko-sql build && yarn workspace neko-orm build && yarn workspace neko-scheduler build && yarn workspace neko-storage build && yarn workspace neko-storage build && yarn workspace neko-http build",
     "build:all": "node scripts/build_all.js",
     "test:all": "node scripts/test_all.js",
+    "test:bun:all": "node scripts/test_all.js --bun",
     "prep_for_dev": "node scripts/prep_for.js --dev",
     "prep_for_release": "node scripts/prep_for.js",
     "publish_to_npm": "node scripts/publish_to_npm.js",
